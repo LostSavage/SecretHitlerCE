@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 74
+update_version = 75
 add_on_version = 3
 
 --Buttons
@@ -2392,7 +2392,7 @@ end
 function findUnusedColor()
 	local checkList = {'Brown', 'Teal', 'Black', 'White', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink'}
 
-	for i, playerColor in ipairs(checkList) do
+	for _, playerColor in ipairs(checkList) do
 		if not Player[playerColor].seated then
 			return playerColor
 		end
@@ -2756,6 +2756,7 @@ function initNoteTakerValues(boardName)
 	if tmpObj then
 		electionTrackerOrgPos = {x = -3.95, y = 1.72, z = -9.35}
 		rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 0, Yellow = 0, Green = 0, Teal = 0, Blue = 0, Purple = 0, Pink = 0}
+		colorOffset = {White = 9, Brown = 0, Red = 1, Orange = 0, Yellow = 0, Green = 4, Teal = 5, Blue = 6, Purple = 5, Pink = 5}
 		tableHeightAdd = 0.44
 		prev_president_pos = {x = -8.0, y = 1.50, z = 14.0}
 		prev_chancelor_pos = {x = 8.0, y = 1.49, z = 14.0}
@@ -2973,6 +2974,7 @@ end
 function menuBase(selfIn)
 	local zOffset = 0
 	local buttonParam = {rotation = {0, 0, rotationZ}, font_size = 300 * fontScale}
+	local text = Global.getTable('text')
 
 	if sharedHistory then
 		buttonParam.function_owner = Global
