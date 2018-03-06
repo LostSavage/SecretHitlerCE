@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 69
+update_version = 70
 
 --Buttons
 settings_pannel_guid = '39d283'
@@ -618,6 +618,24 @@ function bulletSoundFlip(clickedObject, playerColor)
 		options.bulletSound = not options.bulletSound
 		settingsPannelMakeButtons()
 	end
+end
+
+function addJaCard(cardIn)
+	if type(cardIn) == 'table' then
+		cardIn = cardIn[1]
+	end
+
+	local player = string.gsub(cardIn.getDescription(), '\'s Ja Card', '')
+	jaCardGuids[player] = cardIn.getGUID()
+end
+
+function addNeinCard(cardIn)
+	if type(cardIn) == 'table' then
+		cardIn = cardIn[1]
+	end
+
+	local player = string.gsub(cardIn.getDescription(), '\'s Nein Card', '')
+	neinCardGuids[player] = cardIn.getGUID()
 end
 
 function displayBannerCardsCoroutine()
@@ -1813,6 +1831,10 @@ function setupCoroutine()
 				card.setLuaScript(
 					'collision = false -- workaround for rewind error\r\n' ..
 					'\r\n' ..
+					'function onObjectSpawn(spawnObject)\r\n' ..
+					'	Global.call(\'addJaCard\', {self})\r\n' ..
+					'end\r\n' ..
+					'\r\n' ..
 					'function onDrop(playerColor)\r\n' ..
 					'	local options = Global.getTable(\'options\')\r\n' ..
 					'	if options.scriptedVoting then\r\n' ..
@@ -1827,7 +1849,6 @@ function setupCoroutine()
 					'		Global.call(\'createVoteTimer\')\r\n' ..
 					'	end\r\n' ..
 					'end\r\n')
-				jaCardGuids[player] = card.getGUID()
 				offset = 1
 				giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
 			elseif description == 'Nein Card' then
@@ -1835,6 +1856,10 @@ function setupCoroutine()
 				card.setLuaScript(
 					'collision = false -- workaround for rewind error\r\n' ..
 					'\r\n' ..
+					'function onObjectSpawn(spawnObject)\r\n' ..
+					'	Global.call(\'addNeinCard\', {self})\r\n' ..
+					'end\r\n' ..
+					'\r\n' ..
 					'function onDrop(playerColor)\r\n' ..
 					'	local options = Global.getTable(\'options\')\r\n' ..
 					'	if options.scriptedVoting then\r\n' ..
@@ -1849,7 +1874,6 @@ function setupCoroutine()
 					'		Global.call(\'createVoteTimer\')\r\n' ..
 					'	end\r\n' ..
 					'end\r\n')
-				neinCardGuids[player] = card.getGUID()
 				offset = 2
 				giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y, false, true)
 			end
