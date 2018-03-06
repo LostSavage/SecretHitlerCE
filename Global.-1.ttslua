@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 75
+update_version = 76
 add_on_version = 3
 
 --Buttons
@@ -56,6 +56,8 @@ hold = false
 votes = {}
 disableVote = false
 blockDraw = false
+updateLine = nil
+updateAction = ''
 
 -- Saved data
 bannerGuids = {}
@@ -759,24 +761,11 @@ function displayBannerCard(card, offset, bannerGuidsOffset)
 end
 
 function boardCardHandler(card)
-	local notateAction = function(actionIn)
-		local lineSave = noteTakerCurrLine
-		noteTakerCurrLine = #noteTakerNotes
-		if not noteTakerBlankLine(noteTakerCurrLine) then
-			addNewLine()
-			noteTakerCurrLine = #noteTakerNotes
-		end
-		noteTakerNotes[noteTakerCurrLine].color1 = lastPres
-		noteTakerNotes[noteTakerCurrLine].action = actionIn
-		noteTakerCurrLine = lineSave
-		refreshNotes(nil)
-	end
-
 	if isBoardCardInspect(card) then
 		if lastPres then
 			if not options.dealPartyCards then createInspectButtons(lastPres) end
 			if options.autoNotate then
-				notateAction('inspects')
+				notateInfo(lastPres, 'inspects', '', '', true)
 			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
@@ -784,45 +773,16 @@ function boardCardHandler(card)
 	elseif isBoardCardPickPres(card) then
 		if lastPres then
 			if options.autoNotate then
-				notateAction('gives pres to')
+				notateInfo(lastPres, 'gives pres to', '', '', true)
 			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
 		end
 	elseif isBoardCardBullet(card) then
 		if lastPres then
-			local params = {}
-			params.type = bulletInfo.type
-			local bullet = spawnObject(params)
-			custom = {}
-			custom.mesh = bulletInfo.mesh
-			custom.diffuse = bulletInfo.diffuse
-			custom.assetbundle = bulletInfo.assetbundle
-			custom.assetbundle_secondary = bulletInfo.assetbundle_secondary
-			custom.image = bulletInfo.image
-			custom.convex = bulletInfo.convex
-			custom.material = bulletInfo.material
-			custom.specular_color = bulletInfo.specular_color
-			custom.specular_intensity = bulletInfo.specular_intensity
-			custom.specular_sharpness = bulletInfo.specular_sharpness
-			custom.fresnel_strength = bulletInfo.fresnel_strength
-			bullet.use_grid = bulletInfo.use_grid
-			bullet.setCustomObject(custom)
-			bullet.setColorTint(bulletInfo.colorTint)
-			bullet.setScale(bulletInfo.scale)
-			bullet.setLuaScript(
-					'function onDrop(playerColor)\r\n' ..
-					'	local options = Global.getTable(\'options\')\r\n' ..
-					'	if options.scriptedVoting then\r\n' ..
-					'		Global.call(\'updateDeadList\')\r\n' ..
-					'	end\r\n' ..
-					'end\r\n')
-			wait(5)
-			table.insert(bulletGUIDs, 1, bullet.getGUID())
-			bullet.setPosition({0, 30, 0})
-			giveObjectToPlayer(bullet, lastPres, {forward = 20, right = 0, up = 0, forceHeight = 6}, no_rotation)
+			giveBullet(lastPres)
 			if options.autoNotate then
-				notateAction(string.lower(bulletInfo.text))
+				notateInfo(lastPres, string.lower(bulletInfo.text), '', '', true)
 			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
@@ -832,7 +792,7 @@ function boardCardHandler(card)
 			broadcastToColor('Examine the top card from the deck and put it back in the draw pile.', lastPres, {1, 1, 1})
 			drawCards(1, lastPres)
 			if options.autoNotate then
-				notateAction('examines deck:')
+				notateInfo(lastPres, 'examines deck:', '', '', false)
 			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
@@ -842,7 +802,7 @@ function boardCardHandler(card)
 			broadcastToColor('Examine the top three cards from the deck and put them back in the draw pile.', lastPres, {1, 1, 1})
 			drawCards(3, lastPres)
 			if options.autoNotate then
-				notateAction('examines deck:')
+				notateInfo(lastPres, 'examines deck:', '', '', false)
 			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
@@ -990,6 +950,51 @@ function movePlacards(playerIn, returnVoteCards)
 	if tmpChan then giveObjectToPlayer(tmpChan, moveToPlayer, {forward = prevForward, right = 0, up = 0, forceHeight = 2.8}, no_rotation, false, false) end
 end
 
+function giveBullet(playerIn)
+	local params = {}
+	params.type = bulletInfo.type
+	local bullet = spawnObject(params)
+	custom = {}
+	custom.mesh = bulletInfo.mesh
+	custom.diffuse = bulletInfo.diffuse
+	custom.assetbundle = bulletInfo.assetbundle
+	custom.assetbundle_secondary = bulletInfo.assetbundle_secondary
+	custom.image = bulletInfo.image
+	custom.convex = bulletInfo.convex
+	custom.material = bulletInfo.material
+	custom.specular_color = bulletInfo.specular_color
+	custom.specular_intensity = bulletInfo.specular_intensity
+	custom.specular_sharpness = bulletInfo.specular_sharpness
+	custom.fresnel_strength = bulletInfo.fresnel_strength
+	bullet.use_grid = bulletInfo.use_grid
+	bullet.setCustomObject(custom)
+	bullet.setColorTint(bulletInfo.colorTint)
+	bullet.setScale(bulletInfo.scale)
+	bullet.setLuaScript(
+			'function onDrop(playerColor)\r\n' ..
+			'	local options = Global.getTable(\'options\')\r\n' ..
+			'	if options.scriptedVoting then\r\n' ..
+			'		Global.call(\'updateDeadList\')\r\n' ..
+			'	end\r\n' ..
+			'end\r\n' ..
+			'\r\n' ..
+			'function onCollisionEnter(collisionInfo)\r\n' ..
+			'	if Global.call(\'isTableGUID\', {collisionInfo.collision_object.guid}) then\r\n' ..
+			'		local options = Global.getTable(\'options\')\r\n' ..
+			'		local bulletInfo = Global.getTable(\'bulletInfo\')\r\n' ..
+			'		local updateLine = Global.getVar(\'updateLine\')\r\n' ..
+			'		local updateAction = Global.getVar(\'updateAction\')\r\n' ..
+			'		if options.autoNotate and updateLine and updateAction == string.lower(bulletInfo.text) then\r\n' ..
+			'			Global.call(\'notateColor2ByObject\', {self})\r\n' ..
+			'		end\r\n' ..
+			'	end\r\n' ..
+			'end\r\n')
+	wait(5)
+	table.insert(bulletGUIDs, 1, bullet.getGUID())
+	bullet.setPosition({0, 30, 0})
+	giveObjectToPlayer(bullet, playerIn, {forward = 20, right = 0, up = 0, forceHeight = 6}, no_rotation)
+end
+
 function createPolicyCardTimer()
 	Timer.destroy('policyCardTimer')
 	local parameters = {}
@@ -1026,51 +1031,7 @@ function policyCardCoroutine()
 	local maxLiberal = 6
 	local autoNotateReshuffle = false
 
-	local notateResult = function(resultIn)
-		local lineSave = noteTakerCurrLine
-		noteTakerCurrLine = #noteTakerNotes
-		if not noteTakerBlankLine(noteTakerCurrLine) then
-			addNewLine()
-			noteTakerCurrLine = #noteTakerNotes
-		end
-		noteTakerNotes[noteTakerCurrLine].result = resultIn
-		noteTakerCurrLine = lineSave
-		refreshNotes(nil)
-   end
-
-	local notateCardPlayed = function(resultIn)
-		if lastPres and lastChan then
-			local lineSave = noteTakerCurrLine
-			noteTakerCurrLine = #noteTakerNotes
-			if not noteTakerBlankLine(noteTakerCurrLine) then
-				addNewLine()
-				noteTakerCurrLine = #noteTakerNotes
-			end
-			noteTakerNotes[noteTakerCurrLine].color1 = lastPres
-			noteTakerNotes[noteTakerCurrLine].action = '>'
-			noteTakerNotes[noteTakerCurrLine].color2 = lastChan
-			noteTakerNotes[noteTakerCurrLine].result = resultIn
-			noteTakerCurrLine = lineSave
-			refreshNotes(nil)
-		end
-		local tracker = getObjectFromGUID(election_tracker_guid)
-		if tracker then
-			tracker.setPositionSmooth(electionTrackerOrgPos)
-			tracker.setRotationSmooth({0, 315, 0})
-		end
-	end
-
-	local notateTopdeckCard = function(resultIn)
-		local lineSave = noteTakerCurrLine
-		noteTakerCurrLine = #noteTakerNotes
-		if not noteTakerBlankLine(noteTakerCurrLine) then
-			addNewLine()
-			noteTakerCurrLine = #noteTakerNotes
-		end
-		noteTakerNotes[noteTakerCurrLine].action = 'Topdeck:'
-		noteTakerNotes[noteTakerCurrLine].result = resultIn
-		noteTakerCurrLine = lineSave
-		refreshNotes(nil)
+	local homeTracker = function()
 		local tracker = getObjectFromGUID(election_tracker_guid)
 		if tracker then
 			tracker.setPositionSmooth(electionTrackerOrgPos)
@@ -1150,15 +1111,7 @@ function policyCardCoroutine()
 	removeCt = 0
 	inZone = discardZone.getObjects()
 	for i, j in ipairs(inZone) do
-		if isFascistPolicyCard(j) then
-			smartTableInsert(fascistList, j.guid)
-			smartTableInsert(discardList, j.guid)
-			smartTableInsert(discardDeckList, j.guid)
-		elseif isLiberalPolicyCard(j) then
-			smartTableInsert(liberalList, j.guid)
-			smartTableInsert(discardList, j.guid)
-			smartTableInsert(discardDeckList, j.guid)
-		elseif j.name == 'Deck' then
+		if j.name == 'Deck' then
 			smartTableInsert(discardDeckList, j.guid)
 			local inDeck = j.getObjects()
 			for k, l in ipairs(inDeck) do
@@ -1284,11 +1237,12 @@ function policyCardCoroutine()
 			if liberalCardFound then
 				if options.autoNotate then
 					if topdeck then
-						notateTopdeckCard('[0080F8]' .. text.liberalLetter .. '[-]')
+						notateInfo('', 'Topdeck:', '', '[0080F8]' .. text.liberalLetter .. '[-]', false)
 					else
-						notateCardPlayed('[0080F8]' .. text.liberalLetter .. '[-]')
+						notateInfo(lastPres, '>', lastChan, '[0080F8]' .. text.liberalLetter .. '[-]', false)
 					end
-					if autoNotateReshuffle then notateResult('*Reshuffle*') end
+					homeTracker()
+					if autoNotateReshuffle then notateInfo('', '', '', '*Reshuffle*', false) end
 				end
 				if options.autoPlacards then
 					if topdeck then
@@ -1315,12 +1269,13 @@ function policyCardCoroutine()
 			if fascistCardFound then
 				if options.autoNotate then
 					if topdeck then
-						notateTopdeckCard('[FF0000]' .. text.fascistLetter .. '[-]')
+						notateInfo('', 'Topdeck:', '', '[FF0000]' .. text.fascistLetter .. '[-]', false)
 					else
-						notateCardPlayed('[FF0000]' .. text.fascistLetter .. '[-]')
+						notateInfo(lastPres, '>', lastChan, '[FF0000]' .. text.fascistLetter .. '[-]', false)
 					end
-					if lastFascistPlayed == 4 then notateResult('[FF0000]' .. text.hitler .. ' territory![-]') end
-					if autoNotateReshuffle then notateResult('*Reshuffle*') end
+					homeTracker()
+					if lastFascistPlayed == 4 then notateInfo('', '', '', '[FF0000]' .. text.hitler .. ' territory![-]', false) end
+					if autoNotateReshuffle then notateInfo('', '', '', '*Reshuffle*', false) end
 				end
 				if options.autoPlacards then
 					if topdeck then
@@ -1715,7 +1670,8 @@ function setupCoroutine()
 	end
 
 	if options.shufflePlayers then
-		if Player[players[1]].steam_name == 'Player 1' then
+		local playerOneName = Player[players[1]].steam_name
+		if not playerOneName or string.match(playerOneName, 'Player %d') then
 			printToAll('Hotseat game detected unable to shuffle players.', {1,1,1})
 		else
 			printToAll('Shuffling Players...', {1,1,1})
@@ -2091,14 +2047,8 @@ function setupCoroutine()
 	printToAll('--------------------------------------',{1,1,1})
 
 	-- Move and tell first pres
-	tmpObj = getObjectFromGUID(round_table_guid)
-	if tmpObj then
-		giveObjectToPlayer(president, players[randomPlayer], {forward = 9, right = 0, up = 0, forceHeight = 3}, no_rotation)
-		giveObjectToPlayer(chancelor, players[randomPlayer], {forward = 9, right = 0, up = 0, forceHeight = 5.5}, no_rotation)
-	else
-		giveObjectToPlayer(president, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 3}, no_rotation)
-		giveObjectToPlayer(chancelor, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 5.5}, no_rotation)
-	end
+	giveObjectToPlayer(president, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 3}, no_rotation)
+	giveObjectToPlayer(chancelor, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 5.5}, no_rotation)
 	local hcol = stringColorToRGB(players[randomPlayer])
 	printToAll(players[randomPlayer] .. ' is first president!',{hcol['r'], hcol['g'], hcol['b']})
 	printToAll('--------------------------------------',{1,1,1})
@@ -2299,17 +2249,25 @@ function playerInspected(clickedObject, inspectorColor, checkedColor)
 	if inspectorColor == lastPres then
 		local role = roles[checkedColor]
 		local playerColor = stringColorToRGB(checkedColor)
+		local roleText
 		local roleColor
 		if role == 'hitler' or role == 'fascist' then
-			role = 'fascist'
+			roleText = text.fascistArticle .. ' ' .. string.lower(text.fascist)
 			roleColor = {1, 0, 0}
 		else
+			roleText = text.liberalArticle .. ' ' .. string.lower(text.liberal)
 			roleColor = {0.1, 0.3, 1}
 		end
 		printToAll(inspectorColor .. ' inspected ' .. checkedColor, playerColor)
-		broadcastToColor(checkedColor .. ' is a ' .. role .. '!', inspectorColor, roleColor)
+		broadcastToColor(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
 		table.insert(inspected, 1, checkedColor)
 		removeInspect()
+		if options.autoNotate and updateLine and updateAction == 'inspects' then
+			noteTakerNotes[updateLine].color2 = checkedColor
+			refreshNotes(nil)
+			updateLine = nil
+			updateAction = ''
+		end
 	end
 end
 
@@ -2542,6 +2500,22 @@ function smartTableInsert(tableIn, valueIn)
 	end
 end
 
+function isTableGUID(GUIDIn)
+	if type(GUIDIn) == 'table' then
+		GUIDIn = GUIDIn[1]
+	end
+
+	if not GUIDIn then -- Base table
+		return true
+	elseif GUIDIn == tcid_table_guid then
+		return true
+	elseif GUIDIn == round_table_guid then
+		return true
+	end
+
+	return false
+end
+
 --------------------------------------------------------------------------------
 --Note Taker
 --------------------------------------------------------------------------------
@@ -2770,12 +2744,6 @@ function initNoteTakerValues(boardName)
 		tableHeightAdd = 0.83
 		prev_president_pos = {x = -8.0, y = 1.89, z = 14.0}
 		prev_chancelor_pos = {x = 8.0, y = 1.89, z = 14.0}
-		if boardName == 'backgammon_board' then
-			giveForward = -29.5
-		else
-			giveForward = -22.5
-		end
-		prevForward = 9
 
 		--Overides
 		setupBoardGetFunction = function(playerIn)
@@ -4481,6 +4449,25 @@ function noteTakerConflict(currLineIn)
 	return false
 end
 
+function notateInfo(color1In, actionIn, color2In, resultIn, updateLineIn)
+	local lineSave = noteTakerCurrLine
+	noteTakerCurrLine = #noteTakerNotes
+	if not noteTakerBlankLine(noteTakerCurrLine) then
+		addNewLine()
+		noteTakerCurrLine = #noteTakerNotes
+	end
+	noteTakerNotes[noteTakerCurrLine].color1 = color1In
+	noteTakerNotes[noteTakerCurrLine].action = actionIn
+	noteTakerNotes[noteTakerCurrLine].color2 = color2In
+	noteTakerNotes[noteTakerCurrLine].result = resultIn
+	if updateLineIn then
+		updateLine = noteTakerCurrLine
+		updateAction = actionIn
+	end
+	noteTakerCurrLine = lineSave
+	refreshNotes(nil)
+end
+
 function noteTakerBlankLine(currLineIn)
 	if noteTakerNotes[noteTakerCurrLine].conflict == ''
 		and noteTakerNotes[noteTakerCurrLine].color1 == ''
@@ -4688,6 +4675,18 @@ function closestPlayer(objectIn, playerListIn, maxIn)
 	end
 
 	return playerColorOut
+end
+
+function notateColor2ByObject(tableIn)
+	if type(tableIn) == 'table' then
+		local playerColor = closestPlayer(tableIn[1], players, 1000)
+		if noteTakerNotes[updateLine].color1 ~= playerColor then
+			noteTakerNotes[updateLine].color2 = playerColor
+			refreshNotes(nil)
+			updateLine = nil
+			updateAction = ''
+		end
+	end
 end
 
 function sleep(numSeconds)
