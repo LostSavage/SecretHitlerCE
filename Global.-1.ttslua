@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 63
+update_version = 64
 
 --Buttons
 settings_pannel_guid = '39d283'
@@ -20,16 +20,15 @@ nextpresident_orange_deck_guid = '0cce08'
 bullet_red_deck_guid = '747b8f'
 bulletveto_red_deck_guid = 'eb57e4'
 
---Decks
+--Decks/Cards
 hitler_deck_guid = '5997ea'
 fascist_deck_guids = {'5f2055','fb58cf', '4a3cf4'}
 liberal_deck_guids = {'b156f7', 'd1735a', 'c8ab2a', 'b2873d', '313939', '40d8f5' }
-
 policy_deck_guid = '386233'
 policy_notusedfas_card_guid = 'c7138a'
 policy_notusedlib_card_guid = '2c1d40'
-
 extra_role_cards = {'675a6f', '16e480', '0a5960', '02b664', '328440', '05df40', '98f4dd', '7b4b46', 'ccb7ed', 'c2309a'}
+fake_role_card_guid = 'cf946e'
 
 --Scripting Zones
 deal_zone_guid = '0b8c68'
@@ -40,20 +39,18 @@ fascist_zone_guids = {'1f0149', '390247', '6c3840', '13e460', '441bbf', '6a906e'
 liberal_zone_guids = {'12b8ce', '3cabfa', '6f02b7', '939e6d', '3f80ba', 'a6b76f'}
 tracker_zone = 'c0b577'
 
--- @{-100, 100, -100} is used to delete/spawn objects
+--Bags/Other
+last_vote_guids = {'88c953', 'ba4919', 'b7dcde', '4598da'}
 bullet_bag_guid = 'feeecc' -- @{100, 100, 102}
 bullet_sound_bag_guid = '2a3f62' -- @{100, 100, 104}
 fake_party_bag_guid = '473632' -- @{100, 100, 106}
 -- @{100, 100, 108+} hidden zones
-fake_role_card_guid = 'cf946e' -- on table
+-- @{-100, 100, -100} is used to delete/spawn objects
 
 -- Markers
 liberal_bag_guid = 'fa725a'
 fascist_bag_guid = 'f30cb0'
 hilter_bag_guid = 'cc86f8'
-
--- http://steamcommunity.com/profiles/[here]/
-crap_list = {'76561198106290696'}
 
 -- Global Variables (non-static)
 
@@ -711,6 +708,14 @@ function boardCardHandler(card)
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
 		end
+	elseif isBoardCardPickPres(card) then
+		if lastPres then
+			if options.autoNotate then
+				notateAction('gives pres to')
+			end
+		else
+			printToAll('ERROR: Last president not found.', {1,0,0})
+		end
 	elseif isBoardCardBullet(card) then
 		if lastPres then
 			local bullet_bag
@@ -843,6 +848,15 @@ function isBoardCardTopThree(objIn)
 	return false
 end
 
+function isBoardCardPickPres(objIn)
+	if objIn.name == 'Card' and
+		(objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.' or
+		 objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.\nVeto power is\nunlocked.') then
+		return true
+	end
+	return false
+end
+
 function createPolicyCardTimer()
 	Timer.destroy('policyCardTimer')
 	local parameters = {}
@@ -913,12 +927,43 @@ function policyCardCoroutine()
 		end
 	end
 
-	local movePrevPlacards = function(resultIn)
+	local notateTopdeckCard = function(resultIn)
+		local lineSave = noteTakerCurrLine
+		noteTakerCurrLine = #noteTakerNotes
+		if not noteTakerBlankLine(noteTakerCurrLine) then
+			addNewLine()
+			noteTakerCurrLine = #noteTakerNotes
+		end
+		noteTakerNotes[noteTakerCurrLine].action = 'Topdeck:'
+		noteTakerNotes[noteTakerCurrLine].result = resultIn
+		noteTakerCurrLine = lineSave
+		refreshNotes(nil)
+		local tracker = getObjectFromGUID(election_tracker_guid)
+		if tracker then
+			tracker.setPositionSmooth(electionTrackerOrgPos)
+			tracker.setRotationSmooth({0, 315, 0})
+		end
+	end
+
+	local movePrevPlacards = function()
 		if lastPres and lastChan then
 			local tmpPres = getObjectFromGUID(prev_president_guid)
 			if tmpPres then giveObjectToPlayer(tmpPres, lastPres, {forward = prevForward, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, true) end
 			local tmpChan = getObjectFromGUID(prev_chancelor_guid)
 			if tmpChan then giveObjectToPlayer(tmpChan, lastChan, {forward = prevForward, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, true) end
+		end
+	end
+
+	local homePrevPlacards = function()
+		local tmpPres = getObjectFromGUID(prev_president_guid)
+		if tmpPres then
+			tmpPres.setRotationSmooth(flip_y, false, true)
+			tmpPres.setPositionSmooth(prev_president_pos, false, true)
+		end
+		local tmpChan = getObjectFromGUID(prev_chancelor_guid)
+		if tmpChan then
+			tmpChan.setRotationSmooth(flip_y, false, true)
+			tmpChan.setPositionSmooth(prev_chancelor_pos, false, true)
 		end
 	end
 
@@ -1105,10 +1150,20 @@ function policyCardCoroutine()
 			end
 			if liberalCardFound then
 				if options.autoNotate then
-					notateCardPlayed('[0080F8]L[-]')
+					if topdeck then
+						notateTopdeckCard('[0080F8]L[-]')
+					else
+						notateCardPlayed('[0080F8]L[-]')
+					end
 					if autoNotateReshuffle then notateReshuffle() end
 				end
-				if options.autoPrevPlacards then movePrevPlacards() end
+				if options.autoPrevPlacards then
+					if topdeck then
+						homePrevPlacards()
+					else
+						movePrevPlacards()
+					end
+				end
 				startLuaCoroutine(Global, 'displayBannerCardsCoroutine')
 			else
 				lastLiberalPlayed = 0 -- didn't find the card
@@ -1126,10 +1181,20 @@ function policyCardCoroutine()
 			end
 			if fascistCardFound then
 				if options.autoNotate then
-					notateCardPlayed('[FF0000]F[-]')
+					if topdeck then
+						notateTopdeckCard('[FF0000]F[-]')
+					else
+						notateCardPlayed('[FF0000]F[-]')
+					end
 					if autoNotateReshuffle then notateReshuffle() end
 				end
-				if options.autoPrevPlacards then movePrevPlacards() end
+				if options.autoPrevPlacards then
+					if topdeck then
+						homePrevPlacards()
+					else
+						movePrevPlacards()
+					end
+				end
 				startLuaCoroutine(Global, 'displayBannerCardsCoroutine')
 			else
 				lastFascistPlayed = 0 -- didn't find the card
@@ -1196,9 +1261,14 @@ function startVoteCheck()
 		setNotes(voteNotes .. '\n\n' .. mainNotes)
 		local presColor = getPres()
 		local chanColor = getChan()
+		local lastVoteGuid
+		local lastVote
 		local out = '[' .. stringColorToHex(presColor) .. ']' .. presColor .. '[-]'
-		out = out .. ' >  [' .. stringColorToHex(chanColor) .. ']' .. chanColor .. '[-] '
-		printToAll(out .. voteNotes, {1, 1, 1})
+		out = out .. ' > [' .. stringColorToHex(chanColor) .. ']' .. chanColor .. '[-]\n'
+		for _, lastVoteGuid in ipairs(last_vote_guids) do
+			lastVote = getObjectFromGUID(lastVoteGuid)
+			if lastVote then lastVote.TextTool.setValue(out .. voteNotes) end
+		end
 		flipVotes()
 		disableVote = true
 	else
@@ -1260,8 +1330,10 @@ function getFinalVoteString()
 	if neinCount == 0 then out = out .. 'None' end
 	out = out .. '[/i]'
 	if jaCount > neinCount then
+		broadcastToAll("Vote passes", stringColorToRGB('Green'))
 		out = '[' .. stringColorToHex('Green') .. ']-<<<<\u{00B7} Vote passes <\u{2550}\u{2550}\u{00A6}-\u{2022}\n' .. '[-]' .. out
 	else
+		broadcastToAll("Vote fails", stringColorToRGB('Red'))
 		out = '[' .. stringColorToHex('Red') .. ']-<<<<\u{00B7} Vote fails <\u{2550}\u{2550}\u{00A6}-\u{2022}\n' .. '[-]' .. out
 		if options.autoNotate then
 			local lineSave = noteTakerCurrLine
@@ -1463,14 +1535,10 @@ function foundBoardCards()
 end
 
 function setupStart(clickedObject, playerColor)
-	if inTable(crap_list, Player[playerColor].steam_id) then
-		broadcastToAll(Player[playerColor].steam_name .. ' is on the crap list and can\'t start the game (any other promoted player can start it).', {1,0,0})
+	if Player[playerColor].admin then
+		startLuaCoroutine(Global, 'setupCoroutine')
 	else
-		if Player[playerColor].admin then
-			startLuaCoroutine(Global, 'setupCoroutine')
-		else
-			broadcastToColor('Only the host or a promoted player can start the game.', playerColor, {1,0,0})
-		end
+		broadcastToColor('Only the host or a promoted player can start the game.', playerColor, {1,0,0})
 	end
 end
 
@@ -4239,10 +4307,11 @@ function versionInfo(clickedObject, playerColor)
 	local updateVersion = Global.getVar('update_version')
 	local out
 
+	out = _VERSION
 	if modName then
-		out = 'mod_name = ' .. modName
+		out = out .. '\nmod_name = ' .. modName
 	else
-		out = 'mod_name = nil'
+		out = out .. '\nmod_name = nil'
 	end
 	if updateVersion then
 		out = out .. '\nupdate_version = ' .. updateVersion
@@ -4427,8 +4496,10 @@ all_players = {'White', 'Brown', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Bl
 hidden_zone_guids = {White = 'f13d0b', Brown = '90049b', Red = '134297', Orange = '344002', Yellow = '9b5558', Green = '7a8301', Teal = '568a75', Blue = 'dbd95e', Purple = 'cc1b94', Pink = 'd954ee'}
 president_guid = '4d3d8f'
 prev_president_guid = '780217'
+prev_president_pos = {x = -8.0, y = 1.06, z = 14.0}
 chancelor_guid = '7dba7e'
 prev_chancelor_guid = '448483'
+prev_chancelor_pos = {x = 8.0, y = 1.06, z = 14.0}
 election_tracker_guid = 'dd57c4'
 
 -- rotations
