@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 76
+update_version = 77
 add_on_version = 3
 
 --Buttons
@@ -971,6 +971,12 @@ function giveBullet(playerIn)
 	bullet.setColorTint(bulletInfo.colorTint)
 	bullet.setScale(bulletInfo.scale)
 	bullet.setLuaScript(
+			'loadDone = false\r\n' ..
+			'\r\n' ..
+			'function onLoad()\r\n' ..
+			'	loadDone = true\r\n' ..
+			'end\r\n' ..
+			'\r\n' ..
 			'function onDrop(playerColor)\r\n' ..
 			'	local options = Global.getTable(\'options\')\r\n' ..
 			'	if options.scriptedVoting then\r\n' ..
@@ -979,13 +985,15 @@ function giveBullet(playerIn)
 			'end\r\n' ..
 			'\r\n' ..
 			'function onCollisionEnter(collisionInfo)\r\n' ..
-			'	if Global.call(\'isTableGUID\', {collisionInfo.collision_object.guid}) then\r\n' ..
-			'		local options = Global.getTable(\'options\')\r\n' ..
-			'		local bulletInfo = Global.getTable(\'bulletInfo\')\r\n' ..
-			'		local updateLine = Global.getVar(\'updateLine\')\r\n' ..
-			'		local updateAction = Global.getVar(\'updateAction\')\r\n' ..
-			'		if options.autoNotate and updateLine and updateAction == string.lower(bulletInfo.text) then\r\n' ..
-			'			Global.call(\'notateColor2ByObject\', {self})\r\n' ..
+			'	if collisionInfo and loadDone then\r\n' ..
+			'		if Global.call(\'isTableGUID\', {collisionInfo.collision_object.guid}) then\r\n' ..
+			'			local options = Global.getTable(\'options\')\r\n' ..
+			'			local bulletInfo = Global.getTable(\'bulletInfo\')\r\n' ..
+			'			local updateLine = Global.getVar(\'updateLine\')\r\n' ..
+			'			local updateAction = Global.getVar(\'updateAction\')\r\n' ..
+			'			if options.autoNotate and updateLine and updateAction == string.lower(bulletInfo.text) then\r\n' ..
+			'				Global.call(\'notateColor2ByObject\', {self})\r\n' ..
+			'			end\r\n' ..
 			'		end\r\n' ..
 			'	end\r\n' ..
 			'end\r\n')
