@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 73
+update_version = 74
 add_on_version = 3
 
 --Buttons
@@ -1642,22 +1642,18 @@ end
 function onPlayerChangedColor(color)
 	if started then
 		if not (color == 'Grey') and not (color == 'Black') then
-			printToColor('--------------------------------------',color,{1,1,1})
+			printToColor('--------------------------------------',color, {1, 1, 1})
 			printToColor('Welcome! ' .. Player[color].steam_name,color, {1, 1, 1})
-			printToColor('--------------------------------------',color,{1,1,1})
-			if started == true then
-				tellRole(color)
-				printToColor('--------------------------------------',color,{1,1,1})
-			end
+			printToColor('--------------------------------------',color, {1, 1, 1})
+			tellRole(color)
+			printToColor('--------------------------------------',color, {1, 1, 1})
 		elseif color == 'Black' then
-			printToAll('--------------------------------------',{1,1,1})
+			printToAll('--------------------------------------', {1, 1, 1})
 			local hcol = stringColorToRGB(color)
-			printToAll('All hail the omniscient Black player ' .. Player[color].steam_name,{hcol['r'], hcol['g'], hcol['b']})
-			printToAll('--------------------------------------',{1,1,1})
-			if started == true then
-				tellRole(color)
-				printToColor('--------------------------------------',color,{1,1,1})
-			end
+			printToAll('All hail the omniscient Black player ' .. Player[color].steam_name, {hcol['r'], hcol['g'], hcol['b']})
+			printToAll('--------------------------------------', {1, 1, 1})
+			tellRole(color)
+			printToColor('--------------------------------------',color, {1, 1, 1})
 		end
 	end
 end
@@ -2407,35 +2403,35 @@ function shufflePlayers()
 	swapColor = findUnusedColor()
 
 	local ranColors = {}
-   for _, v in pairs(getSeatedPlayers()) do
-     table.insert(ranColors, 1, v)
-   end
-   shuffleTable(ranColors)
+	for _, v in pairs(getSeatedPlayers()) do
+		table.insert(ranColors, 1, v)
+	end
+	shuffleTable(ranColors)
 
-   seatedPlayers = {}
-   for i, v in pairs(getSeatedPlayers()) do
-   	local playerInfo = {}
-      playerInfo.target = ranColors[i]
-      playerInfo.myColor = v
+	seatedPlayers = {}
+	for i, v in pairs(getSeatedPlayers()) do
+		local playerInfo = {}
+		playerInfo.target = ranColors[i]
+		playerInfo.myColor = v
 		table.insert(seatedPlayers, 1, playerInfo)
-   end
+	end
 
 	local doneCount = 0
 	local tryCount = #seatedPlayers
 	while doneCount ~= #seatedPlayers and tryCount > 0 do
 		doneCount = 0
-	   for i, v in pairs(seatedPlayers) do
-	      if v.target ~= v.myColor then
-	      	if Player[v.target].seated == false then
-	            local myC = v.myColor
-	            if Player[myC].seated == true then
-	               Player[myC]:changeColor(v.target)
-	               while Player[myC].seated and not Player[v.target].seated do
-	               	coroutine.yield()
-	               end
-	               v.myColor = v.target
+		for i, v in pairs(seatedPlayers) do
+			if v.target ~= v.myColor then
+				if Player[v.target].seated == false then
+					local myC = v.myColor
+					if Player[myC].seated == true then
+						Player[myC]:changeColor(v.target)
+						while Player[myC].seated and not Player[v.target].seated do
+							coroutine.yield()
+						end
+						v.myColor = v.target
 						doneCount = doneCount + 1
-	            end
+					end
 				elseif Player[swapColor].seated == false then
 					local myC = v.myColor
 					if Player[myC].seated == true then
@@ -2445,10 +2441,10 @@ function shufflePlayers()
 						end
 						v.myColor = swapColor
 					end
-	         end
+				end
 			else
 				doneCount = doneCount + 1
-	      end
+			end
 		end
 		tryCount = tryCount - 1
 		coroutine.yield()
@@ -2903,57 +2899,68 @@ function menu(selfIn)
 		buttonParam.click_function = 'setupWhite'
 		buttonParam.label = 'White'
 		buttonParam.position = {positionXscale * 4, positionY, (-2.25 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('White')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupBrown'
 		buttonParam.label = 'Brown'
 		buttonParam.position = {positionXscale * 0, positionY, (-2.25 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('Brown')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupRed'
 		buttonParam.label = 'Red'
 		buttonParam.position = {positionXscale * -4, positionY, (-2.25 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('Red')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupOrange'
 		buttonParam.label = 'Orange'
 		buttonParam.position = {positionXscale * -6, positionY, (-3.75 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('Orange')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupYellow'
 		buttonParam.label = 'Yellow'
 		buttonParam.position = {positionXscale * -6, positionY, (-5.25 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('Yellow')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupGreen'
 		buttonParam.label = 'Green'
 		buttonParam.position = {positionXscale * -4, positionY, (-6.75 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('Green')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupTeal'
 		buttonParam.label = 'Teal'
 		buttonParam.position = {positionXscale * 0, positionY, (-6.75 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('Teal')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupBlue'
 		buttonParam.label = 'Blue'
 		buttonParam.position = {positionXscale * 4, positionY, (-6.75 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('Blue')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupPurple'
 		buttonParam.label = 'Purple'
 		buttonParam.position = {positionXscale * 6, positionY, (-5.25 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('Purple')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupPink'
 		buttonParam.label = 'Pink'
 		buttonParam.position = {positionXscale * 6, positionY, (-3.75 * positionZscale) + positionZoffset1}
+		buttonParam.color = stringColorToRGB('Pink')
 		selfIn.createButton(buttonParam)
 	end
 
 	buttonParam.click_function = 'setupMe'
 	buttonParam.label = 'Me'
 	buttonParam.position = {positionXscale * 0, positionY, (-4.5 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB('White')
 	selfIn.createButton(buttonParam)
 
 	menuBase(selfIn)
@@ -3275,6 +3282,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 4, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3282,6 +3290,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 0, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3289,6 +3298,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * -4, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3296,6 +3306,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-3.75 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3303,6 +3314,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-5.25 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3310,6 +3322,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * -4, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3317,6 +3330,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 0, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3324,6 +3338,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 4, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3331,6 +3346,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-5.25 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3338,6 +3354,7 @@ function initHorizontal(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-3.75 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	initCommon(selfIn)
@@ -3358,6 +3375,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-6.0 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3365,6 +3383,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-4.5 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3372,6 +3391,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-3.0 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3379,6 +3399,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 2, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3386,6 +3407,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * -2, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3393,6 +3415,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-3.0 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3400,6 +3423,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-4.5 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3407,6 +3431,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-6.0 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3414,6 +3439,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * -2, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
@@ -3421,6 +3447,7 @@ function initVertical(selfIn, offset)
 	buttonParam.click_function = all_players[color]
 	buttonParam.label = all_players[color]
 	buttonParam.position = {positionXscale * 2, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.color = stringColorToRGB(all_players[color])
 	selfIn.createButton(buttonParam)
 
 	initCommon(selfIn)
