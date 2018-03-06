@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 67
+update_version = 68
 
 --Buttons
 settings_pannel_guid = '39d283'
@@ -677,7 +677,7 @@ function displayBannerCard(card, offset, bannerGuidsOffset)
 	bannerCard[3] = card.clone(params)
 	params.position = {-144, 33, offset}
 	bannerCard[4] = card.clone(params)
-	wait(1)
+	wait(5)
 	bannerCard[1].setRotation({90, 180, 0})
 	bannerCard[2].setRotation({90, 0, 0})
 	bannerCard[3].setRotation({90, 270, 0})
@@ -738,7 +738,7 @@ function boardCardHandler(card)
 					'		Global.call(\'updateDeadList\')\r\n' ..
 					'	end\r\n' ..
 					'end\r\n')
-			wait(1)
+			wait(5)
 			table.insert(bulletGUIDs, 1, bullet.getGUID())
 			bullet.setPosition({0, 30, 0})
 			giveObjectToPlayer(bullet, lastPres, {forward = 20, right = 0, up = 0, forceHeight = 6}, no_rotation)
@@ -1395,10 +1395,10 @@ function getFinalVoteString()
 	if neinCount == 0 then out = out .. 'None' end
 	out = out .. '[/i]'
 	if jaCount > neinCount then
-		broadcastToAll("Vote passes", stringColorToRGB('Green'))
+		broadcastToAll('Vote passes', stringColorToRGB('Green'))
 		out = '[' .. stringColorToHex('Green') .. ']-<<<<\u{00B7} Vote passes <\u{2550}\u{2550}\u{00A6}-\u{2022}\n' .. '[-]' .. out
 	else
-		broadcastToAll("Vote fails", stringColorToRGB('Red'))
+		broadcastToAll('Vote fails', stringColorToRGB('Red'))
 		out = '[' .. stringColorToHex('Red') .. ']-<<<<\u{00B7} Vote fails <\u{2550}\u{2550}\u{00A6}-\u{2022}\n' .. '[-]' .. out
 		if options.autoNotate then
 			local lineSave = noteTakerCurrLine
@@ -1778,7 +1778,7 @@ function setupCoroutine()
 	shufflePosition(player_decks)
 	shuffleIndex(players)
 
-	wait(1)
+	wait(5)
 
 	--Deal the Cards
 	for i, player in ipairs(players) do
@@ -1869,6 +1869,7 @@ function setupCoroutine()
 	local randomPlayer = math.random(#players)
 	local president = getObjectFromGUID(president_guid)
 	local pos = president.getPosition()
+	president.setVar('lastPres', players[randomPlayer])
 	president.setPositionSmooth({0, pos['y']+7, 0})
 	local chancelor = getObjectFromGUID(chancelor_guid)
 	pos = chancelor.getPosition()
@@ -1889,7 +1890,7 @@ function setupCoroutine()
 					params.position = {100,100,100}
 					params.guid = l.guid
 					local card = drawDeck.takeObject(params)
-					wait(1)
+					wait(5)
 					destroyObject(card)
 					remove_fascistCt = remove_fascistCt - 1
 				elseif l.description == 'Liberal Policy' and remove_liberalCt > 0 then
@@ -1897,7 +1898,7 @@ function setupCoroutine()
 					params.position = {100,100,100}
 					params.guid = l.guid
 					local card = drawDeck.takeObject(params)
-					wait(1)
+					wait(5)
 					destroyObject(card)
 					remove_liberalCt = remove_liberalCt - 1
 				end
@@ -2000,7 +2001,9 @@ function setupCoroutine()
 	end
 
 	-- interactable/unlock other items
+	president.unlock()
 	president.interactable = true
+	chancelor.unlock()
 	chancelor.interactable = true
 	tmpObj = getObjectFromGUID(election_tracker_guid)
 	tmpObj.unlock()
@@ -2170,7 +2173,7 @@ function createInspectButtons(pres)
 					'	button.font_size = 150\r\n' ..
 					'	self.createButton(button)\r\n' ..
 					'end')
-				wait(1)
+				wait(5)
 				card.setPosition({0, 30 + (i * 0.25), 0})
 				giveObjectToPlayer(card, playerColor, {forward = 16.5, right = 0, up = 0}, flip_y_z)
 			end
@@ -2634,7 +2637,7 @@ function spawnWaitDestructCoroutine()
 		custom.material = 3
 		notetaker.setCustomObject(custom)
 	end
-	wait(1)
+	wait(5)
 	cancelDestroy = true
 	self.destruct()
 
@@ -3510,7 +3513,7 @@ function spawnScreenCoroutine()
 	params.scale = {3.79999614, 3.79999614, 3.79999614}
 	params.position = {-100, 100, -100}
 	local screen = spawnObject(params)
-	wait(1)
+	wait(5)
 	privateScreenGUID = screen.getGUID()
 	refreshNotes(self)
 	if playerNoteTaker and not (playerNoteTaker == '') then
@@ -3543,7 +3546,7 @@ function spawnFogCoroutine()
 			params.type = 'FogOfWarTrigger'
 			fog = spawnObject(params)
 		end
-		wait(2) -- one frame causes issues
+		wait(5)
 		fog.setPosition(screen.getPosition())
 		fog.setRotation(screen.getRotation())
 		fog.setScale({26.2, 3.5, 15.8})
@@ -4605,7 +4608,7 @@ function destroyObjectByGUID(guidIn)
 end
 
 function rgbToHex(c)
-	return string.format('%02x%02x%02x', c["r"] * 255 , c["g"] * 255, c["b"] * 255)
+	return string.format('%02x%02x%02x', c['r'] * 255 , c['g'] * 255, c['b'] * 255)
 end
 
 function stringColorToHex(color)
