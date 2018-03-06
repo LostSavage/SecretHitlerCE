@@ -4,7 +4,8 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 70
+update_version = 71
+add_on_version = 2
 
 --Buttons
 settings_pannel_guid = '39d283'
@@ -31,7 +32,6 @@ extra_role_cards = {'675a6f', '16e480', '0a5960', '02b664', '328440', '05df40', 
 fake_role_card_guid = 'cf946e'
 
 --Scripting Zones
-deal_zone_guid = '0b8c68'
 trash_zone_guid = '39f2b0'
 drawZone_guid = '6463d3'
 discardZone_guid = 'b9bd6e'
@@ -46,11 +46,6 @@ bullet_sound_bag_guid = '2a3f62' -- @{100, 100, 104}
 fake_party_bag_guid = '473632' -- @{100, 100, 106}
 -- @{100, 100, 108+} hidden zones
 -- @{-100, 100, -100} is used to delete/spawn objects
-
--- Markers
-liberal_bag_guid = 'fa725a'
-fascist_bag_guid = 'f30cb0'
-hilter_bag_guid = 'cc86f8'
 
 -- Global Variables (non-static)
 
@@ -88,7 +83,6 @@ options = {
 	dealPartyCards = false,
 	dealRoleCards = false,
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
-	markers = false,
 	noteType = 0, -- [0 dark wook, 1 light wood, 2 red wood, 3 black plastic, 4 custom image, 5 private, 6 cooperative]
 	placardSnap = true,
 	scriptedVoting = true,
@@ -98,6 +92,11 @@ players = {}
 playerRoleCardGuids = {}
 roles = {}
 started = nil
+text = {
+	hitler = 'Hitler',
+	liberal = 'liberal',
+	fascist = 'fascist'
+}
 voteNotes = ''
 
 -- Called when a game finishes loading
@@ -125,6 +124,7 @@ function onLoad(saveString)
 		playerRoleCardGuids = save['prcg']
 		roles = save['r']
 		started = save['s']
+		text = save['t']
 		voteNotes = save['vn']
 	end
 	alwaysInit()
@@ -172,6 +172,7 @@ function onSave()
 	save['prcg'] = playerRoleCardGuids
 	save['r'] = roles
 	save['s'] = started
+	save['t'] = text
 	save['vn'] = voteNotes
 	local saveString = JSON.encode(save)
 
@@ -194,9 +195,13 @@ function alwaysInit()
 	-- Initialize the pseudo random number generator
 	math.randomseed(os.time())
 
-	local tmpObj = getObjectFromGUID(table_guid)
+	local tmpObj = getObjectFromGUID(tcid_table_guid) -- The Captian is Dead
 	if tmpObj then
 		tableHeightAdd = 0.44
+	end
+	tmpObj = getObjectFromGUID(round_table_guid)
+	if tmpObj then
+		tableHeightAdd = 0.83
 	end
 
 	local drawPileBoard = getObjectFromGUID(draw_pile_board_guid)
@@ -281,10 +286,6 @@ function init()
 	if tmpObj == nil then customOnly = true end
 	tmpObj = getObjectFromGUID(policy_notusedlib_card_guid)
 	if tmpObj == nil then customOnly = true end
-
-	tmpObj = getObjectFromGUID(deal_zone_guid)
-	if tmpObj == nil then error('Deal zone') end
-
 	tmpObj = getObjectFromGUID(trash_zone_guid)
 	if tmpObj == nil then error('Trash zone') end
 
@@ -422,34 +423,29 @@ function settingsPannelMakeButtons()
 		buttonParam.position = {startX, 0.2, startZ + offsetZ}
 		settingsPannel.createButton(buttonParam)
 
-		if options.markers then buttonParam.label = label_check else buttonParam.label = '' end
-		buttonParam.click_function = 'markersFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 2}
-		settingsPannel.createButton(buttonParam)
-
 		if options.placardSnap then buttonParam.label = label_check else buttonParam.label = '' end
 		buttonParam.click_function = 'placardSnapFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 3}
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 2}
 		settingsPannel.createButton(buttonParam)
 
 		if options.scriptedVoting then buttonParam.label = label_check else buttonParam.label = '' end
 		buttonParam.click_function = 'scriptedVotingFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 4}
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 3}
 		settingsPannel.createButton(buttonParam)
 
 		if options.autoPlacards then buttonParam.label = label_check else buttonParam.label = '' end
 		buttonParam.click_function = 'autoPlacardsFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 4}
 		settingsPannel.createButton(buttonParam)
 
 		if options.autoNotate then buttonParam.label = label_check else buttonParam.label = '' end
 		buttonParam.click_function = 'autoNotateFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 6}
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
 		settingsPannel.createButton(buttonParam)
 
 		if options.bulletSound then buttonParam.label = label_check else buttonParam.label = '' end
 		buttonParam.click_function = 'bulletSoundFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 7}
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 6}
 		settingsPannel.createButton(buttonParam)
 
 		buttonParam = {click_function = 'setupStart', label = 'Start', function_owner = self, position = {0, 0.2, 23}, rotation = {0, 0, 0}, width = 3300, height = 1500, font_size = 750}
@@ -574,13 +570,6 @@ end
 function partyCardFlip(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.dealPartyCards = not options.dealPartyCards
-		settingsPannelMakeButtons()
-	end
-end
-
-function markersFlip(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.markers = not options.markers
 		settingsPannelMakeButtons()
 	end
 end
@@ -1731,7 +1720,6 @@ function setupCoroutine()
 	destroyObjectByGUID(settings_pannel_guid)
 
 	local numFascists = 0
-	local knows = 'doesn\'t know'
 
 	--figure out number of fascists
 	if #players > 8 then
@@ -1740,7 +1728,6 @@ function setupCoroutine()
 		numFascists = 2
 	else
 		numFascists = 1
-		knows = 'knows'
 	end
 
 	printToAll( #players .. ' player game starting!',{1,1,1})
@@ -1753,7 +1740,11 @@ function setupCoroutine()
 	if not options.dealPartyCards then
 		mainNotes = mainNotes .. '[FFFF00]No party membership cards will be dealt.[-]\n\n'
 	end
-	mainNotes = mainNotes .. 'There are [0000FF][b]' .. #players-numFascists-1 .. ' LIBERALS[/b][-]\nagainst [FF0000][b]'.. numFascists .. ' FASCIST[/b][-] and [FF0000][b]HITLER[/b][-].\nHITLER [b]' .. knows .. '[/b] who the FASCISTS are.\n\n'
+	if numFascists == 1 then
+		mainNotes = mainNotes .. 'There are [0000FF][b]' .. #players-numFascists-1 .. ' ' .. string.upper(text.liberal) .. 'S[/b][-]\nagainst [FF0000][b]'.. numFascists .. ' ' .. string.upper(text.fascist) .. '[/b][-] and [FF0000][b]' .. string.upper(text.hitler) .. '[/b][-].\n' .. string.upper(text.hitler) .. ' [b]knows[/b] who the ' .. string.upper(text.fascist) .. 'S are.\n\n'
+	else
+		mainNotes = mainNotes .. 'There are [0000FF][b]' .. #players-numFascists-1 .. ' ' .. string.upper(text.liberal) .. 'S[/b][-]\nagainst [FF0000][b]'.. numFascists .. ' ' .. string.upper(text.fascist) .. 'S[/b][-] and [FF0000][b]' .. string.upper(text.hitler) .. '[/b][-].\n' .. string.upper(text.hitler) .. ' [b]doesn\'t know[/b] who the ' .. string.upper(text.fascist) .. 'S are.\n\n'
+	end
 	setNotes(mainNotes)
 
 	local fascistDecks = {}
@@ -1992,8 +1983,14 @@ function setupCoroutine()
 	printToAll('--------------------------------------',{1,1,1})
 
 	-- Move and tell first pres
-	giveObjectToPlayer(president, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 3}, no_rotation)
-	giveObjectToPlayer(chancelor, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 5.5}, no_rotation)
+	tmpObj = getObjectFromGUID(round_table_guid)
+	if tmpObj then
+		giveObjectToPlayer(president, players[randomPlayer], {forward = 9, right = 0, up = 0, forceHeight = 3}, no_rotation)
+		giveObjectToPlayer(chancelor, players[randomPlayer], {forward = 9, right = 0, up = 0, forceHeight = 5.5}, no_rotation)
+	else
+		giveObjectToPlayer(president, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 3}, no_rotation)
+		giveObjectToPlayer(chancelor, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 5.5}, no_rotation)
+	end
 	local hcol = stringColorToRGB(players[randomPlayer])
 	printToAll(players[randomPlayer] .. ' is first president!',{hcol['r'], hcol['g'], hcol['b']})
 	printToAll('--------------------------------------',{1,1,1})
@@ -2002,10 +1999,8 @@ function setupCoroutine()
 	local tmpZone = getObjectFromGUID(trash_zone_guid)
 	local inZone = tmpZone.getObjects()
 	for _, j in ipairs(inZone) do
-		if j.getGUID() ~= table_guid then destroyObject(j) end
+		if j.getGUID() ~= tcid_table_guid and j.getGUID() ~= round_table_guid then destroyObject(j) end
 	end
-	destroyObject(tmpZone)
-	tmpZone = getObjectFromGUID(deal_zone_guid)
 	destroyObject(tmpZone)
 
 	-- Delete extra role cards
@@ -2065,10 +2060,6 @@ function setupCoroutine()
 		end
 	end
 
-	if not options.markers then
-		removeMarkers()
-	end
-
 	--Set the started variable to true
 	started = true
 
@@ -2084,32 +2075,32 @@ function tellRole(player)
 	if player == 'Black' then
 		for _, l in pairs(fascists) do
 			pRBG = stringColorToRGB(l)
-			broadcastToColor(l .. ' is a fascist!', player, pRBG)
+			broadcastToColor(l .. ' is a ' .. text.fascist .. '!', player, pRBG)
 		end
 		pRBG = stringColorToRGB(hitler)
-		broadcastToColor(hitler .. ' is Hitler!', player, pRBG)
+		broadcastToColor(hitler .. ' is ' .. text.hitler .. '!', player, pRBG)
 	else
 		local role = roles[player]
 		if role == 'fascist' then
 			for _, l in pairs(fascists) do
 				if not (l == player) then
 					pRBG = stringColorToRGB(l)
-					broadcastToColor(l .. ' is a fascist, too!', player, pRBG)
+					broadcastToColor(l .. ' is a ' .. text.fascist .. ', too!', player, pRBG)
 				end
 			end
 			pRBG = stringColorToRGB(hitler)
-			broadcastToColor(hitler .. ' is Hitler!', player, pRBG)
-			broadcastToColor('You are a fascist!', player, {1, 0, 0})
+			broadcastToColor(hitler .. ' is ' .. text.hitler .. '!', player, pRBG)
+			broadcastToColor('You are a ' .. text.fascist .. '!', player, {1, 0, 0})
 		elseif role == 'hitler' then
 			if (#players < 7) then
 				for _, l in pairs(fascists) do
 					pRBG = stringColorToRGB(l)
-					broadcastToColor(l .. ' is a fascist!', player, pRBG)
+					broadcastToColor(l .. ' is a ' .. text.fascist .. '!', player, pRBG)
 				end
 			end
-			broadcastToColor('You are hitler!', player, {1, 0, 0})
+			broadcastToColor('You are ' .. text.hitler .. '!', player, {1, 0, 0})
 		elseif role == 'liberal' then
-			broadcastToColor('You are Liberal!', player, {0.1, 0.3, 1})
+			broadcastToColor('You are a ' .. text.liberal .. '!', player, {0.1, 0.3, 1})
 		else
 			broadcastToColor(player .. ' is not Playing!', player, {1, 1, 1})
 		end
@@ -2149,21 +2140,6 @@ function disableSecurityCoroutine()
 	return true
 end
 
-function removeMarkers()
-	destroyObjectByGUID(liberal_bag_guid)
-	destroyObjectByGUID(fascist_bag_guid)
-	destroyObjectByGUID(hilter_bag_guid)
-	local allObjs = getAllObjects()
-	local object
-	for _, object in ipairs(allObjs) do
-		if object.getDescription() == 'Put in front of a player you think is a liberal (optional)' or
-			object.getDescription() == 'Put in front of a player you think is a fascist (optional)' or
-			object.getDescription() == 'Put in front of a player you think is Hitler (optional)' then
-			destroyObject(object)
-		end
-	end
-end
-
 function createInspectButtons(pres)
 	local fake_party_bag = getObjectFromGUID(fake_party_bag_guid)
 	local card
@@ -2171,7 +2147,7 @@ function createInspectButtons(pres)
 	if fake_party_bag then
 		broadcastToColor('Click on the party membership card of the person you want to inspect.', pres, {1, 1, 1})
 		for i, playerColor in ipairs(players) do
-			if playerColor ~= pres and not inTable(inspected, playerColor) then
+			if playerColor ~= pres and not inTable(inspected, playerColor) and not deadPlayer[playerColor] then
 				local params = {}
 				params.position = {0, 30 + (i * 0.25), 0}
 				params.rotation = {0, 0, 180}
@@ -2430,7 +2406,7 @@ left_unicode = '\u{25C4}'
 noteTakerNotes = {}
 noteTakerCurrLine = 0
 
-rightOffset = {White = 5.6299992, Brown = 0, Red = -5.6299992, Orange = 2.5, Yellow = -2.5, Green = 5.6299992, Teal = 0, Blue = -5.6299992, Purple = 2.5, Pink = -2.5}
+rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 2.5, Yellow = -2.5, Green = 0, Teal = 0, Blue = 0, Purple = 2.5, Pink = -2.5}
 colorOffset = {White = 0, Brown = 0, Red = 0, Orange = 0, Yellow = 0, Green = 5, Teal = 5, Blue = 5, Purple = 5, Pink = 5}
 cancelDestroy = false
 functionName = nil
@@ -2449,12 +2425,12 @@ giveForward = -19
 buttonScale = 1
 fontScale = 1
 maxLines = 25
-prevForward = 15
+prevForward = 11
 textColorReplace = 'FFFFFF]'
 
 -- tracker (default)
-electionTrackerOrgPos = {x = -4.14867, y = 2.51325083, z = -9.337429}
-electionTrackerMoveX = 2.6
+electionTrackerOrgPos = {x = -3.970005, y = 1.27525151, z = -9.385001}
+electionTrackerMoveX = 2.7
 
 function noteTakerOnLoad(saveString)
 	self.setDescription('Note Taker by Lost Savage\nBased on the work of:\nsmiling Aktheon,\nSwiftPanda,\nThe Blind Dragon\nand Max\n')
@@ -2489,26 +2465,6 @@ function noteTakerOnLoad(saveString)
 		if oldNoteTaker then
 			noteTakerNotes = oldNoteTaker.getTable('noteTakerNotes')
 			noteTakerCurrLine = oldNoteTaker.getVar('noteTakerCurrLine')
-		end
-	end
-
-	if Global.getVar('mod_name') == 'Secret Hitler: CE' then
-		if sharedHistory then
-			Global.call('defaultsSecretHitlerCE', {self})
-		else
-			defaultsSecretHitlerCE(self)
-		end
-	elseif Global.getVar('key') then -- Secret Hitler: Super Scripted Round Table
-		if sharedHistory then
-			Global.call('defaultsSecretHitlerSSRT')
-		else
-			defaultsSecretHitlerSSRT()
-		end
-	elseif Global.getVar('president_guid') == 'bb4b47' then -- Secret Hitler Cheat/Troll Proof
-		if sharedHistory then
-			Global.call('defaultsSecretHitlerCTP', {self})
-		else
-			defaultsSecretHitlerCTP(self)
 		end
 	end
 
@@ -2620,6 +2576,41 @@ function initNoteTakerValues(boardName)
 		buttonScale = 1.5
 		fontScale = 1.5
 	end
+
+	local options = Global.getTable('options')
+	if options.scriptedVoting and boardName.name ~= 'backgammon_board' then
+		maxLines = 19
+	end
+
+	local tmpObj = getObjectFromGUID(tcid_table_guid) -- The Captian is Dead
+	if tmpObj then
+		electionTrackerOrgPos = {x = -3.95, y = 1.72, z = -9.35}
+		rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 0, Yellow = 0, Green = 0, Teal = 0, Blue = 0, Purple = 0, Pink = 0}
+		tableHeightAdd = 0.44
+		prev_president_pos = {x = -8.0, y = 1.50, z = 14.0}
+		prev_chancelor_pos = {x = 8.0, y = 1.49, z = 14.0}
+	end
+
+	tmpObj = getObjectFromGUID(round_table_guid)
+	if tmpObj then
+		electionTrackerOrgPos = {x = -3.97, y = 2.10, z = -9.39}
+		rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 0, Yellow = 0, Green = 0, Teal = 0, Blue = 0, Purple = 0, Pink = 0}
+		colorOffset = {White = 9, Brown = 0, Red = 1, Orange = 2, Yellow = 3, Green = 4, Teal = 5, Blue = 6, Purple = 7, Pink = 8}
+		tableHeightAdd = 0.83
+		prev_president_pos = {x = -8.0, y = 1.89, z = 14.0}
+		prev_chancelor_pos = {x = 8.0, y = 1.89, z = 14.0}
+		if boardName == 'backgammon_board' then
+			giveForward = -29.5
+		else
+			giveForward = -22.5
+		end
+		prevForward = 9
+
+		--Overides
+		setupBoardGetFunction = function(playerIn)
+			return 'initHorizontal'
+		end
+	end
 end
 
 function spawnWaitDestructCoroutine()
@@ -2692,7 +2683,7 @@ function menu(selfIn)
 		else
 			if selfIn.getVar('playerNoteTaker') ~= '' then
 				forceMenu = true
-				startLuaCoroutine(selfIn, 'spawnScreenCoroutine')
+				spawnScreen(selfIn)
 				return
 			end
 		end
@@ -2791,8 +2782,7 @@ function menu(selfIn)
 	buttonParam.position = {positionXscale * 0, positionY, (-4.5 * positionZscale) + positionZoffset1}
 	selfIn.createButton(buttonParam)
 
-	local zOffset = menuBase(selfIn)
-	menuExtended(zOffset)
+	menuBase(selfIn)
 
 	if fakePlayerNoteTaker then
 		selfIn.setVar('playerNoteTaker', '')
@@ -2901,11 +2891,20 @@ function menuBase(selfIn)
 		zOffset = 1.5
 	end
 
-	return zOffset
-end
+	buttonParam.click_function = 'shuffleDrawDeckButton'
+	buttonParam.label = 'Shuffle'
+	buttonParam.position = {positionXscale * 4, positionY, (1.25 + zOffset) * positionZscale + positionZoffset2}
+	selfIn.createButton(buttonParam)
 
-function menuExtended(zOffset)
-	return
+	buttonParam.click_function = 'disableSecurityButton'
+	buttonParam.label = 'Disable security'
+	buttonParam.position = {positionXscale * 4, positionY, (2.75 + zOffset) * positionZscale + positionZoffset2}
+	selfIn.createButton(buttonParam)
+
+	buttonParam.click_function = 'giveRoleCardsButton'
+	buttonParam.label = 'Give role cards'
+	buttonParam.position = {positionXscale * 4, positionY, (4.25 + zOffset) * positionZscale + positionZoffset2}
+	selfIn.createButton(buttonParam)
 end
 
 function setupPlayer(clickedObject, playerIn)
@@ -2934,7 +2933,7 @@ function setupBoard(selfIn)
 			refreshNotes(selfIn)
 			startLuaCoroutine(selfIn, 'spawnFogCoroutine')
 		else
-			startLuaCoroutine(selfIn, 'spawnScreenCoroutine')
+			spawnScreen(selfIn)
 			return
 		end
 	end
@@ -3064,6 +3063,26 @@ function flipMoveTracker(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		moveTracker = not moveTracker
 		menu(clickedObject)
+	end
+end
+
+function shuffleDrawDeckButton(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+		if not Global.call('shuffleDrawDeck') then
+			broadcastToColor('ERROR: Failed to shuffle draw deck.', playerColor, {1,0,0})
+		end
+	end
+end
+
+function disableSecurityButton(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+		Global.call('disableSecurity')
+	end
+end
+
+function giveRoleCardsButton(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+		Global.call('giveRoleCards')
 	end
 end
 
@@ -3531,14 +3550,18 @@ function initCommon(selfIn)
 	end
 end
 
-function spawnScreenCoroutine()
+function spawnScreen(selfIn)
 	local params = {}
 	params.type = 'Notecard'
 	params.scale = {3.79999614, 3.79999614, 3.79999614}
 	params.position = {-100, 100, -100}
-	local screen = spawnObject(params)
-	wait(5)
-	privateScreenGUID = screen.getGUID()
+	params.callback = 'spawnScreenCallback'
+	params.callback_owner = selfIn
+	spawnObject(params)
+end
+
+function spawnScreenCallback(objIn, paramsIn)
+	privateScreenGUID = objIn.getGUID()
 	refreshNotes(self)
 	if playerNoteTaker and not (playerNoteTaker == '') then
 		if forceMenu then
@@ -3550,8 +3573,6 @@ function spawnScreenCoroutine()
 	else
 		menu(self)
 	end
-
-	return true
 end
 
 function spawnFogCoroutine()
@@ -4362,176 +4383,9 @@ function versionInfo(clickedObject, playerColor)
 	printToColor(out, playerColor, {1, 1, 1})
 end
 
--- Begin Secret Hitler: CE
-function defaultsSecretHitlerCE(selfIn)
-	if type(selfIn) == 'table' then
-		selfIn = selfIn[1]
-	end
-
-	local options = Global.getTable('options')
-	if options.scriptedVoting and selfIn.name ~= 'backgammon_board' then
-		maxLines = 19
-	end
-
-	electionTrackerOrgPos = {x = -3.970005, y = 1.27525151, z = -9.385001}
-	electionTrackerMoveX = 2.7
-	rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 2.5, Yellow = -2.5, Green = 0, Teal = 0, Blue = 0, Purple = 2.5, Pink = -2.5}
-	prevForward = 11
-
-	-- The Captian is Dead
-	local tmpObj = getObjectFromGUID(table_guid)
-	if tmpObj then
-		rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 0, Yellow = 0, Green = 0, Teal = 0, Blue = 0, Purple = 0, Pink = 0}
-		tableHeightAdd = 0.44
-	end
-
-	--Overides
-	menuExtended = function(zOffset)
-		local buttonParam = {rotation = {0, 0, rotationZ}, width = 2700 * buttonScale, height = 700 * buttonScale, font_size = 300 * fontScale}
-		if sharedHistory then
-			buttonParam.function_owner = Global
-		else
-			buttonParam.function_owner = self
-		end
-
-		buttonParam.click_function = 'shuffleDrawDeckButton'
-		buttonParam.label = 'Shuffle'
-		buttonParam.position = {positionXscale * 4, positionY, (1.25 + zOffset) * positionZscale + positionZoffset2}
-		selfIn.createButton(buttonParam)
-
-		buttonParam.click_function = 'disableSecurityButton'
-		buttonParam.label = 'Disable security'
-		buttonParam.position = {positionXscale * 4, positionY, (2.75 + zOffset) * positionZscale + positionZoffset2}
-		selfIn.createButton(buttonParam)
-
-		buttonParam.click_function = 'removeMarkersButton'
-		buttonParam.label = 'Remove markers'
-		buttonParam.position = {positionXscale * 4, positionY, (4.25 + zOffset) * positionZscale + positionZoffset2}
-		selfIn.createButton(buttonParam)
-
-		buttonParam.click_function = 'giveRoleCardsButton'
-		buttonParam.label = 'Give role cards'
-		buttonParam.position = {positionXscale * 4, positionY, (5.75 + zOffset) * positionZscale + positionZoffset2}
-		selfIn.createButton(buttonParam)
-	end
-end
-
-function shuffleDrawDeckButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		if not Global.call('shuffleDrawDeck') then
-			broadcastToColor('ERROR: Failed to shuffle draw deck.', playerColor, {1,0,0})
-		end
-	end
-end
-
-function disableSecurityButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		Global.call('disableSecurity')
-	end
-end
-
-function removeMarkersButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		Global.call('removeMarkers')
-	end
-end
-
-function giveRoleCardsButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		Global.call('giveRoleCards')
-	end
-end
--- end Secret Hitler: CE
-
--- Begin Secret Hitler: Super Scripted Round Table
-function defaultsSecretHitlerSSRT()
-	tableHeightAdd = 0.5
-	giveForward = giveForward - 3.5
-	electionTrackerOrgPos = {x = -4.13262, y = 3.34380722, z = -11.3563175}
-	rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 0, Yellow = 0, Green = 0, Teal = 0, Blue = 0, Purple = 0, Pink = 0}
-	colorOffset = {White = 9, Brown = 0, Red = 1, Orange = 2, Yellow = 3, Green = 4, Teal = 5, Blue = 6, Purple = 7, Pink = 8}
-	maxLines = 17
-
-	--Overides
-	setupBoardGetFunction = function(playerIn)
-		return 'initHorizontal'
-	end
-
-	setNotes = function(notes)
-		if notes == '' then notes = nil end
-		Global.setVar('notes_string', notes)
-		Global.call('printNotes')
-	end
-end
--- end Secret Hitler: Super Scripted Round Table
-
--- Begin Secret Hitler Cheat/Troll Proof
-function defaultsSecretHitlerCTP(selfIn)
-	if type(selfIn) == 'table' then
-		selfIn = selfIn[1]
-	end
-
-	president_guid = 'bb4b47'
-
-	menuExtended = function(zOffset)
-		local buttonParam = {rotation = {0, 0, rotationZ}, width = 2700 * buttonScale, height = 700 * buttonScale, font_size = 300 * fontScale}
-
-		if sharedHistory then
-			buttonParam.function_owner = Global
-		else
-			buttonParam.function_owner = self
-		end
-
-		buttonParam.click_function = 'resetDeckCTP'
-		buttonParam.label = 'Reset Deck'
-		buttonParam.position = {positionXscale * 4, positionY, (1.25 + zOffset) * positionZscale + positionZoffset2}
-		selfIn.createButton(buttonParam)
-
-		buttonParam.click_function = 'topdeckCTP'
-		buttonParam.label = 'Topdeck Card'
-		buttonParam.position = {positionXscale * 4, positionY, (2.75 + zOffset) * positionZscale + positionZoffset2}
-		selfIn.createButton(buttonParam)
-
-		buttonParam.click_function = 'showRoleCardsCTP'
-		buttonParam.label = 'Show Role Cards'
-		buttonParam.position = {positionXscale * 4, positionY, (4.25 + zOffset) * positionZscale + positionZoffset2}
-		selfIn.createButton(buttonParam)
-
-		buttonParam.click_function = 'deckSecurityCTP'
-		buttonParam.label = 'Deck Security'
-		buttonParam.position = {positionXscale * 4, positionY, (5.75 + zOffset) * positionZscale + positionZoffset2}
-		selfIn.createButton(buttonParam)
-	end
-end
-
-function resetDeckCTP(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		startLuaCoroutine(Global, 'ResetDeck')
-	end
-end
-
-function topdeckCTP(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		startLuaCoroutine(Global, 'topdeckCard')
-		startLuaCoroutine(Global, 'trackerSleep')
-	end
-end
-
-function showRoleCardsCTP(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		startLuaCoroutine(Global, 'spawnRoleCards')
-	end
-end
-
-function deckSecurityCTP(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		Global.call('flipDeckSecurity')
-	end
-end
--- end Secret Hitler Cheat/Troll Proof
-
 -- Common Globals and Functions
-table_guid = 'be127b' -- The Captian is Dead
+tcid_table_guid = 'be127b' -- The Captian is Dead
+round_table_guid = '5cd706'
 all_players = {'White', 'Brown', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue', 'Purple', 'Pink'}
 hidden_zone_guids = {White = 'f13d0b', Brown = '90049b', Red = '134297', Orange = '344002', Yellow = '9b5558', Green = '7a8301', Teal = '568a75', Blue = 'dbd95e', Purple = 'cc1b94', Pink = 'd954ee'}
 president_guid = '4d3d8f'
