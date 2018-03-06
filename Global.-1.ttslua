@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 61
+update_version = 62
 
 --Buttons
 settings_pannel_guid = '39d283'
@@ -80,6 +80,8 @@ lastLiberalPlayed = 0
 lastPres = nil
 mainNotes = ''
 neinCardGuids = {}
+noteTakerNotes = {}
+noteTakerCurrLine = 0
 options = {
 	dealPartyCards = false,
 	dealRoleCards = false,
@@ -112,6 +114,8 @@ function onLoad(saveString)
 		lastPres = save['lp']
 		mainNotes = save['mn']
 		neinCardGuids = save['nein']
+		noteTakerNotes = save['ntn']
+		noteTakerCurrLine = save['ntcl']
 		options = save['o']
 		players = save['p']
 		playerRoleCardGuids = save['prcg']
@@ -150,6 +154,8 @@ function onSave()
 	save['lp'] = lastPres
 	save['mn'] = mainNotes
 	save['nein'] = neinCardGuids
+	save['ntn'] = noteTakerNotes
+	save['ntcl'] = noteTakerCurrLine
 	save['o'] = options
 	save['p'] = players
 	save['prcg'] = playerRoleCardGuids
@@ -937,7 +943,7 @@ function policyCardCoroutine()
 			broadcastToAll('Starting reshuffle...', {1,1,1})
 			local discardDeck = getObjectFromGUID(discardDeckList[1])
 			discardDeck.setPositionSmooth({pos['x'], 3, pos['z']}, false, true)
-			sleep(1.5)
+			sleep(2)
 			local expectedCards = #drawList + #discardList
 			local drawDeck = getDeckFromZoneByGUID(drawZone_guid)
 			if drawDeck and #drawDeck.getObjects() == expectedCards then
@@ -1247,7 +1253,7 @@ function drawCards(amount, playerColor)
 	end
 end
 
-function getPres(player)
+function getPres()
 	local tempObj = getObjectFromGUID(president_guid)
 	return closestPlayer(tempObj, players, 1000)
 end
@@ -2074,15 +2080,12 @@ end
 --Note Taker
 --------------------------------------------------------------------------------
 
---conflict color1 action color2 claim3 claim2 claim1 result
-
 useColor = true
 cooperative = false
 lockNoteTaker = true
 colorMatch = false
 useNames = false
 playerNoteTaker = ''
-privateFullNotes = ''
 privateFogGUID = nil
 privateScreenGUID = nil
 swapLF = false
@@ -2092,16 +2095,25 @@ prevChanColor = nil
 nextPost = nil
 forceMenu = nil
 lastGUID = nil
+editMode = true -- true is right, false is left
 --CUT HERE
 model_list = {}
 image_list = {}
 no_button_list = {}
 
+menu_unicode = '\u{2630}'
+up_unicode = '\u{25B2}'
+right_unicode = '\u{25BA}'
+down_unicode = '\u{25BC}'
+left_unicode = '\u{25C4}'
+
+noteTakerNotes = {}
+noteTakerCurrLine = 0
+
 rightOffset = {White = 5.6299992, Brown = 0, Red = -5.6299992, Orange = 2.5, Yellow = -2.5, Green = 5.6299992, Teal = 0, Blue = -5.6299992, Purple = 2.5, Pink = -2.5}
 colorOffset = {White = 0, Brown = 0, Red = 0, Orange = 0, Yellow = 0, Green = 5, Teal = 5, Blue = 5, Purple = 5, Pink = 5}
 cancelDestroy = false
 functionName = nil
-JSONHistory = nil
 sharedHistory = false
 tableHeightAdd = 0
 
@@ -2132,8 +2144,9 @@ function noteTakerOnLoad(saveString)
 		lockNoteTaker = save['l']
 		colorMatch = save['m']
 		useNames = save['n']
+		noteTakerNotes = save['ntn']
+		noteTakerCurrLine = save['ntcl']
 		playerNoteTaker = save['p']
-		privateFullNotes = save['pfn']
 		privateFogGUID = save['pfg']
 		privateScreenGUID = save['psg']
 		swapLF = save['s']
@@ -2142,24 +2155,19 @@ function noteTakerOnLoad(saveString)
 
 	if Global.getVar('mod_name') == 'Secret Hitler: CE' and self.name ~= 'backgammon_board' then
 		sharedHistory = true
-		if not Global.getVar('noteTakerMaxHistory') then
-			Global.call('initNoteTakerValues', {self.name})
+		Global.call('initNoteTakerValues', {self.name})
+		if Global.getVar('noteTakerCurrLine') == 0 then
+			Global.call('addNewLine')
 		end
 	else
 		initNoteTakerValues(self.name)
+		if noteTakerCurrLine == 0 then
+			addNewLine()
+		end
 		local oldNoteTaker = getObjectFromGUID(lastGUID)
 		if oldNoteTaker then
-			JSONHistory = oldNoteTaker.getVar('JSONHistory')
-			if JSONHistory then
-				local save = JSON.decode(JSONHistory)
-				noteTakerC1 = save['c1']
-				noteTakerC2 = save['c2']
-				noteTakerC1History = save['c1h']
-				noteTakerC2History = save['c2h']
-				noteTakerHistory = save['h']
-				noteTakerCHistory = save['ch']
-				noteTakerMaxHistory = save['mh']
-			end
+			noteTakerNotes = oldNoteTaker.getTable('noteTakerNotes')
+			noteTakerCurrLine = oldNoteTaker.getVar('noteTakerCurrLine')
 		end
 	end
 
@@ -2208,8 +2216,9 @@ function notetakerOnSave()
 	save['l'] = lockNoteTaker
 	save['m'] = colorMatch
 	save['n'] = useNames
+	save['ntn'] = noteTakerNotes
+	save['ntcl'] = noteTakerCurrLine
 	save['p'] = playerNoteTaker
-	save['pfn'] = privateFullNotes
 	save['pfg'] = privateFogGUID
 	save['psg'] = privateScreenGUID
 	save['s'] = swapLF
@@ -2230,19 +2239,6 @@ end
 function initNoteTakerValues(boardName)
 	if type(boardName) == 'table' then
 		boardName = boardName[1]
-	end
-
-	noteTakerC1 = nil
-	noteTakerC2 = nil
-	noteTakerC1History = {}
-	noteTakerC2History = {}
-	noteTakerHistory = {}
-	noteTakerCHistory = 1
-	noteTakerMaxHistory = 1
-	if boardName == 'backgammon_board' then
-		noteTakerHistory[1] = privateFullNotes
-	else
-		noteTakerHistory[1] = noteTakerGetNotes()
 	end
 
 	if boardName == 'Chess_Board' then
@@ -2283,12 +2279,7 @@ function initNoteTakerValues(boardName)
 		fontScale = 0.9
 		maxLines = 10
 
-		noteTakerGetNotes = function()
-			return privateFullNotes
-		end
-
 		noteTakerSetNotes = function(stringIn)
-			privateFullNotes = stringIn
 			local out = string.gsub(stringIn, stringColorToHex('White'), '000000')
 			local screen = getObjectFromGUID(privateScreenGUID)
 			if screen then
@@ -2304,15 +2295,6 @@ function initNoteTakerValues(boardName)
 end
 
 function spawnWaitDestructCoroutine()
-	local save = {}
-	save['c1'] = noteTakerC1
-	save['c2'] = noteTakerC2
-	save['c1h'] = noteTakerC1History
-	save['c2h'] = noteTakerC2History
-	save['h'] = noteTakerHistory
-	save['ch'] = noteTakerCHistory
-	save['mh'] = noteTakerMaxHistory
-	JSONHistory = JSON.encode(save)
 	local params = {}
 	params.type = self.name
 	params.scale = self.getScale()
@@ -2621,7 +2603,6 @@ function setupBoard(selfIn)
 		if screen then
 			forceObjectToPlayer(screen, playerNT, {forward = giveForward + 12.5, right = rightOffset[playerNoteTaker], up = 0, forceHeight = 0.9}, {x = 0, y = 180 - rotationZ, z = 0})
 			screen.lock()
-			screen.setDescription(noteTakerGetNotes())
 			refreshNotes(selfIn)
 			startLuaCoroutine(selfIn, 'spawnFogCoroutine')
 		else
@@ -2941,7 +2922,7 @@ function initCommon(selfIn)
 
 	-- Settings
 	buttonParam.click_function = 'menuButton'
-	buttonParam.label = '\u{2630}'
+	buttonParam.label = menu_unicode
 	buttonParam.width = 600 * buttonScale
 	buttonParam.height = 500 * buttonScale
 	if selfIn.name == 'backgammon_board' then
@@ -2953,231 +2934,271 @@ function initCommon(selfIn)
 
 	-- Post/Retrieve
 	if selfIn.name == 'backgammon_board' and cooperative then
-		buttonParam.click_function = 'post'
+		buttonParam.click_function = 'postButton'
 		buttonParam.label = 'Post'
 		buttonParam.width = 1500 * buttonScale
 		buttonParam.position = {positionXscale * -6.25, positionY, (-16.3 * positionZscale) + positionZoffset2}
 		selfIn.createButton(buttonParam)
-		buttonParam.click_function = 'retrieve'
+
+		buttonParam.click_function = 'retrieveButton'
 		buttonParam.label = 'Retrieve'
 		buttonParam.position = {positionXscale * 5, positionY, (-16.3 * positionZscale) + positionZoffset2}
 		selfIn.createButton(buttonParam)
 	end
 
-	-- Top
-	buttonParam.click_function = 'auto'
+	-- Center
+	buttonParam.click_function = 'autoButton'
 	buttonParam.label = 'Auto Gov'
 	buttonParam.height = 700 * buttonScale
-	buttonParam.width = 1500 * buttonScale
-	buttonParam.position = {positionXscale * -6.5, positionY, (-0.25 * positionZscale) + positionZoffset2}
-	selfIn.createButton(buttonParam)
-
 	if Player[selfIn.getVar('playerNoteTaker')].admin or selfIn.name ~= 'backgammon_board' then
+		buttonParam.width = 1800 * buttonScale
+		buttonParam.position = {positionXscale * -2, positionY, (-5.25 * positionZscale) + positionZoffset1}
+		selfIn.createButton(buttonParam)
+
 		buttonParam.click_function = 'setPreviousPlacs'
 		buttonParam.label = 'Move Prev'
-		buttonParam.position = {positionXscale * 6.5, positionY, (-0.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 2, positionY, (-5.25 * positionZscale) + positionZoffset1}
+		selfIn.createButton(buttonParam)
+	else
+		buttonParam.width = 3700 * buttonScale
+		buttonParam.position = {positionXscale * 0, positionY, (-5.25 * positionZscale) + positionZoffset1}
 		selfIn.createButton(buttonParam)
 	end
 
-	buttonParam.click_function = 'Downvoted'
+	buttonParam.click_function = 'downvotedButton'
 	buttonParam.label = 'Downvoted'
-	buttonParam.width = 4600 * buttonScale
-	buttonParam.position = {positionXscale * 0, positionY, (-0.25 * positionZscale) + positionZoffset2}
+	buttonParam.width = 3700 * buttonScale
+	buttonParam.position = {positionXscale * 0, positionY, (-3.75 * positionZscale) + positionZoffset1}
 	selfIn.createButton(buttonParam)
 
 	-- Left
-	buttonParam.click_function = 'Examines'
+	buttonParam.click_function = 'examinesButton'
 	buttonParam.label = 'Examines'
 	buttonParam.width = 1500 * buttonScale
+	buttonParam.height = 700 * buttonScale
+	buttonParam.position = {positionXscale * -6.5, positionY, (-0.25 * positionZscale) + positionZoffset2}
+	selfIn.createButton(buttonParam)
+
+	buttonParam.click_function = 'conflictButton'
+	buttonParam.label = 'Conflict'
 	buttonParam.position = {positionXscale * -6.5, positionY, (1.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'Conflict'
-	buttonParam.label = 'Conflict'
+	buttonParam.click_function = 'reshuffleButton'
+	buttonParam.label = 'Reshuffle'
 	buttonParam.position = {positionXscale * -6.5, positionY, (2.75 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'Reshuffle'
-	buttonParam.label = 'Reshuffle'
+	buttonParam.click_function = 'hZoneButton'
+	buttonParam.label = 'H zone'
 	buttonParam.position = {positionXscale * -6.5, positionY, (4.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'HZone'
-	buttonParam.label = 'H zone'
+	buttonParam.click_function = 'topdeckButton'
+	buttonParam.label = 'Topdeck'
 	buttonParam.position = {positionXscale * -6.5, positionY, (5.75 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'Topdeck'
-	buttonParam.label = 'Topdeck'
+	buttonParam.click_function = 'revisedButton'
+	buttonParam.label = 'Revised'
 	buttonParam.position = {positionXscale * -6.5, positionY, (7.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	-- Right
-	buttonParam.click_function = 'Reset'
-	buttonParam.label = 'Clear'
+	buttonParam.click_function = 'deleteLineButton'
+	buttonParam.label = 'Delete Line'
+	buttonParam.position = {positionXscale * 6.5, positionY, (-0.25 * positionZscale) + positionZoffset2}
+	selfIn.createButton(buttonParam)
+
+	buttonParam.click_function = 'insertLineButton'
+	buttonParam.label = 'Insert Line'
 	buttonParam.position = {positionXscale * 6.5, positionY, (1.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'deleteLineButton'
-	buttonParam.label = 'Delete Line'
+	buttonParam.click_function = 'topButton'
+	buttonParam.label = 'Top'
 	buttonParam.position = {positionXscale * 6.5, positionY, (2.75 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'NewLineButton'
-	buttonParam.label = 'New Line'
+	buttonParam.click_function = 'bottomButton'
+	buttonParam.label = 'Bottom'
 	buttonParam.position = {positionXscale * 6.5, positionY, (4.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'Undo'
-	buttonParam.label = 'Undo'
-	buttonParam.position = {positionXscale * 6.5, positionY, (5.75 * positionZscale) + positionZoffset2}
+	buttonParam.click_function = 'upButton'
+	buttonParam.label = up_unicode
+	buttonParam.width = 700 * buttonScale
+	buttonParam.position = {positionXscale * 5.75, positionY, (5.75 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'Redo'
-	buttonParam.label = 'Redo'
-	buttonParam.position = {positionXscale * 6.5, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.click_function = 'rightButton'
+	buttonParam.label = right_unicode
+	buttonParam.position = {positionXscale * 7.25, positionY, (6.5 * positionZscale) + positionZoffset2}
+	selfIn.createButton(buttonParam)
+
+	buttonParam.click_function = 'downButton'
+	buttonParam.label = down_unicode
+	buttonParam.position = {positionXscale * 5.75, positionY, (7.25 * positionZscale) + positionZoffset2}
+	selfIn.createButton(buttonParam)
+
+	buttonParam.click_function = 'leftButton'
+	buttonParam.label = left_unicode
+	buttonParam.position = {positionXscale * 4.25, positionY, (6.5 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	-- Policy x3
 	buttonParam.click_function = 'QQQ'
 	buttonParam.label = '???'
-	buttonParam.position = {positionXscale * 3.8, positionY, (4.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * 3.8, positionY, (2.75 * positionZscale) + positionZoffset2}
 	buttonParam.width = 900 * buttonScale
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'FFF'
 	buttonParam.label = 'FFF'
 	if swapLF then
-		buttonParam.position = {positionXscale * -3.8, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -3.8, positionY, (2.75 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position = {positionXscale * 1.9, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 1.9, positionY, (2.75 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'FFL'
 	buttonParam.label = 'FFL'
 	if swapLF then
-		buttonParam.position = {positionXscale * -1.9, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -1.9, positionY, (2.75 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position = {positionXscale * 0.0, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 0.0, positionY, (2.75 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'FLL'
 	buttonParam.label = 'FLL'
 	if swapLF then
-		buttonParam.position = {positionXscale * 0.0, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 0.0, positionY, (2.75 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position = {positionXscale * -1.9, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -1.9, positionY, (2.75 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'LLL'
 	buttonParam.label = 'LLL'
 	if swapLF then
-		buttonParam.position = {positionXscale * 1.9, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 1.9, positionY, (2.75 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position = {positionXscale * -3.8, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -3.8, positionY, (2.75 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
 	-- Policy x2
 	buttonParam.click_function = 'QQ'
 	buttonParam.label = '??'
-	buttonParam.position = {positionXscale * 2.85, positionY, (5.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * 2.85, positionY, (4.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'FF'
 	buttonParam.label = 'FF'
 	if swapLF then
-		buttonParam.position = {positionXscale * -2.85, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -2.85, positionY, (4.25 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position = {positionXscale * 0.95, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 0.95, positionY, (4.25 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
 	-- same if swapLF
 	buttonParam.click_function = 'FL'
 	buttonParam.label = 'FL'
-	buttonParam.position = {positionXscale * -0.95, positionY, (5.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * -0.95, positionY, (4.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'LL'
 	buttonParam.label = 'LL'
 	if swapLF then
-		buttonParam.position = {positionXscale * 0.95, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 0.95, positionY, (4.25 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position = {positionXscale * -2.85, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -2.85, positionY, (4.25 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
 	-- Policy final
-	buttonParam.click_function = 'V'
+	buttonParam.click_function = 'vetoButton'
 	buttonParam.label = 'Veto'
-	buttonParam.position = {positionXscale * 2.6, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * 2.35, positionY, (5.75 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'F'
 	buttonParam.label = 'F'
 	if swapLF then
-		buttonParam.position = {positionXscale * -1.9, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -1.9, positionY, (5.75 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position =  {positionXscale * 0.0, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position =  {positionXscale * 0.0, positionY, (5.75 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'L'
 	buttonParam.label = 'L'
 	if swapLF then
-		buttonParam.position = {positionXscale * 0.0, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 0.0, positionY, (5.75 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position = {positionXscale * -1.9, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -1.9, positionY, (5.75 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
 	-- Power buttons
-
-	buttonParam.click_function = 'Investigate'
+	buttonParam.click_function = 'investigate'
 	buttonParam.label = 'Investigates'
-	buttonParam.position = {positionXscale * -2.9, positionY, (1.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * -2.9, positionY, (-0.25 * positionZscale) + positionZoffset2}
 	buttonParam.width = 1800 * buttonScale
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'GivesTo'
+	buttonParam.click_function = 'givesTo'
 	buttonParam.label = 'Gives to'
-	buttonParam.position = {positionXscale * 0.5, positionY, (1.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * 0.5, positionY, (-0.25 * positionZscale) + positionZoffset2}
 	buttonParam.width = 1400 * buttonScale
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'Shoots'
+	buttonParam.click_function = 'shoots'
 	buttonParam.label = 'Shoots'
-	buttonParam.position = {positionXscale * 3.4, positionY, (1.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * 3.4, positionY, (-0.25 * positionZscale) + positionZoffset2}
 	buttonParam.width = 1300 * buttonScale
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'Liberal'
+	buttonParam.click_function = 'liberal'
 	buttonParam.label = 'Liberal'
 	buttonParam.width = 1500 * buttonScale
 	if swapLF then
-		buttonParam.position = {positionXscale * 0.0, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 0.0, positionY, (1.25 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position = {positionXscale * -3.2, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -3.2, positionY, (1.25 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'Fascist'
+	buttonParam.click_function = 'fascist'
 	buttonParam.label = 'Fascist'
 	if swapLF then
-		buttonParam.position = {positionXscale * -3.2, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -3.2, positionY, (1.25 * positionZscale) + positionZoffset2}
 	else
-		buttonParam.position = {positionXscale * 0.0, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * 0.0, positionY, (1.25 * positionZscale) + positionZoffset2}
 	end
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'NoComment'
+	buttonParam.click_function = 'noComment'
 	buttonParam.label = 'Nothing'
-	buttonParam.position = {positionXscale * 3.20, positionY, (2.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * 3.20, positionY, (1.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
+
+	-- Bottom
+	if Player[selfIn.getVar('playerNoteTaker')].admin then
+		buttonParam.click_function = 'copyResult'
+		buttonParam.label = 'Copy Result'
+		buttonParam.width = 1800 * buttonScale
+		buttonParam.position = {positionXscale * -2.9, positionY, (7.25 * positionZscale) + positionZoffset2}
+		selfIn.createButton(buttonParam)
+
+		buttonParam.click_function = 'pasteResult'
+		buttonParam.label = 'Paste Result'
+		buttonParam.position = {positionXscale * 1, positionY, (7.25 * positionZscale) + positionZoffset2}
+		selfIn.createButton(buttonParam)
+	end
 end
 
 function spawnScreenCoroutine()
@@ -3188,7 +3209,6 @@ function spawnScreenCoroutine()
 	local screen = spawnObject(params)
 	wait(1)
 	privateScreenGUID = screen.getGUID()
-	screen.setDescription(noteTakerGetNotes())
 	refreshNotes(self)
 	if playerNoteTaker and not (playerNoteTaker == '') then
 		if forceMenu then
@@ -3230,16 +3250,23 @@ function spawnFogCoroutine()
 	return true
 end
 
-function post(clickedObject, playerColor)
+function postButton(clickedObject, playerColor)
 	if clickedObject.getVar('playerNoteTaker') == playerColor then
 		if nextPost == nil or nextPost < os.clock() then
 			nextPost = os.clock() + 30
+			Global.setTable('noteTakerNotes', noteTakerNotes)
+			Global.setVar('noteTakerCurrLine', noteTakerCurrLine)
 			local options = Global.getTable('options')
 			if Global.getVar('mod_name') == 'Secret Hitler: CE' and options.scriptedVoting then
-				Global.setVar('mainNotes', privateFullNotes)
-				setNotes(Global.getVar('voteNotes') .. privateFullNotes)
+				local notesString = noteTakerNotesString(19, false)
+				Global.setVar('mainNotes', notesString)
+				setNotes(Global.getVar('voteNotes') .. notesString)
+			elseif Global.getVar('key') then
+				local notesString = noteTakerNotesString(17, false)
+				setNotes(notesString)
 			else
-				setNotes(privateFullNotes)
+				local notesString = noteTakerNotesString(25, false)
+				setNotes(notesString)
  			end
 		else
 			broadcastToColor('You can only post once every 30 seconds.', playerNoteTaker, {1, 0, 0})
@@ -3247,80 +3274,56 @@ function post(clickedObject, playerColor)
 	end
 end
 
-function retrieve(clickedObject, playerColor)
+function retrieveButton(clickedObject, playerColor)
 	if clickedObject.getVar('playerNoteTaker') == playerColor then
-		local options = Global.getTable('options')
-		if Global.getVar('mod_name') == 'Secret Hitler: CE' and options.scriptedVoting then
-			noteTakerSetNotes(Global.getVar('mainNotes'))
-		else
-			noteTakerSetNotes(getNotes())
+		noteTakerNotes = Global.getTable('noteTakerNotes')
+		noteTakerCurrLine = Global.getVar('noteTakerCurrLine')
+		if not noteTakerCurrLine or noteTakerCurrLine == 0 then
+			noteTakerNotes = {}
+			noteTakerCurrLine = 0
+			addNewLine()
 		end
-		incHistory(clickedObject)
+		refreshNotes(clickedObject)
 	end
 end
 
-function incHistory(selfIn)
-	refreshNotes(selfIn)
-	noteTakerCHistory = noteTakerCHistory + 1
-	noteTakerMaxHistory = noteTakerCHistory
-	noteTakerC1History[noteTakerCHistory] = noteTakerC1
-	noteTakerC2History[noteTakerCHistory] = noteTakerC2
-	noteTakerHistory[noteTakerCHistory] = noteTakerGetNotes()
-	if string.sub(noteTakerHistory[noteTakerCHistory], -1) == '\n' or noteTakerHistory[noteTakerCHistory] == '' then
-		noteTakerC1 = nil
-		noteTakerC2 = nil
+function addNewLine()
+	noteTakerCurrLine = noteTakerCurrLine + 1
+	if noteTakerCurrLine > #noteTakerNotes then
+		table.insert(noteTakerNotes, defaultLine())
 	end
+	editMode = true
 end
 
 function refreshNotes(selfIn)
-	local tempNotes = noteTakerGetNotes()
-	local linesFound = 0
-	local newLinePos = string.find(tempNotes, '\n')
-	local oldLinePos = nil
+	local tempNotes = noteTakerNotesString(maxLines, true)
 
-	while newLinePos do
-		linesFound = linesFound + 1
-		oldLinePos = newLinePos
-		newLinePos = string.find(tempNotes, '\n', newLinePos + 1)
-	end
-
-	if oldLinePos ~= string.len(tempNotes) then
-		linesFound = linesFound + 1
-	end
-
-	if linesFound > maxLines then
-		newLinePos = 0
-		for i=1, linesFound - maxLines, 1 do
-			newLinePos = string.find(tempNotes, '\n', newLinePos + 1)
+	if selfIn.name == 'backgammon_board' then
+		tempNotes = string.gsub(tempNotes, stringColorToHex('White'), '000000')
+		local screen = getObjectFromGUID(privateScreenGUID)
+		if screen then -- save the long version by not using noteTakerSetNotes
+			screen.setDescription(tempNotes)
 		end
-		if selfIn.name == 'backgammon_board' then
-			tempNotes = string.gsub(tempNotes, stringColorToHex('White'), '000000')
-			local screen = getObjectFromGUID(privateScreenGUID)
-			if screen then -- save the long version by not using noteTakerSetNotes
-				screen.setDescription(string.sub(tempNotes, newLinePos + 1, string.len(tempNotes)))
-			end
-		else
-			noteTakerSetNotes(string.sub(tempNotes, newLinePos + 1, string.len(tempNotes)))
-		end
-	else -- noteTakerSetNotes does a BBCode color replace for white
+	else
 		noteTakerSetNotes(tempNotes)
 	end
 end
 
 function buttonColor(clickedObject, clickingPlayer, colorClicked)
-	local text
-
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == clickingPlayer then
-		local player = Player[colorClicked]
-		if player.steam_name and useNames then
-			text = player.steam_name
+		if noteTakerNotes[noteTakerCurrLine].color1 == '' or not editMode then
+			noteTakerNotes[noteTakerCurrLine].color1 = colorClicked
+			noteTakerNotes[noteTakerCurrLine].action = '>'
+			prevPresColor = colorClicked
 		else
-			text = colorClicked
+			noteTakerNotes[noteTakerCurrLine].color2 = colorClicked
+			prevChanColor = colorClicked
 		end
-		if useColor then
-			text = '[' .. stringColorToHex(colorClicked) .. ']' .. text .. '[-]'
+		if (noteTakerNotes[noteTakerCurrLine].action == 'shoots' or noteTakerNotes[noteTakerCurrLine].action == 'gives pres to')
+		 	and noteTakerNotes[noteTakerCurrLine].color1 ~= '' and noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
+			addNewLine()
 		end
-		addColorNote(clickedObject, text, colorClicked)
+		refreshNotes(clickedObject)
 	end
 end
 
@@ -3364,40 +3367,25 @@ function Pink(clickedObject, clickingPlayer)
 	buttonColor(clickedObject, clickingPlayer, 'Pink')
 end
 
-function addColorNote(selfIn, textIn, colorIn)
-	if not noteTakerC1 then
-		noteTakerC1 = '[i]' .. textIn .. '[/i] > '
-		noteTakerSetNotes(noteTakerGetNotes() .. noteTakerC1)
-		prevPresColor = colorIn
-	elseif not noteTakerC2 then
-		noteTakerC2 = '[i]' .. textIn .. '[/i]'
-		noteTakerSetNotes(noteTakerGetNotes() .. noteTakerC2)
-		prevChanColor = colorIn
-	else
-		deleteLine()
-		noteTakerC2 = '[i]' .. textIn .. '[/i]'
-		noteTakerSetNotes(noteTakerGetNotes() .. noteTakerC1 .. noteTakerC2)
-		prevChanColor = colorIn
-	end
-
-	if string.sub(noteTakerHistory[noteTakerCHistory], -8) == ' shoots ' or string.sub(noteTakerHistory[noteTakerCHistory], -15) == ' gives pres to ' then
-		NewLine()
-	end
-
-	incHistory(selfIn)
-end
-
 -- Top
-
-function auto(clickedObject, playerColor)
+function autoButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
 		local tempObj = getObjectFromGUID(president_guid)
 		local pres = closestPlayer(tempObj, all_players, 1000)
 		tempObj = getObjectFromGUID(chancelor_guid)
 		local chan = closestPlayer(tempObj, all_players, 1000)
 
-		if pres then _G[pres](clickedObject, playerColor) end
-		if chan then _G[chan](clickedObject, playerColor) end
+		if pres then
+			noteTakerNotes[noteTakerCurrLine].color1 = pres
+			noteTakerNotes[noteTakerCurrLine].action = '>'
+			prevPresColor = pres
+		end
+		if chan then
+			noteTakerNotes[noteTakerCurrLine].color2 = chan
+			noteTakerNotes[noteTakerCurrLine].action = '>'
+			prevChanColor = chan
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
@@ -3412,454 +3400,515 @@ function setPreviousPlacs(clickedObject, playerColor)
 	end
 end
 
-function Downvoted(clickedObject, playerColor)
-	local text
-
+function downvotedButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
 		if useColor then
-			text = ': [222222]Downvoted[-]'
+			noteTakerNotes[noteTakerCurrLine].result = '[222222]Downvoted[-]'
 		else
-			text = ': Downvoted'
+			noteTakerNotes[noteTakerCurrLine].result = 'Downvoted'
 		end
-		noteTakerSetNotes(noteTakerGetNotes() .. text)
-		NewLine()
-		incHistory(clickedObject)
+		noteTakerNotes[noteTakerCurrLine].action = '>'
+		noteTakerNotes[noteTakerCurrLine].claim3 = ''
+		noteTakerNotes[noteTakerCurrLine].claim2 = ''
+		noteTakerNotes[noteTakerCurrLine].claim1 = ''
+		addNewLine()
+		refreshNotes(clickedObject)
 		incTracker()
 	end
 end
 
 -- Left
-
-function Examines(clickedObject, playerColor)
+function examinesButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if string.sub(noteTakerHistory[noteTakerCHistory], -3) == ' > ' then
-		 	noteTakerSetNotes( string.sub(noteTakerGetNotes(), 0, -4) .. ' examines deck: ' )
-		 	incHistory(clickedObject)
+		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
+			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
-			broadcastToColor('Press a color first.', playerColor, {1, 0, 0})
+			noteTakerNotes[noteTakerCurrLine].action = 'examines deck:'
+			noteTakerNotes[noteTakerCurrLine].color2 = ''
 		end
+		if noteTakerNotes[noteTakerCurrLine].result ~= '' then
+			addNewLine()
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
-function Conflict(clickedObject, playerColor)
+function conflictButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if string.sub(noteTakerHistory[noteTakerCHistory], -11) == '(Conflict) ' then
-			Undo(clickedObject, playerColor)
-		elseif noteTakerC1 and noteTakerC2 then
-			if string.sub(noteTakerHistory[noteTakerCHistory], -11 - string.len(noteTakerC1) - string.len(noteTakerC2)) == '(Conflict) ' .. noteTakerC1 .. noteTakerC2 then
-				deleteLine()
-				noteTakerSetNotes(noteTakerGetNotes() .. noteTakerC1 .. noteTakerC2)
-			else
-				deleteLine()
-				noteTakerSetNotes(noteTakerGetNotes() .. '(Conflict) ' .. noteTakerC1 .. noteTakerC2)
-			end
-		elseif noteTakerC1 then
-			if string.sub(noteTakerHistory[noteTakerCHistory], -11 - string.len(noteTakerC1)) == '(Conflict) ' .. noteTakerC1  then
-				deleteLine()
-				noteTakerSetNotes(noteTakerGetNotes() .. saveString)
-			else
-				deleteLine()
-				noteTakerSetNotes(noteTakerGetNotes() .. '(Conflict) ' .. saveString)
-			end
+		if noteTakerNotes[noteTakerCurrLine].conflict == '(Conflict)' then
+			noteTakerNotes[noteTakerCurrLine].conflict = ''
+			noteTakerNotes[noteTakerCurrLine].claim1 = ''
 		else
-			noteTakerSetNotes(noteTakerGetNotes() .. '(Conflict) ')
+			noteTakerNotes[noteTakerCurrLine].conflict = '(Conflict)'
 		end
-		incHistory(clickedObject)
+		refreshNotes(clickedObject)
 	end
 end
 
-function Reshuffle(clickedObject, playerColor)
+function reshuffleButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerSetNotes( noteTakerGetNotes() .. '*Reshuffle*' )
-		NewLine()
-		incHistory(clickedObject)
+		noteTakerNotes[noteTakerCurrLine].conflict = ''
+		noteTakerNotes[noteTakerCurrLine].color1 = ''
+		noteTakerNotes[noteTakerCurrLine].action = ''
+		noteTakerNotes[noteTakerCurrLine].color2 = ''
+		noteTakerNotes[noteTakerCurrLine].claim3 = ''
+		noteTakerNotes[noteTakerCurrLine].claim2 = ''
+		noteTakerNotes[noteTakerCurrLine].claim1 = ''
+		noteTakerNotes[noteTakerCurrLine].result = '*Reshuffle*'
+		addNewLine()
+		refreshNotes(clickedObject)
 	end
 end
 
-function HZone(clickedObject, playerColor)
-	local text
-
+function hZoneButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
 		if useColor then
 			text = '[FF0000]Hitler territory![-]'
 		else
 			text = 'Hitler territory!'
 		end
-		noteTakerSetNotes(noteTakerGetNotes() .. text)
-		NewLine()
-		incHistory(clickedObject)
+		noteTakerNotes[noteTakerCurrLine].conflict = ''
+		noteTakerNotes[noteTakerCurrLine].color1 = ''
+		noteTakerNotes[noteTakerCurrLine].action = ''
+		noteTakerNotes[noteTakerCurrLine].color2 = ''
+		noteTakerNotes[noteTakerCurrLine].claim3 = ''
+		noteTakerNotes[noteTakerCurrLine].claim2 = ''
+		noteTakerNotes[noteTakerCurrLine].claim1 = ''
+		noteTakerNotes[noteTakerCurrLine].result = text
+		addNewLine()
+		refreshNotes(clickedObject)
 	end
 end
 
-function Topdeck(clickedObject, playerColor)
+function topdeckButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if string.sub(noteTakerHistory[noteTakerCHistory], -9) == 'Topdeck: ' then
-			broadcastToColor('No Topdeck: Topdeck.', playerColor, {1, 0, 0})
+		if noteTakerNotes[noteTakerCurrLine].action == 'Topdeck:' then
+			noteTakerNotes[noteTakerCurrLine].action = ''
 		else
-			noteTakerSetNotes(noteTakerGetNotes() .. 'Topdeck: ')
-			incHistory(clickedObject)
+			noteTakerNotes[noteTakerCurrLine].conflict = ''
+			noteTakerNotes[noteTakerCurrLine].color1 = ''
+			noteTakerNotes[noteTakerCurrLine].action = 'Topdeck:'
+			noteTakerNotes[noteTakerCurrLine].color2 = ''
+			noteTakerNotes[noteTakerCurrLine].claim3 = ''
+			noteTakerNotes[noteTakerCurrLine].claim2 = ''
+			noteTakerNotes[noteTakerCurrLine].claim1 = ''
 		end
+		if noteTakerNotes[noteTakerCurrLine].result ~= '' then
+			addNewLine()
+		end
+		refreshNotes(clickedObject)
+	end
+end
+
+function revisedButton(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		if noteTakerNotes[noteTakerCurrLine].conflict == '(Rev)' then
+			noteTakerNotes[noteTakerCurrLine].conflict = ''
+		else
+			noteTakerNotes[noteTakerCurrLine].conflict = '(Rev)'
+			noteTakerNotes[noteTakerCurrLine].claim1 = ''
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
 -- Right
-
-function Reset(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerSetNotes('')
-		incHistory(clickedObject)
-	end
-end
-
 function deleteLineButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		deleteLine()
-		incHistory(clickedObject)
+		if noteTakerCurrLine == #noteTakerNotes then
+			table.remove(noteTakerNotes, noteTakerCurrLine)
+			noteTakerCurrLine = noteTakerCurrLine - 1
+			addNewLine()
+		else
+			table.remove(noteTakerNotes, noteTakerCurrLine)
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
-function deleteLine() -- this event is not added to history log
-	local tempNotes = noteTakerGetNotes()
-	local newLinePos = string.find(tempNotes, '\n')
-	local oldLinePos = nils
-	local olderLinePos = nil
-
-	while newLinePos do
-		olderLinePos = oldLinePos
-		oldLinePos = newLinePos
-		newLinePos = string.find(tempNotes, '\n', newLinePos + 1)
-	end
-
-	if oldLinePos == string.len(tempNotes) then
-		oldLinePos = olderLinePos
-	end
-
-	if oldLinePos then
-		noteTakerSetNotes(string.sub(tempNotes, 1, oldLinePos))
-	else
-		noteTakerSetNotes('')
-	end
-end
-
-function NewLine() -- this event is not added to history log
-	 noteTakerSetNotes(noteTakerGetNotes() .. '\n')
-end
-
-function NewLineButton(clickedObject, playerColor)
+function insertLineButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		NewLine()
-		incHistory(clickedObject)
+		table.insert(noteTakerNotes, noteTakerCurrLine, defaultLine())
+		refreshNotes(clickedObject)
 	end
 end
 
-function Undo(clickedObject, playerColor)
+function topButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if noteTakerCHistory > 1 then
-			noteTakerCHistory = noteTakerCHistory - 1
-			noteTakerSetNotes(noteTakerHistory[noteTakerCHistory])
-			refreshNotes(clickedObject)
-			noteTakerC1 = noteTakerC1History[noteTakerCHistory]
-			noteTakerC2 = noteTakerC2History[noteTakerCHistory]
-			if string.sub(noteTakerHistory[noteTakerCHistory], -1) == '\n' or noteTakerHistory[noteTakerCHistory] == '' then
-				noteTakerC1 = nil
-				noteTakerC2 = nil
-			end
+		noteTakerCurrLine = 1
+		refreshNotes(clickedObject)
+		editMode = true
+	end
+end
+
+function bottomButton(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		noteTakerCurrLine = #noteTakerNotes
+		refreshNotes(clickedObject)
+		editMode = true
+	end
+end
+
+function upButton(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		if noteTakerCurrLine - 1 > 0 then
+			noteTakerCurrLine = noteTakerCurrLine - 1
+		end
+		editMode = true
+		refreshNotes(clickedObject)
+		if noteTakerNotes[noteTakerCurrLine].color1 ~= '' then
+			prevPresColor = noteTakerNotes[noteTakerCurrLine].color1
+		end
+		if noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
+			prevChanColor = noteTakerNotes[noteTakerCurrLine].color2
 		end
 	end
 end
 
-function Redo(clickedObject, playerColor)
+function downButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if noteTakerCHistory < noteTakerMaxHistory then
-			noteTakerCHistory = noteTakerCHistory + 1
-			noteTakerSetNotes(noteTakerHistory[noteTakerCHistory])
-			refreshNotes(clickedObject)
-			noteTakerC1 = noteTakerC1History[noteTakerCHistory]
-			noteTakerC2 = noteTakerC2History[noteTakerCHistory]
-			if string.sub(noteTakerHistory[noteTakerCHistory], -1) == '\n' or noteTakerHistory[noteTakerCHistory] == '' then
-				noteTakerC1 = nil
-				noteTakerC2 = nil
-			end
+		addNewLine()
+		editMode = true
+		refreshNotes(clickedObject)
+		if noteTakerNotes[noteTakerCurrLine].color1 ~= '' then
+			prevPresColor = noteTakerNotes[noteTakerCurrLine].color1
 		end
+		if noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
+			prevChanColor = noteTakerNotes[noteTakerCurrLine].color2
+		end
+	end
+end
+
+function rightButton(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		editMode = true
+		refreshNotes(clickedObject)
+	end
+end
+
+function leftButton(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		editMode = false
+		refreshNotes(clickedObject)
 	end
 end
 
 -- Center
-
-function Investigate(clickedObject, playerColor)
+function investigate(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if string.sub(noteTakerHistory[noteTakerCHistory], -3) == ' > ' then
-			noteTakerSetNotes(string.sub(noteTakerGetNotes(), 0, -4) .. ' inspects ')
-			incHistory(clickedObject)
-		elseif noteTakerC1 and noteTakerC2 then
-			deleteLine()
-			noteTakerSetNotes(noteTakerGetNotes() .. string.sub(noteTakerC1, 0, -4) .. ' inspects ' .. noteTakerC2)
-			incHistory(clickedObject)
+		if noteTakerNotes[noteTakerCurrLine].action == 'inspects' then
+			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
-			broadcastToColor('Press a color.', playerColor, {1, 0, 0})
+			noteTakerNotes[noteTakerCurrLine].action = 'inspects'
 		end
+		if noteTakerNotes[noteTakerCurrLine].color1 ~= ''
+			and noteTakerNotes[noteTakerCurrLine].color2 ~= ''
+			and noteTakerNotes[noteTakerCurrLine].result ~= '' then
+			addNewLine()
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
-function GivesTo(clickedObject, playerColor)
+function givesTo(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if string.sub(noteTakerHistory[noteTakerCHistory], -3) == ' > ' then
-			noteTakerSetNotes(string.sub(noteTakerGetNotes(), 0, -4) .. ' gives pres to ')
-			incHistory(clickedObject)
-		elseif noteTakerC1 and noteTakerC2 then
-			deleteLine()
-			noteTakerSetNotes(noteTakerGetNotes() .. string.sub(noteTakerC1, 0, -4) .. ' gives pres to ' .. noteTakerC2 .. '\n')
-			incHistory(clickedObject)
+		if noteTakerNotes[noteTakerCurrLine].action == 'gives pres to' then
+			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
-			broadcastToColor('Press a color.', playerColor, {1, 0, 0})
+			noteTakerNotes[noteTakerCurrLine].action = 'gives pres to'
 		end
+		if noteTakerNotes[noteTakerCurrLine].color1 ~= ''
+			and noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
+			addNewLine()
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
-function Shoots(clickedObject, playerColor)
+function shoots(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if string.sub(noteTakerHistory[noteTakerCHistory], -3) == ' > ' then
-			noteTakerSetNotes(string.sub(noteTakerGetNotes(), 0, -4) .. ' shoots ')
-			incHistory(clickedObject)
-		elseif noteTakerC1 and noteTakerC2 then
-			deleteLine()
-			noteTakerSetNotes(noteTakerGetNotes() .. string.sub(noteTakerC1, 0, -4) .. ' shoots ' .. noteTakerC2 .. '\n')
-			incHistory(clickedObject)
+		if noteTakerNotes[noteTakerCurrLine].action == 'shoots' then
+			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
-			broadcastToColor('Press a color.', playerColor, {1, 0, 0})
+			noteTakerNotes[noteTakerCurrLine].action = 'shoots'
 		end
+		if noteTakerNotes[noteTakerCurrLine].color1 ~= ''
+			and noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
+			addNewLine()
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
-function Liberal(clickedObject, playerColor)
-	local text
-
+function liberal(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
 		if useColor then
 			text = 'claims [0080F8]Liberal[-]'
 		else
 			text = 'claims Liberal'
 		end
-		if string.sub(noteTakerHistory[noteTakerCHistory], -16) == ' examines deck: ' then
-			noteTakerSetNotes(noteTakerGetNotes() .. text)
-		else
-			noteTakerSetNotes(noteTakerGetNotes() .. ': ' .. text)
-		end
-		NewLine()
-		incHistory(clickedObject)
+		noteTakerNotes[noteTakerCurrLine].result = text
+		addNewLine()
+		refreshNotes(clickedObject)
 	end
 end
 
-function Fascist(clickedObject, playerColor)
-	local text
-
+function fascist(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
 		if useColor then
 			text = 'claims [FF0000]Fascist[-]'
 		else
 			text = 'claims Fascist'
 		end
-		if string.sub(noteTakerHistory[noteTakerCHistory], -16) == ' examines deck: ' then
-			noteTakerSetNotes(noteTakerGetNotes() .. text)
-		else
-			noteTakerSetNotes(noteTakerGetNotes() .. ': ' .. text)
-		end
-		NewLine()
-		incHistory(clickedObject)
+		noteTakerNotes[noteTakerCurrLine].result = text
+		addNewLine()
+		refreshNotes(clickedObject)
 	end
 end
 
-function NoComment(clickedObject, playerColor)
+function noComment(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if string.sub(noteTakerHistory[noteTakerCHistory], -16) == ' examines deck: ' then
-			noteTakerSetNotes(noteTakerGetNotes() .. 'says [i]Nothing[/i]')
-		else
-			noteTakerSetNotes(noteTakerGetNotes() .. ': says [i]Nothing[/i]')
-		end
-		NewLine()
-		incHistory(clickedObject)
+		noteTakerNotes[noteTakerCurrLine].result = 'says [i]Nothing[/i]'
+		addNewLine()
+		refreshNotes(clickedObject)
 	end
 end
 
 function LLL(clickedObject, playerColor)
-	local text
-
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
 		if useColor then
 			text = '[0080F8]LLL[-]'
 		else
 			text = 'LLL'
 		end
-		if string.sub(noteTakerHistory[noteTakerCHistory], -16) == ' examines deck: ' then
-			noteTakerSetNotes(noteTakerGetNotes() .. text)
-			NewLine()
+		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
+			noteTakerNotes[noteTakerCurrLine].result = text
+			addNewLine()
 		else
-			noteTakerSetNotes(noteTakerGetNotes() .. ': ' .. text .. ' >')
+			noteTakerNotes[noteTakerCurrLine].claim3 = text
+			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+					and noteTakerNotes[noteTakerCurrLine].result ~= ''
+					and noteTakerCurrLine == #noteTakerNotes then
+				addNewLine()
+			end
 		end
-		incHistory(clickedObject)
-	end
-end
-
-function FFL(clickedObject, playerColor)
-	local text
-
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if useColor then
-			text = '[FF0000]FF[-][0080F8]L[-]'
-		else
-			text = 'FFL'
-		end
-		if string.sub(noteTakerHistory[noteTakerCHistory], -16) == ' examines deck: ' then
-			noteTakerSetNotes(noteTakerGetNotes() .. text)
-			NewLine()
-		else
-			noteTakerSetNotes(noteTakerGetNotes() .. ': ' .. text .. ' >')
-		end
-		incHistory(clickedObject)
+		refreshNotes(clickedObject)
 	end
 end
 
 function FLL(clickedObject, playerColor)
-	local text
-
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
 		if useColor then
 			text = '[FF0000]F[-][0080F8]LL[-]'
 		else
 			text = 'FLL'
 		end
-		if string.sub(noteTakerHistory[noteTakerCHistory], -16) == ' examines deck: ' then
-			noteTakerSetNotes(noteTakerGetNotes() .. text)
-			NewLine()
+		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
+			noteTakerNotes[noteTakerCurrLine].result = text
+			addNewLine()
 		else
-			noteTakerSetNotes(noteTakerGetNotes() .. ': ' .. text .. ' >')
+			noteTakerNotes[noteTakerCurrLine].claim3 = text
+			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+					and noteTakerNotes[noteTakerCurrLine].result ~= ''
+					and noteTakerCurrLine == #noteTakerNotes then
+				addNewLine()
+			end
 		end
-		incHistory(clickedObject)
+		refreshNotes(clickedObject)
+	end
+end
+
+function FFL(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
+		if useColor then
+			text = '[FF0000]FF[-][0080F8]L[-]'
+		else
+			text = 'FFL'
+		end
+		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
+			noteTakerNotes[noteTakerCurrLine].result = text
+			addNewLine()
+		else
+			noteTakerNotes[noteTakerCurrLine].claim3 = text
+			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+					and noteTakerNotes[noteTakerCurrLine].result ~= ''
+					and noteTakerCurrLine == #noteTakerNotes then
+				addNewLine()
+			end
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
 function FFF(clickedObject, playerColor)
-	local text
-
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
 		if useColor then
 			text = '[FF0000]FFF[-]'
 		else
 			text = 'FFF'
 		end
-		if string.sub(noteTakerHistory[noteTakerCHistory], -16) == ' examines deck: ' then
-			noteTakerSetNotes(noteTakerGetNotes() .. text)
-			NewLine()
+		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
+			noteTakerNotes[noteTakerCurrLine].result = text
+			addNewLine()
 		else
-			noteTakerSetNotes(noteTakerGetNotes() .. ': ' .. text .. ' >')
+			noteTakerNotes[noteTakerCurrLine].claim3 = text
+			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+					and noteTakerNotes[noteTakerCurrLine].result ~= ''
+					and noteTakerCurrLine == #noteTakerNotes then
+				addNewLine()
+			end
 		end
-		incHistory(clickedObject)
+		refreshNotes(clickedObject)
 	end
 end
 
 function QQQ(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if string.sub(noteTakerHistory[noteTakerCHistory], -16) == ' examines deck: ' then
-			noteTakerSetNotes(noteTakerGetNotes() .. '???')
-			NewLine()
+		local text = '???'
+		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
+			noteTakerNotes[noteTakerCurrLine].result = text
+			addNewLine()
 		else
-			noteTakerSetNotes(noteTakerGetNotes() .. ': ??? >')
+			noteTakerNotes[noteTakerCurrLine].claim3 = text
+			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+					and noteTakerNotes[noteTakerCurrLine].result ~= ''
+					and noteTakerCurrLine == #noteTakerNotes then
+				addNewLine()
+			end
 		end
-		incHistory(clickedObject)
+		refreshNotes(clickedObject)
 	end
 end
 
 function LL(clickedObject, playerColor)
-	local text
-
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
 		if useColor then
-			text = ' [0080F8]LL[-] >'
+			text = '[0080F8]LL[-]'
 		else
-			text = ' LL >'
+			text = 'LL'
 		end
-		noteTakerSetNotes(noteTakerGetNotes() .. text)
-		incHistory(clickedObject)
+		if not editMode or noteTakerNotes[noteTakerCurrLine].claim2 == ''
+			or noteTakerNotes[noteTakerCurrLine].conflict ~= '(Conflict)' then
+			noteTakerNotes[noteTakerCurrLine].claim2 = text
+		else
+			noteTakerNotes[noteTakerCurrLine].claim1 = text
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
 function FL(clickedObject, playerColor)
-	local text
-
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
 		if useColor then
-			text = ' [FF0000]F[-][0080F8]L[-] >'
+			text = '[FF0000]F[-][0080F8]L[-]'
 		else
-			text = ' FL >'
+			text = 'FL'
 		end
-		noteTakerSetNotes(noteTakerGetNotes() .. text)
-		incHistory(clickedObject)
+		if not editMode or noteTakerNotes[noteTakerCurrLine].claim2 == ''
+			or noteTakerNotes[noteTakerCurrLine].conflict ~= '(Conflict)' then
+			noteTakerNotes[noteTakerCurrLine].claim2 = text
+		else
+			noteTakerNotes[noteTakerCurrLine].claim1 = text
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
 function FF(clickedObject, playerColor)
-	local text
-
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		local text
 		if useColor then
-			text = ' [FF0000]FF[-] >'
+			text = '[FF0000]FF[-]'
 		else
-			text = ' FF >'
+			text = 'FF'
 		end
-		noteTakerSetNotes(noteTakerGetNotes() .. text)
-		incHistory(clickedObject)
+		if not editMode or noteTakerNotes[noteTakerCurrLine].claim2 == ''
+			or noteTakerNotes[noteTakerCurrLine].conflict ~= '(Conflict)' then
+			noteTakerNotes[noteTakerCurrLine].claim2 = text
+		else
+			noteTakerNotes[noteTakerCurrLine].claim1 = text
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
 function QQ(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerSetNotes(noteTakerGetNotes() .. ' ?? >')
-		incHistory(clickedObject)
+		local text = '??'
+		if not editMode or noteTakerNotes[noteTakerCurrLine].claim2 == ''
+			or noteTakerNotes[noteTakerCurrLine].conflict ~= '(Conflict)' then
+			noteTakerNotes[noteTakerCurrLine].claim2 = text
+		else
+			noteTakerNotes[noteTakerCurrLine].claim1 = text
+		end
+		refreshNotes(clickedObject)
 	end
 end
 
 function L(clickedObject, playerColor)
-	local text
-
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
 		if useColor then
-			text = ' [0080F8]L[-]'
+			noteTakerNotes[noteTakerCurrLine].result = '[0080F8]L[-]'
 		else
-			text = ' L'
+			noteTakerNotes[noteTakerCurrLine].result = 'L'
 		end
-		noteTakerSetNotes(noteTakerGetNotes() .. text)
-		NewLine()
-		incHistory(clickedObject)
+		if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+				and noteTakerNotes[noteTakerCurrLine].claim3 ~= ''
+				and noteTakerCurrLine == #noteTakerNotes then
+			addNewLine()
+		end
+		refreshNotes(clickedObject)
 		resetTracker()
 	end
 end
 
 function F(clickedObject, playerColor)
-	local text
-
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
 		if useColor then
-			text = ' [FF0000]F[-]'
+			noteTakerNotes[noteTakerCurrLine].result = '[FF0000]F[-]'
 		else
-			text = ' F'
+			noteTakerNotes[noteTakerCurrLine].result = 'F'
 		end
-		noteTakerSetNotes(noteTakerGetNotes() .. text)
-		NewLine()
-		incHistory(clickedObject)
+		if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+				and noteTakerNotes[noteTakerCurrLine].claim3 ~= ''
+				and noteTakerCurrLine == #noteTakerNotes then
+			addNewLine()
+		end
+		refreshNotes(clickedObject)
 		resetTracker()
 	end
 end
 
-function V(clickedObject, playerColor)
+function vetoButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if string.sub(noteTakerGetNotes(), -1) == '>' then
-			noteTakerSetNotes(noteTakerGetNotes() .. ' Veto!')
-		else
-			noteTakerSetNotes(noteTakerGetNotes() .. ': Veto!')
-		end
-		NewLine()
-		incHistory(clickedObject)
+		noteTakerNotes[noteTakerCurrLine].result = 'Veto!'
+		addNewLine()
+		refreshNotes(clickedObject)
 		incTracker()
+	end
+end
+
+--Bottom
+function copyResult(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		clickedObject.setDescription(noteTakerNotes[noteTakerCurrLine].result)
+	end
+end
+
+function pasteResult(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+		noteTakerNotes[noteTakerCurrLine].result = clickedObject.GetDescription()
+		addNewLine()
+		refreshNotes(clickedObject)
 	end
 end
 
@@ -3878,13 +3927,88 @@ function resetTracker()
 	end
 end
 
-function noteTakerGetNotes()
-	local options = Global.getTable('options')
-	if Global.getVar('mod_name') == 'Secret Hitler: CE' and options.scriptedVoting then
-		return Global.getVar('mainNotes')
-	else
-		return getNotes()
+function defaultLine()
+	return {conflict = '', color1 = '', action = '', color2 = '', claim3 = '', claim2 = '', claim1 = '', result = ''}
+end
+
+function noteTakerNotesString(maxLinesIn, showArrow)
+	local stringOut = ''
+	local startLine = 1
+	local lastLine = #noteTakerNotes
+
+	if maxLinesIn < #noteTakerNotes then
+		startLine = #noteTakerNotes - maxLinesIn + 1
 	end
+	if startLine > noteTakerCurrLine then
+		startLine = noteTakerCurrLine
+		lastLine = startLine + maxLinesIn - 1
+		if lastLine > #noteTakerNotes then
+			lastLine = #noteTakerNotes
+		end
+	end
+
+	for i = startLine, lastLine, 1 do
+
+		if noteTakerCurrLine == i and showArrow then
+			if editMode then
+				stringOut = stringOut .. right_unicode .. ' '
+			else
+				stringOut = stringOut .. left_unicode .. ' '
+			end
+		end
+		if noteTakerNotes[i].conflict ~= '' then
+			stringOut = stringOut .. noteTakerNotes[i].conflict .. ' '
+		end
+		if noteTakerNotes[i].color1 ~= '' then
+			local player = Player[noteTakerNotes[i].color1]
+			local text = noteTakerNotes[i].color1
+			if player.steam_name and useNames then
+				text = player.steam_name
+			end
+			if useColor then
+				text = '[' .. stringColorToHex(noteTakerNotes[i].color1) .. ']' .. text .. '[-]'
+			end
+			stringOut = stringOut .. '[i]' .. text .. '[/i]' .. ' '
+		end
+		if noteTakerNotes[i].action ~= '' then
+			stringOut = stringOut .. noteTakerNotes[i].action .. ' '
+		end
+		if noteTakerNotes[i].color2 ~= '' then
+			local player = Player[noteTakerNotes[i].color2]
+			local text = noteTakerNotes[i].color2
+			if player.steam_name and useNames then
+				text = player.steam_name
+			end
+			if useColor then
+				text = '[' .. stringColorToHex(noteTakerNotes[i].color2) .. ']' .. text .. '[-]'
+			end
+			stringOut = stringOut .. '[i]' .. text .. '[/i]'
+			if noteTakerNotes[i].action ~= 'gives pres to'
+			 	and noteTakerNotes[i].action ~= 'shoots' then
+				stringOut = stringOut .. ': '
+			elseif noteTakerNotes[i].claim3 ~= ''
+					or noteTakerNotes[i].claim2 ~= ''
+					or noteTakerNotes[i].claim1 ~= ''
+					or noteTakerNotes[i].result ~= '' then
+				stringOut = stringOut .. ' '
+			end
+		end
+		if noteTakerNotes[i].claim3 ~= '' then
+			stringOut = stringOut .. noteTakerNotes[i].claim3 .. ' > '
+		end
+		if noteTakerNotes[i].claim2 ~= '' then
+			stringOut = stringOut .. noteTakerNotes[i].claim2 .. ' > '
+		end
+		if noteTakerNotes[i].claim1 ~= '' then
+			stringOut = stringOut .. noteTakerNotes[i].claim1 .. ' > '
+		end
+		if noteTakerNotes[i].result ~= '' then
+			stringOut = stringOut .. noteTakerNotes[i].result
+		end
+		stringOut = stringOut .. '\n'
+	end
+
+	return stringOut
 end
 
 function noteTakerSetNotes(stringIn)
@@ -3907,7 +4031,6 @@ function newNoteTakerLuaScript(playerNoteTakerIn, useColorIn, cooperativeIn, loc
 	'colorMatch = ' .. colorMatchIn .. '\r\n' ..
 	'useNames = ' .. useNamesIn .. '\r\n' ..
 	'playerNoteTaker = \'' .. playerNoteTakerIn .. '\'\r\n' ..
-	'privateFullNotes = \'\'\r\n' ..
 	'privateFogGUID = nil\r\n' ..
 	'privateScreenGUID = nil\r\n' ..
 	'swapLF = ' .. swapLFIn .. '\r\n' ..
@@ -3942,7 +4065,6 @@ function respawnNoteTakerLuaScript()
 	'colorMatch = ' .. tostring(colorMatch) .. '\r\n' ..
 	'useNames = ' .. tostring(useNames) .. '\r\n' ..
 	'playerNoteTaker = ' .. easyQuotes(playerNoteTaker) .. '\r\n' ..
-	'privateFullNotes = ' .. easyQuotes(string.gsub(privateFullNotes, '\n', string.char(92, 92, 110))).. '\r\n' ..
 	'privateFogGUID = ' .. easyQuotes(privateFogGUID) .. '\r\n' ..
 	'privateScreenGUID = ' .. easyQuotes(privateScreenGUID) .. '\r\n' ..
 	'swapLF = ' .. tostring(swapLF) .. '\r\n' ..
@@ -4093,12 +4215,6 @@ function defaultsSecretHitlerSSRT()
 		if notes == '' then notes = nil end
 		Global.setVar('notes_string', notes)
 		Global.call('printNotes')
-	end
-
-	getNotes = function()
-		local notes = Global.getVar('notes_string')
-		if notes == nil then notes = '' end
-		return notes
 	end
 end
 -- end Secret Hitler: Super Scripted Round Table
