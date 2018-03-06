@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 77
+update_version = 78
 add_on_version = 3
 
 --Buttons
@@ -42,6 +42,8 @@ tracker_zone = 'c0b577'
 
 --Other
 last_vote_guids = {'88c953', 'ba4919', 'b7dcde', '4598da'}
+nb_vote_history_idx = 12
+nb_dead_player_idx = 13
 -- @{100, 100, 100+} hidden zones
 -- @{-100, 100, -100} is used to delete/spawn objects
 
@@ -55,9 +57,8 @@ lastDrawCt = nil
 hold = false
 votes = {}
 disableVote = false
+votePassed = false
 blockDraw = false
-updateLine = nil
-updateAction = ''
 
 -- Saved data
 bannerGuids = {}
@@ -93,19 +94,21 @@ lastChan = nil
 lastPres = nil
 mainNotes = ''
 neinCardGuids = {}
+notate = {
+	line = nil,
+	action = ''
+}
 noteTakerNotes = {}
 noteTakerCurrLine = 0
 options = {
 	autoNotate = true,
-	autoPlacards = true,
 	dealPartyCards = false,
 	dealRoleCards = false,
-	extraRoleButtons = true,
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
 	noteType = 0, -- [0 dark wook, 1 light wood, 2 red wood, 3 black plastic, 4 custom image, 5 private, 6 cooperative]
-	placardSnap = true,
 	scriptedVoting = true,
 	shufflePlayers = false,
+	voteHistory = false,
 	zoneType = 1 -- [0 None, 1 Small, 2 Large]
 }
 players = {}
@@ -126,6 +129,7 @@ text = {
 	policy = 'policy'
 }
 voteNotes = ''
+voteNotebook = ''
 
 -- Called when a game finishes loading
 function onLoad(saveString)
@@ -147,6 +151,7 @@ function onLoad(saveString)
 		lastPres = save['lp']
 		mainNotes = save['mn']
 		neinCardGuids = save['nein']
+		notate = save['note']
 		noteTakerNotes = save['ntn']
 		noteTakerCurrLine = save['ntcl']
 		options = save['o']
@@ -157,6 +162,7 @@ function onLoad(saveString)
 		started = save['s']
 		text = save['t']
 		voteNotes = save['vn']
+		voteNotebook = save['vnb']
 	end
 	alwaysInit()
 	if not started then
@@ -198,6 +204,7 @@ function onSave()
 	save['lp'] = lastPres
 	save['mn'] = mainNotes
 	save['nein'] = neinCardGuids
+	save['note'] = notate
 	save['ntn'] = noteTakerNotes
 	save['ntcl'] = noteTakerCurrLine
 	save['o'] = options
@@ -208,6 +215,7 @@ function onSave()
 	save['s'] = started
 	save['t'] = text
 	save['vn'] = voteNotes
+	save['vnb'] = voteNotebook
 	local saveString = JSON.encode(save)
 
 	return saveString
@@ -474,34 +482,24 @@ function settingsPannelMakeButtons()
 		buttonParam.position = {startX, 0.2, startZ + offsetZ}
 		settingsPannel.createButton(buttonParam)
 
-		if options.placardSnap then buttonParam.label = label_check else buttonParam.label = '' end
-		buttonParam.click_function = 'placardSnapFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 2}
-		settingsPannel.createButton(buttonParam)
-
 		if options.scriptedVoting then buttonParam.label = label_check else buttonParam.label = '' end
 		buttonParam.click_function = 'scriptedVotingFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 3}
-		settingsPannel.createButton(buttonParam)
-
-		if options.autoPlacards then buttonParam.label = label_check else buttonParam.label = '' end
-		buttonParam.click_function = 'autoPlacardsFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 4}
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 2}
 		settingsPannel.createButton(buttonParam)
 
 		if options.autoNotate then buttonParam.label = label_check else buttonParam.label = '' end
 		buttonParam.click_function = 'autoNotateFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 3}
 		settingsPannel.createButton(buttonParam)
 
-		if options.extraRoleButtons then buttonParam.label = label_check else buttonParam.label = '' end
-		buttonParam.click_function = 'extraRoleButtonsFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 6}
+		if options.voteHistory then buttonParam.label = label_check else buttonParam.label = '' end
+		buttonParam.click_function = 'voteHistoryFlip'
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 4}
 		settingsPannel.createButton(buttonParam)
 
 		if options.shufflePlayers then buttonParam.label = label_check else buttonParam.label = '' end
 		buttonParam.click_function = 'shufflePlayersFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 7}
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
 		settingsPannel.createButton(buttonParam)
 
 		buttonParam = {click_function = 'setupStart', label = 'Start', function_owner = self, position = {0, 0.2, 23}, rotation = {0, 0, 0}, width = 3300, height = 1500, font_size = 750}
@@ -630,23 +628,9 @@ function partyCardFlip(clickedObject, playerColor)
 	end
 end
 
-function placardSnapFlip(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.placardSnap = not options.placardSnap
-		settingsPannelMakeButtons()
-	end
-end
-
 function scriptedVotingFlip(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.scriptedVoting = not options.scriptedVoting
-		settingsPannelMakeButtons()
-	end
-end
-
-function autoPlacardsFlip(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.autoPlacards = not options.autoPlacards
 		settingsPannelMakeButtons()
 	end
 end
@@ -658,9 +642,9 @@ function autoNotateFlip(clickedObject, playerColor)
 	end
 end
 
-function extraRoleButtonsFlip(clickedObject, playerColor)
+function voteHistoryFlip(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		options.extraRoleButtons = not options.extraRoleButtons
+		options.voteHistory = not options.voteHistory
 		settingsPannelMakeButtons()
 	end
 end
@@ -720,7 +704,7 @@ function displayBannerCardsCoroutine()
 		boardCardHandler(boardCard)
 	else
 		displayBannerCard(policyCard, 0, 0)
-		if lastPres and options.autoPlacards and not topdeck then
+		if lastPres and not topdeck then
 			movePlacards(nextPres(lastPres), true)
 		end
 	end
@@ -809,7 +793,7 @@ function boardCardHandler(card)
 		end
 	end
 
-	if lastPres and options.autoPlacards then
+	if lastPres then
 		if isBoardCardPickPres(card) then
 			local saveForcePres = forcePres
 			forcePres = nil
@@ -941,6 +925,7 @@ function movePlacards(playerIn, returnVoteCards)
 		returnVoteCardsToHand()
 		disableVote = false
 		blockDraw = false
+		votePassed = false
 	end
 
 	local tmpPres = getObjectFromGUID(president_guid)
@@ -986,13 +971,14 @@ function giveBullet(playerIn)
 			'\r\n' ..
 			'function onCollisionEnter(collisionInfo)\r\n' ..
 			'	if collisionInfo and loadDone then\r\n' ..
-			'		if Global.call(\'isTableGUID\', {collisionInfo.collision_object.guid}) then\r\n' ..
-			'			local options = Global.getTable(\'options\')\r\n' ..
-			'			local bulletInfo = Global.getTable(\'bulletInfo\')\r\n' ..
-			'			local updateLine = Global.getVar(\'updateLine\')\r\n' ..
-			'			local updateAction = Global.getVar(\'updateAction\')\r\n' ..
-			'			if options.autoNotate and updateLine and updateAction == string.lower(bulletInfo.text) then\r\n' ..
-			'				Global.call(\'notateColor2ByObject\', {self})\r\n' ..
+			'		local options = Global.getTable(\'options\')\r\n' ..
+			'		if options.autoNotate then\r\n' ..
+			'			if Global.call(\'isTableGUID\', {collisionInfo.collision_object.guid}) then\r\n' ..
+			'				local bulletInfo = Global.getTable(\'bulletInfo\')\r\n' ..
+			'				local notate = Global.getTable(\'notate\')\r\n' ..
+			'				if notate.line and notate.action == string.lower(bulletInfo.text) then\r\n' ..
+			'					Global.call(\'notateColor2ByObject\', {self})\r\n' ..
+			'				end\r\n' ..
 			'			end\r\n' ..
 			'		end\r\n' ..
 			'	end\r\n' ..
@@ -1252,12 +1238,10 @@ function policyCardCoroutine()
 					homeTracker()
 					if autoNotateReshuffle then notateInfo('', '', '', '*Reshuffle*', false) end
 				end
-				if options.autoPlacards then
-					if topdeck then
-						homePrevPlacards()
-					else
-						movePrevPlacards()
-					end
+				if topdeck then
+					homePrevPlacards()
+				else
+					movePrevPlacards()
 				end
 				startLuaCoroutine(Global, 'displayBannerCardsCoroutine')
 			else
@@ -1285,12 +1269,10 @@ function policyCardCoroutine()
 					if lastFascistPlayed == 4 then notateInfo('', '', '', '[FF0000]' .. text.hitler .. ' territory![-]', false) end
 					if autoNotateReshuffle then notateInfo('', '', '', '*Reshuffle*', false) end
 				end
-				if options.autoPlacards then
-					if topdeck then
-						homePrevPlacards()
-					else
-						movePrevPlacards()
-					end
+				if topdeck then
+					homePrevPlacards()
+				else
+					movePrevPlacards()
 				end
 				if lastFascistPlayed >= 4 then hitlerTerritory = true end
 				startLuaCoroutine(Global, 'displayBannerCardsCoroutine')
@@ -1363,14 +1345,30 @@ function startVoteCheck()
 		out = out .. '[' .. stringColorToHex(chanColor) .. ']' .. chanColor .. '[-]\n'
 		out = out .. voteNotes
 		out = removeBBCode(out)
+		if voteNotebook == '' then
+			voteNotebook = out
+		else
+			voteNotebook = voteNotebook .. '\n\n' .. out
+		end
+		if options.voteHistory then
+			local params = {}
+			params.index = nb_vote_history_idx
+			params.body = voteNotebook
+			editNotebookTab(params)
+		end
 		for _, lastVoteGuid in ipairs(last_vote_guids) do
 			local lastVote = getObjectFromGUID(lastVoteGuid)
 			if lastVote then lastVote.TextTool.setValue(out) end
 		end
 		flipVotes()
 		disableVote = true
-		if hitlerTerritory and hitler == chanColor and string.find(out, 'Vote passes') then
-			createGiveRoleCardTimer()
+		if string.find(out, 'Vote passes') then
+			votePassed = true
+			if hitlerTerritory and hitler == chanColor then
+				createGiveRoleCardTimer()
+			end
+		else
+			votePassed = false
 		end
 	else
 		voteNotes = getPrelimVoteString()
@@ -1381,10 +1379,9 @@ end
 function waitReturnVoteCardsCoroutine()
 	sleep(5)
 	returnVoteCardsToHand()
-	if options.autoPlacards then
-		disableVote = false
-		blockDraw = false
-	end
+	disableVote = false
+	blockDraw = false
+	votePassed = false
 
 	return true
 end
@@ -1465,9 +1462,7 @@ function getFinalVoteString()
 				tracker.translate({electionTrackerMoveX, 0, 0})
 			end
 		end
-		if options.autoPlacards then
-			movePlacards(nextPres(getPres()), false)
-		end
+		movePlacards(nextPres(getPres()), false)
 		startLuaCoroutine(Global, 'waitReturnVoteCardsCoroutine')
 	end
 
@@ -1495,16 +1490,22 @@ function getPrelimVoteString()
 end
 
 function updateDeadList()
+	local notebookText = ''
 	deadPlayer = {}
-	for i, bulletGUID in pairs(bulletGUIDs) do
+	for _, bulletGUID in pairs(bulletGUIDs) do
 		local bullet = getObjectFromGUID(bulletGUID)
 		if bullet then
-			local player = closestPlayer(bullet, players, 1000)
+			local player = closestPlayer(bullet, players, 18)
 			if player then
+				notebookText = notebookText .. player .. '\n'
 				deadPlayer[player] = true
 			end
 		end
 	end
+	local params = {}
+	params.index = nb_dead_player_idx
+	params.body = notebookText
+	editNotebookTab(params)
 end
 
 function editButtonByLabel(objectGUIDIn, oldLabelIn, newLabelIn, newFunctionIn)
@@ -1557,8 +1558,12 @@ function drawThree(clickedObject, playerColor)
 			if blockDraw then
 				broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
 			else
-				blockDraw = true
-				drawCards(3, playerColor)
+				if not options.scriptedVoting or votePassed then
+					blockDraw = true
+					drawCards(3, playerColor)
+				else
+					broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+				end
 			end
 		else
 			broadcastToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
@@ -1711,27 +1716,26 @@ function setupCoroutine()
 				tmpObj.setScale({15.3268776, 5.1, 6.35014629})
 				forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
 			end
-			if options.extraRoleButtons then
-				local params = {}
-				params.type = 'backgammon_piece_white'
-				params.position = {-100, 100, -100}
-				params.callback = 'roleButtonCallback'
-				params.callback_owner = selfIn
-				local buttonBase = spawnObject(params)
-				buttonBase.setColorTint(stringColorToRGB(player))
-				buttonBase.setLock(true)
-				forceObjectToPlayer(buttonBase, player, {forward = 2.5, right = 6.8, up = 0, forceHeight = 1.09}, flip_y)
-				local button = {}
-				button.click_function = 'tellRoleButton'
-				button.label = 'Role?'
-				button.function_owner = self
-				button.position = {0, 0.2, 0}
-				button.rotation = {0, 0, 0}
-				button.width = 800
-				button.height = 600
-				button.font_size = 300
-				buttonBase.createButton(button)
-			end
+			-- extra Role Button
+			local params = {}
+			params.type = 'backgammon_piece_white'
+			params.position = {-100, 100, -100}
+			params.callback = 'roleButtonCallback'
+			params.callback_owner = selfIn
+			local buttonBase = spawnObject(params)
+			buttonBase.setColorTint(stringColorToRGB(player))
+			buttonBase.setLock(true)
+			forceObjectToPlayer(buttonBase, player, {forward = 2.5, right = 6.8, up = 0, forceHeight = 1.09}, flip_y)
+			local button = {}
+			button.click_function = 'tellRoleButton'
+			button.label = 'Role?'
+			button.function_owner = self
+			button.position = {0, 0.2, 0}
+			button.rotation = {0, 0, 0}
+			button.width = 800
+			button.height = 600
+			button.font_size = 300
+			buttonBase.createButton(button)
 		end
 	end
 
@@ -2270,11 +2274,11 @@ function playerInspected(clickedObject, inspectorColor, checkedColor)
 		broadcastToColor(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
 		table.insert(inspected, 1, checkedColor)
 		removeInspect()
-		if options.autoNotate and updateLine and updateAction == 'inspects' then
-			noteTakerNotes[updateLine].color2 = checkedColor
+		if options.autoNotate and notate.line and notate.action == 'inspects' then
+			noteTakerNotes[notate.line].color2 = checkedColor
 			refreshNotes(nil)
-			updateLine = nil
-			updateAction = ''
+			notate.line = nil
+			notate.action = ''
 		end
 	end
 end
@@ -2341,6 +2345,10 @@ function createGiveRoleCardTimer()
 end
 
 function giveRoleCards()
+	local params = {}
+	params.index = nb_vote_history_idx
+	params.body = voteNotebook
+	editNotebookTab(params)
 	if not options.dealRoleCards then
 		for _, player in ipairs(all_players) do
 			if playerRoleCardGuids[player] then
@@ -3064,6 +3072,11 @@ function menuBase(selfIn)
 	buttonParam.label = 'Give role cards'
 	buttonParam.position = {positionXscale * 4, positionY, (4.25 + zOffset) * positionZscale + positionZoffset2}
 	selfIn.createButton(buttonParam)
+
+	buttonParam.click_function = 'forceVotePass'
+	buttonParam.label = 'Vote Passed'
+	buttonParam.position = {positionXscale * 4, positionY, (5.75 + zOffset) * positionZscale + positionZoffset2}
+	selfIn.createButton(buttonParam)
 end
 
 function setupPlayer(clickedObject, playerIn)
@@ -3242,6 +3255,13 @@ end
 function giveRoleCardsButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		Global.call('giveRoleCards')
+	end
+end
+
+function forceVotePass(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+		Global.setVar('votePassed', true)
+		Global.setVar('blockDraw', false)
 	end
 end
 
@@ -4457,7 +4477,7 @@ function noteTakerConflict(currLineIn)
 	return false
 end
 
-function notateInfo(color1In, actionIn, color2In, resultIn, updateLineIn)
+function notateInfo(color1In, actionIn, color2In, resultIn, updateLaterIn)
 	local lineSave = noteTakerCurrLine
 	noteTakerCurrLine = #noteTakerNotes
 	if not noteTakerBlankLine(noteTakerCurrLine) then
@@ -4468,9 +4488,9 @@ function notateInfo(color1In, actionIn, color2In, resultIn, updateLineIn)
 	noteTakerNotes[noteTakerCurrLine].action = actionIn
 	noteTakerNotes[noteTakerCurrLine].color2 = color2In
 	noteTakerNotes[noteTakerCurrLine].result = resultIn
-	if updateLineIn then
-		updateLine = noteTakerCurrLine
-		updateAction = actionIn
+	if updateLaterIn then
+		notate.line = noteTakerCurrLine
+		notate.action = actionIn
 	end
 	noteTakerCurrLine = lineSave
 	refreshNotes(nil)
@@ -4647,8 +4667,8 @@ function forceObjectToPlayer(object, playerColor, posAdd, rotAdd)
 		end
 		if posAdd['forceHeight'] then
 			object.setPosition({ph['pos_x'] + ph['trigger_forward_x'] * posAdd['forward'] + ph['trigger_right_x'] * posAdd['right'] + ph['trigger_up_x'] * posAdd['up'],
-											  posAdd['forceHeight'] + tableHeightAdd,
-											  ph['pos_z'] + ph['trigger_forward_z'] * posAdd['forward'] + ph['trigger_right_z'] * posAdd['right'] + ph['trigger_up_z'] * posAdd['up']})
+									  posAdd['forceHeight'] + tableHeightAdd,
+									  ph['pos_z'] + ph['trigger_forward_z'] * posAdd['forward'] + ph['trigger_right_z'] * posAdd['right'] + ph['trigger_up_z'] * posAdd['up']})
 		else
 			object.setPosition({ph['pos_x'] + ph['trigger_forward_x'] * posAdd['forward'] + ph['trigger_right_x'] * posAdd['right'] + ph['trigger_up_x'] * posAdd['up'],
 									  ph['pos_y'] + ph['trigger_forward_y'] * posAdd['forward'] + ph['trigger_right_y'] * posAdd['right'] + ph['trigger_up_y'] * posAdd['up'],
@@ -4687,12 +4707,12 @@ end
 
 function notateColor2ByObject(tableIn)
 	if type(tableIn) == 'table' then
-		local playerColor = closestPlayer(tableIn[1], players, 1000)
-		if noteTakerNotes[updateLine].color1 ~= playerColor then
-			noteTakerNotes[updateLine].color2 = playerColor
+		local playerColor = closestPlayer(tableIn[1], players, 18)
+		if playerColor and noteTakerNotes[notate.line].color1 ~= playerColor then
+			noteTakerNotes[notate.line].color2 = playerColor
 			refreshNotes(nil)
-			updateLine = nil
-			updateAction = ''
+			notate.line = nil
+			notate.action = ''
 		end
 	end
 end
