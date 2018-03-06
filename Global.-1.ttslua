@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 66
+update_version = 67
 
 --Buttons
 settings_pannel_guid = '39d283'
@@ -61,7 +61,6 @@ topdeck = false
 lastDrawCt = nil
 hold = false
 votes = {}
-deadPlayer = {}
 disableVote = false
 blockDraw = false
 
@@ -651,8 +650,8 @@ function displayBannerCardsCoroutine()
 		boardCardHandler(boardCard)
 	else
 		displayBannerCard(policyCard, 0, 0)
-		if lastPres and options.autoPlacards then
-			movePlacards(nextPres(lastPres))
+		if lastPres and options.autoPlacards and not topdeck then
+			movePlacards(nextPres(lastPres), true)
 		end
 	end
 
@@ -775,14 +774,14 @@ function boardCardHandler(card)
 		if isBoardCardPickPres(card) then
 			local saveForcePres = forcePres
 			forcePres = nil
-			movePlacards(lastPres)
+			movePlacards(lastPres, true)
 			if saveForcePres then
 				forcePres = saveForcePres
 			else
 				forcePres = nextPres(lastPres)
 			end
 		else
-			movePlacards(nextPres(lastPres))
+			movePlacards(nextPres(lastPres), true)
 		end
 	end
 end
@@ -883,7 +882,8 @@ function nextPres(playerIn)
 	local checkPres = playerIn
 	local returnVal = nextList[checkPres]
 
-	while not inTable(players, returnVal) do
+
+	while not inTable(players, returnVal) or deadPlayer[returnVal] do
 		checkPres = returnVal
 		returnVal = nextList[checkPres]
 	end
@@ -891,14 +891,21 @@ function nextPres(playerIn)
 	return returnVal
 end
 
-function movePlacards(playerIn)
+function movePlacards(playerIn, returnVoteCards)
 	local moveToPlayer = playerIn
 	if forcePres then
 		moveToPlayer = forcePres
 		forcePres = nil
 	end
 
+	if options.scriptedVoting and returnVoteCards then
+		returnVoteCardsToHand()
+		disableVote = false
+		blockDraw = false
+	end
+
 	local tmpPres = getObjectFromGUID(president_guid)
+	tmpPres.setVar('lastPres', moveToPlayer)
 	if tmpPres then giveObjectToPlayer(tmpPres, moveToPlayer, {forward = prevForward, right = 0, up = 0, forceHeight = 2.2}, no_rotation, false, false) end
 	local tmpChan = getObjectFromGUID(chancelor_guid)
 	if tmpChan then giveObjectToPlayer(tmpChan, moveToPlayer, {forward = prevForward, right = 0, up = 0, forceHeight = 2.8}, no_rotation, false, false) end
@@ -1318,9 +1325,6 @@ function startVoteCheck()
 		end
 		flipVotes()
 		disableVote = true
-		if options.scriptedVoting then
-			startLuaCoroutine(Global, 'waitReturnVoteCardsCoroutine')
-		end
 	else
 		voteNotes = getPrelimVoteString()
 		setNotes(voteNotes .. '\n\n' .. mainNotes)
@@ -1415,8 +1419,9 @@ function getFinalVoteString()
 			end
 		end
 		if options.autoPlacards then
-			movePlacards(nextPres(getPres()))
+			movePlacards(nextPres(getPres()), false)
 		end
+		startLuaCoroutine(Global, 'waitReturnVoteCardsCoroutine')
 	end
 
 	return out
