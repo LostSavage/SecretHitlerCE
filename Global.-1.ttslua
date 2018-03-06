@@ -1,10 +1,10 @@
 -- Created by LostGod on 5/8/2016
--- Modded by Lost Savage
+-- Heavily modified by Lost Savage
 -- Also used code from SwiftPanda, Rodney and Markimus
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 78
+update_version = 79
 add_on_version = 3
 
 --Buttons
@@ -105,6 +105,7 @@ options = {
 	dealPartyCards = false,
 	dealRoleCards = false,
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
+	muteGov = false,
 	noteType = 0, -- [0 dark wook, 1 light wood, 2 red wood, 3 black plastic, 4 custom image, 5 private, 6 cooperative]
 	scriptedVoting = true,
 	shufflePlayers = false,
@@ -502,6 +503,11 @@ function settingsPannelMakeButtons()
 		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
 		settingsPannel.createButton(buttonParam)
 
+		if options.muteGov then buttonParam.label = label_check else buttonParam.label = '' end
+		buttonParam.click_function = 'muteGovFlip'
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 6}
+		--settingsPannel.createButton(buttonParam)
+
 		buttonParam = {click_function = 'setupStart', label = 'Start', function_owner = self, position = {0, 0.2, 23}, rotation = {0, 0, 0}, width = 3300, height = 1500, font_size = 750}
 		settingsPannel.createButton(buttonParam)
 	else
@@ -656,6 +662,13 @@ function shufflePlayersFlip(clickedObject, playerColor)
 	end
 end
 
+function muteGovFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.muteGov = not options.muteGov
+		settingsPannelMakeButtons()
+	end
+end
+
 function addJaCard(cardIn)
 	if type(cardIn) == 'table' then
 		cardIn = cardIn[1]
@@ -710,6 +723,12 @@ function displayBannerCardsCoroutine()
 	end
 
 	topdeck = false
+
+	-- Unmute
+	if options.muteGov then
+		if not Player[lastPres].host then Player[lastPres].mute() end
+		if not Player[lastChan].host then Player[lastChan].mute() end
+	end
 
 	-- Win check
 	if lastLiberalPlayed > 5 or lastFascistPlayed > 6 then
@@ -1189,7 +1208,7 @@ function policyCardCoroutine()
 	end
 
 	-- Location of all cards is known
-	if started and #fascistList == maxFascist and #liberalList == maxLiberal then
+	if started and #fascistList == maxFascist and #liberalList == maxLiberal and #discardDeckList == 1 then
 		-- Reshuffle
 		if #drawList < 3 and #discardDeckList == 1 and (#drawDeckList == 0 or #drawDeckList == 1) then
 			if drawDeckList[1] then
@@ -1559,6 +1578,12 @@ function drawThree(clickedObject, playerColor)
 				broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
 			else
 				if not options.scriptedVoting or votePassed then
+					-- Mute
+					if options.muteGov then
+						if not Player[playerColor].host then Player[playerColor].mute() end
+						local chan = getChan()
+						if not Player[chan].host then Player[chan].mute() end
+					end
 					blockDraw = true
 					drawCards(3, playerColor)
 				else
@@ -2355,6 +2380,7 @@ function giveRoleCards()
 				local card = getObjectFromGUID(playerRoleCardGuids[player])
 				if card then
 					card.interactable = true
+					card.setLock(false)
 					forceObjectToPlayer(card, player, {forward = 0, right = -2, up = 0}, flip_y_z)
 				end
 			end
