@@ -1,10 +1,10 @@
 -- Created by LostGod on 5/8/2016
 -- Heavily modified by Lost Savage
--- Also used code from SwiftPanda, Rodney and Markimus
+-- Also used code from smiling Aktheon, SwiftPanda, Rodney and Markimus
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 79
+update_version = 80
 add_on_version = 3
 
 --Buttons
@@ -268,7 +268,7 @@ function alwaysInit()
 		button.label = 'Role?'
 		button.function_owner = self
 		button.position = {0, 3, 0}
-		button.rotation = {0, 0, 0}
+		button.rotation = {0, 0, 180}
 		button.width = 1000
 		button.height = 1500
 		button.font_size = 150
@@ -1208,7 +1208,7 @@ function policyCardCoroutine()
 	end
 
 	-- Location of all cards is known
-	if started and #fascistList == maxFascist and #liberalList == maxLiberal and #discardDeckList == 1 then
+	if started and #fascistList == maxFascist and #liberalList == maxLiberal and (#discardDeckList == 0 or #discardDeckList == 1) then
 		-- Reshuffle
 		if #drawList < 3 and #discardDeckList == 1 and (#drawDeckList == 0 or #drawDeckList == 1) then
 			if drawDeckList[1] then
@@ -2265,7 +2265,7 @@ function createInspectButtons(pres)
 					'	button.label = \'Inspect\\n' .. playerColor .. '\'\r\n' ..
 					'	button.function_owner = Global\r\n' ..
 					'	button.position = {0, 3, 0}\r\n' ..
-					'	button.rotation = {0, 0, 0}\r\n' ..
+					'	button.rotation = {0, 0, 180}\r\n' ..
 					'	button.width = 1000\r\n' ..
 					'	button.height = 1500\r\n' ..
 					'	button.font_size = 150\r\n' ..
