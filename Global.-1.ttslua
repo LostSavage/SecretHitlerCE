@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 64
+update_version = 65
 
 --Buttons
 settings_pannel_guid = '39d283'
@@ -1261,13 +1261,13 @@ function startVoteCheck()
 		setNotes(voteNotes .. '\n\n' .. mainNotes)
 		local presColor = getPres()
 		local chanColor = getChan()
-		local lastVoteGuid
-		local lastVote
-		local out = '[' .. stringColorToHex(presColor) .. ']' .. presColor .. '[-]'
-		out = out .. ' > [' .. stringColorToHex(chanColor) .. ']' .. chanColor .. '[-]\n'
+		local out = '[' .. stringColorToHex(presColor) .. ']' .. presColor .. '[-] > '
+		out = out .. '[' .. stringColorToHex(chanColor) .. ']' .. chanColor .. '[-]\n'
+		out = out .. voteNotes
+		out = removeBBCode(out)
 		for _, lastVoteGuid in ipairs(last_vote_guids) do
-			lastVote = getObjectFromGUID(lastVoteGuid)
-			if lastVote then lastVote.TextTool.setValue(out .. voteNotes) end
+			local lastVote = getObjectFromGUID(lastVoteGuid)
+			if lastVote then lastVote.TextTool.setValue(out) end
 		end
 		flipVotes()
 		disableVote = true
@@ -3676,31 +3676,28 @@ function conflictButton(clickedObject, playerColor)
 end
 
 function reshuffleButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerNotes[noteTakerCurrLine].conflict = ''
-		noteTakerNotes[noteTakerCurrLine].color1 = ''
-		noteTakerNotes[noteTakerCurrLine].action = ''
-		noteTakerNotes[noteTakerCurrLine].color2 = ''
-		noteTakerNotes[noteTakerCurrLine].claim3 = ''
-		noteTakerNotes[noteTakerCurrLine].claim2 = ''
-		noteTakerNotes[noteTakerCurrLine].claim1 = ''
-		noteTakerNotes[noteTakerCurrLine].result = '*Reshuffle*'
-		addNewLine()
-		refreshNotes(clickedObject)
-	end
+	resultOnly(clickedObject, playerColor, '*Reshuffle*')
 end
 
 function hZoneButton(clickedObject, playerColor)
+	resultOnly(clickedObject, playerColor, '[FF0000]Hitler territory![-]')
+end
+
+function resultOnly(clickedObject, playerColor, text)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerNotes[noteTakerCurrLine].conflict = ''
-		noteTakerNotes[noteTakerCurrLine].color1 = ''
-		noteTakerNotes[noteTakerCurrLine].action = ''
-		noteTakerNotes[noteTakerCurrLine].color2 = ''
-		noteTakerNotes[noteTakerCurrLine].claim3 = ''
-		noteTakerNotes[noteTakerCurrLine].claim2 = ''
-		noteTakerNotes[noteTakerCurrLine].claim1 = ''
-		noteTakerNotes[noteTakerCurrLine].result = '[FF0000]Hitler territory![-]'
-		addNewLine()
+		if noteTakerNotes[noteTakerCurrLine].result == text then
+			noteTakerNotes[noteTakerCurrLine].result = ''
+		else
+			noteTakerNotes[noteTakerCurrLine].conflict = ''
+			noteTakerNotes[noteTakerCurrLine].color1 = ''
+			noteTakerNotes[noteTakerCurrLine].action = ''
+			noteTakerNotes[noteTakerCurrLine].color2 = ''
+			noteTakerNotes[noteTakerCurrLine].claim3 = ''
+			noteTakerNotes[noteTakerCurrLine].claim2 = ''
+			noteTakerNotes[noteTakerCurrLine].claim1 = ''
+			noteTakerNotes[noteTakerCurrLine].result = text
+			addNewLine()
+		end
 		refreshNotes(clickedObject)
 	end
 end
@@ -3717,9 +3714,9 @@ function topdeckButton(clickedObject, playerColor)
 			noteTakerNotes[noteTakerCurrLine].claim3 = ''
 			noteTakerNotes[noteTakerCurrLine].claim2 = ''
 			noteTakerNotes[noteTakerCurrLine].claim1 = ''
-		end
-		if noteTakerNotes[noteTakerCurrLine].result ~= '' then
-			addNewLine()
+			if noteTakerNotes[noteTakerCurrLine].result ~= '' then
+				addNewLine()
+			end
 		end
 		refreshNotes(clickedObject)
 	end
@@ -3871,113 +3868,68 @@ function shoots(clickedObject, playerColor)
 end
 
 function liberal(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerNotes[noteTakerCurrLine].result = 'claims [0080F8]Liberal[-]'
-		addNewLine()
-		refreshNotes(clickedObject)
-	end
+	resultText(clickedObject, playerColor, 'claims [0080F8]Liberal[-]')
 end
 
 function fascist(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerNotes[noteTakerCurrLine].result = 'claims [FF0000]Fascist[-]'
-		addNewLine()
-		refreshNotes(clickedObject)
-	end
+	resultText(clickedObject, playerColor, 'claims [FF0000]Fascist[-]')
 end
 
 function noComment(clickedObject, playerColor)
+	resultText(clickedObject, playerColor, 'says [i]Nothing[/i]')
+end
+
+function resultText(clickedObject, playerColor, text)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerNotes[noteTakerCurrLine].result = 'says [i]Nothing[/i]'
-		addNewLine()
+		if noteTakerNotes[noteTakerCurrLine].result == text then
+			noteTakerNotes[noteTakerCurrLine].result = ''
+		else
+			noteTakerNotes[noteTakerCurrLine].result = text
+			addNewLine()
+		end
 		refreshNotes(clickedObject)
 	end
 end
 
 function LLL(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text = '[0080F8]LLL[-]'
-		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
-			noteTakerNotes[noteTakerCurrLine].result = text
-			addNewLine()
-		else
-			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
-					and noteTakerNotes[noteTakerCurrLine].result ~= ''
-					and noteTakerCurrLine == #noteTakerNotes then
-				addNewLine()
-			end
-		end
-		refreshNotes(clickedObject)
-	end
+	XXX(clickedObject, playerColor, '[0080F8]LLL[-]')
 end
 
 function FLL(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text = '[FF0000]F[-][0080F8]LL[-]'
-		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
-			noteTakerNotes[noteTakerCurrLine].result = text
-			addNewLine()
-		else
-			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
-					and noteTakerNotes[noteTakerCurrLine].result ~= ''
-					and noteTakerCurrLine == #noteTakerNotes then
-				addNewLine()
-			end
-		end
-		refreshNotes(clickedObject)
-	end
+	XXX(clickedObject, playerColor, '[FF0000]F[-][0080F8]LL[-]')
 end
 
 function FFL(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text = '[FF0000]FF[-][0080F8]L[-]'
-		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
-			noteTakerNotes[noteTakerCurrLine].result = text
-			addNewLine()
-		else
-			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
-					and noteTakerNotes[noteTakerCurrLine].result ~= ''
-					and noteTakerCurrLine == #noteTakerNotes then
-				addNewLine()
-			end
-		end
-		refreshNotes(clickedObject)
-	end
+	XXX(clickedObject, playerColor, '[FF0000]FF[-][0080F8]L[-]')
 end
 
 function FFF(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text = '[FF0000]FFF[-]'
-		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
-			noteTakerNotes[noteTakerCurrLine].result = text
-			addNewLine()
-		else
-			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
-					and noteTakerNotes[noteTakerCurrLine].result ~= ''
-					and noteTakerCurrLine == #noteTakerNotes then
-				addNewLine()
-			end
-		end
-		refreshNotes(clickedObject)
-	end
+	XXX(clickedObject, playerColor, '[FF0000]FFF[-]')
 end
 
 function QQQ(clickedObject, playerColor)
+	XXX(clickedObject, playerColor, '???')
+end
+
+function XXX(clickedObject, playerColor, text)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text = '???'
 		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
-			noteTakerNotes[noteTakerCurrLine].result = text
-			addNewLine()
-		else
-			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
-					and noteTakerNotes[noteTakerCurrLine].result ~= ''
-					and noteTakerCurrLine == #noteTakerNotes then
+			if noteTakerNotes[noteTakerCurrLine].result == text then
+				noteTakerNotes[noteTakerCurrLine].result = ''
+			else
+				noteTakerNotes[noteTakerCurrLine].result = text
 				addNewLine()
+			end
+		else
+			if noteTakerNotes[noteTakerCurrLine].claim3 == text then
+				noteTakerNotes[noteTakerCurrLine].claim3 = ''
+			else
+				noteTakerNotes[noteTakerCurrLine].claim3 = text
+				if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
+						and noteTakerNotes[noteTakerCurrLine].result ~= ''
+						and noteTakerCurrLine == #noteTakerNotes then
+					addNewLine()
+				end
 			end
 		end
 		refreshNotes(clickedObject)
@@ -3985,80 +3937,65 @@ function QQQ(clickedObject, playerColor)
 end
 
 function LL(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text = '[0080F8]LL[-]'
-		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
-			and noteTakerConflict(noteTakerCurrLine)) then
-			noteTakerNotes[noteTakerCurrLine].claim2 = text
-		else
-			noteTakerNotes[noteTakerCurrLine].claim1 = text
-		end
-		refreshNotes(clickedObject)
-	end
+	XX(clickedObject, playerColor, '[0080F8]LL[-]')
 end
 
 function FL(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text = '[FF0000]F[-][0080F8]L[-]'
-		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
-			and noteTakerConflict(noteTakerCurrLine)) then
-			noteTakerNotes[noteTakerCurrLine].claim2 = text
-		else
-			noteTakerNotes[noteTakerCurrLine].claim1 = text
-		end
-		refreshNotes(clickedObject)
-	end
+	XX(clickedObject, playerColor, '[FF0000]F[-][0080F8]L[-]')
 end
 
 function FF(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text = '[FF0000]FF[-]'
-		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
-			and noteTakerConflict(noteTakerCurrLine)) then
-			noteTakerNotes[noteTakerCurrLine].claim2 = text
-		else
-			noteTakerNotes[noteTakerCurrLine].claim1 = text
-		end
-		refreshNotes(clickedObject)
-	end
+	XX(clickedObject, playerColor, '[FF0000]FF[-]')
 end
 
 function QQ(clickedObject, playerColor)
+	XX(clickedObject, playerColor, '??')
+end
+
+function XX(clickedObject, playerColor, text)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text = '??'
 		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
 			and noteTakerConflict(noteTakerCurrLine)) then
-			noteTakerNotes[noteTakerCurrLine].claim2 = text
+			if noteTakerNotes[noteTakerCurrLine].claim2 == text then
+				noteTakerNotes[noteTakerCurrLine].claim2 = ''
+			else
+				noteTakerNotes[noteTakerCurrLine].claim2 = text
+			end
 		else
-			noteTakerNotes[noteTakerCurrLine].claim1 = text
+			if noteTakerNotes[noteTakerCurrLine].claim1 == text then
+				noteTakerNotes[noteTakerCurrLine].claim1 = ''
+			else
+				noteTakerNotes[noteTakerCurrLine].claim1 = text
+			end
 		end
 		refreshNotes(clickedObject)
 	end
 end
 
 function L(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerNotes[noteTakerCurrLine].result = '[0080F8]L[-]'
-		if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
-				and noteTakerNotes[noteTakerCurrLine].claim3 ~= ''
-				and noteTakerCurrLine == #noteTakerNotes then
-			addNewLine()
-		end
-		refreshNotes(clickedObject)
-		resetTracker()
-	end
+	X(clickedObject, playerColor, '[0080F8]L[-]')
 end
 
 function F(clickedObject, playerColor)
+	X(clickedObject, playerColor, '[FF0000]F[-]')
+end
+
+function X(clickedObject, playerColor, text)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		noteTakerNotes[noteTakerCurrLine].result = '[FF0000]F[-]'
-		if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
-				and noteTakerNotes[noteTakerCurrLine].claim3 ~= ''
-				and noteTakerCurrLine == #noteTakerNotes then
-			addNewLine()
+		if noteTakerNotes[noteTakerCurrLine].result == text then
+			noteTakerNotes[noteTakerCurrLine].result = ''
+		else
+			noteTakerNotes[noteTakerCurrLine].result = text
+			if noteTakerCurrLine == #noteTakerNotes and
+				((noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
+				  and noteTakerNotes[noteTakerCurrLine].claim3 ~= '')
+				 or noteTakerNotes[noteTakerCurrLine].action == 'Topdeck:'
+				 or noteTakerNotes[noteTakerCurrLine].action == 'examines deck:') then
+				addNewLine()
+			end
+			resetTracker()
 		end
 		refreshNotes(clickedObject)
-		resetTracker()
 	end
 end
 
@@ -4122,7 +4059,6 @@ function noteTakerNotesString(maxLinesIn, showArrow, useColorIn)
 	end
 
 	for i = startLine, lastLine, 1 do
-
 		if noteTakerCurrLine == i and showArrow then
 			if editMode then
 				stringOut = stringOut .. right_unicode .. ' '
@@ -4130,56 +4066,7 @@ function noteTakerNotesString(maxLinesIn, showArrow, useColorIn)
 				stringOut = stringOut .. left_unicode .. ' '
 			end
 		end
-		if noteTakerNotes[i].conflict ~= '' then
-			stringOut = stringOut .. noteTakerNotes[i].conflict .. ' '
-		end
-		if noteTakerNotes[i].color1 ~= '' then
-			local player = Player[noteTakerNotes[i].color1]
-			local text = noteTakerNotes[i].color1
-			if player.steam_name and useNames then
-				text = player.steam_name
-			end
-			if useColorIn then
-				text = '[' .. stringColorToHex(noteTakerNotes[i].color1) .. ']' .. text .. '[-]'
-			end
-			stringOut = stringOut .. '[i]' .. text .. '[/i]' .. ' '
-		end
-		if noteTakerNotes[i].action ~= '' then
-			stringOut = stringOut .. noteTakerNotes[i].action .. ' '
-		end
-		if noteTakerNotes[i].color2 ~= '' then
-			local player = Player[noteTakerNotes[i].color2]
-			local text = noteTakerNotes[i].color2
-			if player.steam_name and useNames then
-				text = player.steam_name
-			end
-			if useColorIn then
-				text = '[' .. stringColorToHex(noteTakerNotes[i].color2) .. ']' .. text .. '[-]'
-			end
-			stringOut = stringOut .. '[i]' .. text .. '[/i]'
-			if noteTakerNotes[i].action ~= 'gives pres to'
-			 	and noteTakerNotes[i].action ~= 'shoots' then
-				stringOut = stringOut .. ': '
-			elseif noteTakerNotes[i].claim3 ~= ''
-					or noteTakerNotes[i].claim2 ~= ''
-					or noteTakerNotes[i].claim1 ~= ''
-					or noteTakerNotes[i].result ~= '' then
-				stringOut = stringOut .. ' '
-			end
-		end
-		if noteTakerNotes[i].claim3 ~= '' then
-			stringOut = stringOut .. noteTakerNotes[i].claim3 .. ' > '
-		end
-		if noteTakerNotes[i].claim2 ~= '' then
-			stringOut = stringOut .. noteTakerNotes[i].claim2 .. ' > '
-		end
-		if noteTakerNotes[i].claim1 ~= '' then
-			stringOut = stringOut .. noteTakerNotes[i].claim1 .. ' > '
-		end
-		if noteTakerNotes[i].result ~= '' then
-			stringOut = stringOut .. noteTakerNotes[i].result
-		end
-		stringOut = stringOut .. '\n'
+		stringOut = stringOut .. noteTakerNotesLine(i, useColorIn)
 	end
 
 	if not useColorIn then
@@ -4187,6 +4074,63 @@ function noteTakerNotesString(maxLinesIn, showArrow, useColorIn)
 		stringOut = string.gsub(stringOut, 'FF0000]', textColorReplace) -- Fascist color
 		stringOut = string.gsub(stringOut, '222222]', textColorReplace) -- Downvote color
 	end
+
+	return stringOut
+end
+
+function noteTakerNotesLine(lineIn, useColorIn)
+	local stringOut = ''
+
+	if noteTakerNotes[lineIn].conflict ~= '' then
+		stringOut = stringOut .. noteTakerNotes[lineIn].conflict .. ' '
+	end
+	if noteTakerNotes[lineIn].color1 ~= '' then
+		local player = Player[noteTakerNotes[lineIn].color1]
+		local text = noteTakerNotes[lineIn].color1
+		if player.steam_name and useNames then
+			text = string.sub(player.steam_name, 1, 7)
+		end
+		if useColorIn then
+			text = '[' .. stringColorToHex(noteTakerNotes[lineIn].color1) .. ']' .. text .. '[-]'
+		end
+		stringOut = stringOut .. '[i]' .. text .. '[/i]' .. ' '
+	end
+	if noteTakerNotes[lineIn].action ~= '' then
+		stringOut = stringOut .. noteTakerNotes[lineIn].action .. ' '
+	end
+	if noteTakerNotes[lineIn].color2 ~= '' then
+		local player = Player[noteTakerNotes[lineIn].color2]
+		local text = noteTakerNotes[lineIn].color2
+		if player.steam_name and useNames then
+			text = string.sub(player.steam_name, 1, 7)
+		end
+		if useColorIn then
+			text = '[' .. stringColorToHex(noteTakerNotes[lineIn].color2) .. ']' .. text .. '[-]'
+		end
+		stringOut = stringOut .. '[i]' .. text .. '[/i]'
+		if noteTakerNotes[lineIn].action ~= 'gives pres to'
+			and noteTakerNotes[lineIn].action ~= 'shoots' then
+			stringOut = stringOut .. ': '
+		elseif noteTakerNotes[lineIn].claim3 ~= ''
+				or noteTakerNotes[lineIn].claim2 ~= ''
+				or noteTakerNotes[lineIn].claim1 ~= ''
+				or noteTakerNotes[lineIn].result ~= '' then
+			stringOut = stringOut .. ' '
+		end
+	end
+	if noteTakerNotes[lineIn].claim3 ~= '' then
+		stringOut = stringOut .. noteTakerNotes[lineIn].claim3 .. ' > '
+	end
+	if noteTakerNotes[lineIn].claim2 ~= '' then
+		stringOut = stringOut .. noteTakerNotes[lineIn].claim2 .. ' > '
+	end
+	if noteTakerNotes[lineIn].claim1 ~= '' then
+		stringOut = stringOut .. noteTakerNotes[lineIn].claim1 .. ' > '
+	end
+	if noteTakerNotes[lineIn].result ~= '' then
+		stringOut = stringOut .. noteTakerNotes[lineIn].result
+	end
+	stringOut = stringOut .. '\n'
 
 	return stringOut
 end
@@ -4333,7 +4277,7 @@ function defaultsSecretHitlerCE(selfIn)
 		maxLines = 19
 	end
 
-	electionTrackerOrgPos = {x = -3.95596671, y = 2.51625156, z = -9.343102}
+	electionTrackerOrgPos = {x = -3.970001, y = 2.51625061, z = -9.385004}
 	electionTrackerMoveX = 2.7
 	rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 2.5, Yellow = -2.5, Green = 0, Teal = 0, Blue = 0, Purple = 2.5, Pink = -2.5}
 	prevForward = 11
@@ -4597,5 +4541,23 @@ end
 
 function stringColorToHex(color)
 	return rgbToHex(stringColorToRGB(color))
+end
+
+function removeBBCode(stringIn)
+	local out = ''
+	local formating = false
+
+	for i = 1, string.len(stringIn) do
+		local tmpChar = string.sub(stringIn, i, i)
+		if tmpChar == '[' then
+			formating = true
+		elseif tmpChar == ']' then
+			formating = false
+		else
+			if not formating then out = out .. tmpChar end
+		end
+	end
+
+	return out
 end
 -- end Common Globals and Functions
