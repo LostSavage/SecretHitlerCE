@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 83
+update_version = 84
 add_on_version = 4
 
 --Buttons
@@ -65,7 +65,6 @@ blockDraw = false
 
 -- Saved data
 bannerGuids = {}
-bulletGuids = {}
 bulletInfo = {
 	type = 'Custom_Model',
 	mesh = 'http://cloud-3.steamusercontent.com/ugc/487893695357489958/2749FC201350D558AC9DF373861E4323C8B354BB/',
@@ -82,7 +81,8 @@ bulletInfo = {
 	use_grid = false,
 	colorTint = {0, 0, 0.0382530019},
 	scale = {0.75, 0.75, 0.75},
-	text = 'Shoots'
+	action = 'Shoots',
+	status = 'Dead'
 }
 fascists = {}
 forcePres = nil
@@ -153,7 +153,6 @@ function onLoad(saveString)
 	if not (saveString == '') then
 		local save = JSON.decode(saveString)
 		bannerGuids = save['b']
-		bulletGuids = save['bu']
 		bulletInfo = save['bi']
 		fascists = save['f']
 		forcePres = save['fp']
@@ -208,7 +207,6 @@ end
 function onSave()
 	local save = {}
 	save['b'] = bannerGuids
-	save['bu'] = bulletGuids
 	save['bi'] = bulletInfo
 	save['f'] = fascists
 	save['fp'] = forcePres
@@ -341,15 +339,15 @@ function refreshStatusButtons()
 				button.label = 'Vote Only'
 			elseif _G.playerStatus[ownerColor] == 4 then
 				button.color = stringColorToRGB('Red')
-				button.label = 'Dead'
+				button.label = bulletInfo.status
 			else
 				button.color = stringColorToRGB('Red')
-				button.label = 'Dead\nNot ' .. text.hitler
+				button.label = bulletInfo.status .. '\nNot ' .. text.hitler
 			end
 			button.function_owner = self
 			button.position = {0, 0.2, 0}
 			button.rotation = {0, 180, 0}
-			button.width = 2800
+			button.width = 2900
 			button.height = 1500
 			button.font_size = 600
 			tmpObj.createButton(button)
@@ -860,7 +858,7 @@ function boardCardHandler(card)
 		if lastPres then
 			giveBullet(lastPres)
 			if options.autoNotate then
-				notateInfo(lastPres, string.lower(bulletInfo.text), '', '', true)
+				notateInfo(lastPres, string.lower(bulletInfo.action), '', '', true)
 			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
@@ -1074,7 +1072,7 @@ function giveBullet(playerIn)
 			'			if Global.call(\'isTableGUID\', {collisionInfo.collision_object.guid}) then\r\n' ..
 			'				local bulletInfo = Global.getTable(\'bulletInfo\')\r\n' ..
 			'				local notate = Global.getTable(\'notate\')\r\n' ..
-			'				if notate.line and notate.action == string.lower(bulletInfo.text) then\r\n' ..
+			'				if notate.line and notate.action == string.lower(bulletInfo.action) then\r\n' ..
 			'					Global.call(\'notateColor2ByObject\', {self})\r\n' ..
 			'				end\r\n' ..
 			'			end\r\n' ..
@@ -1082,7 +1080,6 @@ function giveBullet(playerIn)
 			'	end\r\n' ..
 			'end\r\n')
 	wait(5)
-	table.insert(bulletGuids, 1, bullet.getGUID())
 	bullet.setPosition({0, 30, 0})
 	giveObjectToPlayer(bullet, playerIn, {forward = 20, right = 0, up = 0, forceHeight = 6}, no_rotation)
 end
@@ -2302,10 +2299,10 @@ function changePlayerStatus(clickedObject, playerColor)
 					button.label = 'Vote Only'
 				elseif _G.playerStatus[ownerColor] == 4 then
 					button.color = stringColorToRGB('Red')
-					button.label = 'Dead'
+					button.label =  bulletInfo.status
 				else
 					button.color = stringColorToRGB('Red')
-					button.label = 'Dead\nNot '.. text.hitler
+					button.label = bulletInfo.status .. '\nNot '.. text.hitler
 				end
 				clickedObject.editButton(button)
 			end
@@ -3906,7 +3903,7 @@ function initCommon(selfIn)
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'shoots'
-	buttonParam.label = bulletInfo.text
+	buttonParam.label = bulletInfo.action
 	buttonParam.position = {positionXscale * 3.4, positionY, (-0.25 * positionZscale) + positionZoffset2}
 	buttonParam.width = 1300 * buttonScale
 	selfIn.createButton(buttonParam)
@@ -4067,7 +4064,7 @@ function buttonColor(clickedObject, clickingPlayer, colorClicked)
 			noteTakerNotes[noteTakerCurrLine].color2 = colorClicked
 			prevChanColor = colorClicked
 		end
-		if (noteTakerNotes[noteTakerCurrLine].action == string.lower(bulletInfo.text) or noteTakerNotes[noteTakerCurrLine].action == 'gives pres to')
+		if (noteTakerNotes[noteTakerCurrLine].action == string.lower(bulletInfo.action) or noteTakerNotes[noteTakerCurrLine].action == 'gives pres to')
 		 	and noteTakerNotes[noteTakerCurrLine].color1 ~= '' and noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
 			addNewLine()
 		end
@@ -4371,10 +4368,10 @@ function shoots(clickedObject, playerColor)
 	local bulletInfo = Global.getTable('bulletInfo')
 
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if noteTakerNotes[noteTakerCurrLine].action == string.lower(bulletInfo.text) then
+		if noteTakerNotes[noteTakerCurrLine].action == string.lower(bulletInfo.action) then
 			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
-			noteTakerNotes[noteTakerCurrLine].action = string.lower(bulletInfo.text)
+			noteTakerNotes[noteTakerCurrLine].action = string.lower(bulletInfo.action)
 		end
 		if noteTakerNotes[noteTakerCurrLine].color1 ~= ''
 			and noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
@@ -4654,7 +4651,7 @@ function noteTakerNotesLine(lineIn, useColorIn)
 		end
 		stringOut = stringOut .. '[i]' .. text .. '[/i]'
 		if noteTakerNotes[lineIn].action ~= 'gives pres to'
-			and noteTakerNotes[lineIn].action ~= string.lower(bulletInfo.text) then
+			and noteTakerNotes[lineIn].action ~= string.lower(bulletInfo.action) then
 			stringOut = stringOut .. ': '
 		elseif noteTakerNotes[lineIn].claim3 ~= ''
 				or noteTakerNotes[lineIn].claim2 ~= ''
