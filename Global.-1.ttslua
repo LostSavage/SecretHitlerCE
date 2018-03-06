@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 65
+update_version = 66
 
 --Buttons
 settings_pannel_guid = '39d283'
@@ -70,6 +70,7 @@ bannerGuids = {}
 bulletGUIDs = {}
 deadPlayer = {}
 fascists = {}
+forcePres = nil
 hitler = {}
 inspected = {}
 jaCardGuids = {}
@@ -83,7 +84,7 @@ noteTakerNotes = {}
 noteTakerCurrLine = 0
 options = {
 	autoNotate = true,
-	autoPrevPlacards = true,
+	autoPlacards = true,
 	bulletSound = true,
 	dealPartyCards = false,
 	dealRoleCards = false,
@@ -108,6 +109,7 @@ function onLoad(saveString)
 		bulletGUIDs = save['bu']
 		deadPlayer = save['dp']
 		fascists = save['f']
+		forcePres = save['fp']
 		hitler = save['h']
 		inspected = save['i']
 		jaCardGuids = save['ja']
@@ -154,6 +156,7 @@ function onSave()
 	save['bu'] = bulletGUIDs
 	save['dp'] = deadPlayer
 	save['f'] = fascists
+	save['fp'] = forcePres
 	save['h'] = hitler
 	save['i'] = inspected
 	save['ja'] = jaCardGuids
@@ -435,8 +438,8 @@ function settingsPannelMakeButtons()
 		buttonParam.position = {startX, 0.2, startZ + offsetZ * 4}
 		settingsPannel.createButton(buttonParam)
 
-		if options.autoPrevPlacards then buttonParam.label = label_check else buttonParam.label = '' end
-		buttonParam.click_function = 'autoPrevPlacardsFlip'
+		if options.autoPlacards then buttonParam.label = label_check else buttonParam.label = '' end
+		buttonParam.click_function = 'autoPlacardsFlip'
 		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
 		settingsPannel.createButton(buttonParam)
 
@@ -597,9 +600,9 @@ function scriptedVotingFlip(clickedObject, playerColor)
 	end
 end
 
-function autoPrevPlacardsFlip(clickedObject, playerColor)
+function autoPlacardsFlip(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		options.autoPrevPlacards = not options.autoPrevPlacards
+		options.autoPlacards = not options.autoPlacards
 		settingsPannelMakeButtons()
 	end
 end
@@ -648,6 +651,9 @@ function displayBannerCardsCoroutine()
 		boardCardHandler(boardCard)
 	else
 		displayBannerCard(policyCard, 0, 0)
+		if lastPres and options.autoPlacards then
+			movePlacards(nextPres(lastPres))
+		end
 	end
 
 	topdeck = false
@@ -764,6 +770,21 @@ function boardCardHandler(card)
 			printToAll('ERROR: Last president not found.', {1,0,0})
 		end
 	end
+
+	if lastPres and options.autoPlacards then
+		if isBoardCardPickPres(card) then
+			local saveForcePres = forcePres
+			forcePres = nil
+			movePlacards(lastPres)
+			if saveForcePres then
+				forcePres = saveForcePres
+			else
+				forcePres = nextPres(lastPres)
+			end
+		else
+			movePlacards(nextPres(lastPres))
+		end
+	end
 end
 
 function isPolicyCard(objIn)
@@ -857,6 +878,32 @@ function isBoardCardPickPres(objIn)
 	return false
 end
 
+function nextPres(playerIn)
+	local nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'White'}
+	local checkPres = playerIn
+	local returnVal = nextList[checkPres]
+
+	while not inTable(players, returnVal) do
+		checkPres = returnVal
+		returnVal = nextList[checkPres]
+	end
+
+	return returnVal
+end
+
+function movePlacards(playerIn)
+	local moveToPlayer = playerIn
+	if forcePres then
+		moveToPlayer = forcePres
+		forcePres = nil
+	end
+
+	local tmpPres = getObjectFromGUID(president_guid)
+	if tmpPres then giveObjectToPlayer(tmpPres, moveToPlayer, {forward = prevForward, right = 0, up = 0, forceHeight = 2.2}, no_rotation, false, false) end
+	local tmpChan = getObjectFromGUID(chancelor_guid)
+	if tmpChan then giveObjectToPlayer(tmpChan, moveToPlayer, {forward = prevForward, right = 0, up = 0, forceHeight = 2.8}, no_rotation, false, false) end
+end
+
 function createPolicyCardTimer()
 	Timer.destroy('policyCardTimer')
 	local parameters = {}
@@ -948,22 +995,22 @@ function policyCardCoroutine()
 	local movePrevPlacards = function()
 		if lastPres and lastChan then
 			local tmpPres = getObjectFromGUID(prev_president_guid)
-			if tmpPres then giveObjectToPlayer(tmpPres, lastPres, {forward = prevForward, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, true) end
+			if tmpPres then giveObjectToPlayer(tmpPres, lastPres, {forward = prevForward, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, false) end
 			local tmpChan = getObjectFromGUID(prev_chancelor_guid)
-			if tmpChan then giveObjectToPlayer(tmpChan, lastChan, {forward = prevForward, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, true) end
+			if tmpChan then giveObjectToPlayer(tmpChan, lastChan, {forward = prevForward, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, false) end
 		end
 	end
 
 	local homePrevPlacards = function()
 		local tmpPres = getObjectFromGUID(prev_president_guid)
 		if tmpPres then
-			tmpPres.setRotationSmooth(flip_y, false, true)
-			tmpPres.setPositionSmooth(prev_president_pos, false, true)
+			tmpPres.setRotationSmooth(flip_y, false, false)
+			tmpPres.setPositionSmooth(prev_president_pos, false, false)
 		end
 		local tmpChan = getObjectFromGUID(prev_chancelor_guid)
 		if tmpChan then
-			tmpChan.setRotationSmooth(flip_y, false, true)
-			tmpChan.setPositionSmooth(prev_chancelor_pos, false, true)
+			tmpChan.setRotationSmooth(flip_y, false, false)
+			tmpChan.setPositionSmooth(prev_chancelor_pos, false, false)
 		end
 	end
 
@@ -1157,7 +1204,7 @@ function policyCardCoroutine()
 					end
 					if autoNotateReshuffle then notateReshuffle() end
 				end
-				if options.autoPrevPlacards then
+				if options.autoPlacards then
 					if topdeck then
 						homePrevPlacards()
 					else
@@ -1188,7 +1235,7 @@ function policyCardCoroutine()
 					end
 					if autoNotateReshuffle then notateReshuffle() end
 				end
-				if options.autoPrevPlacards then
+				if options.autoPlacards then
 					if topdeck then
 						homePrevPlacards()
 					else
@@ -1271,10 +1318,24 @@ function startVoteCheck()
 		end
 		flipVotes()
 		disableVote = true
+		if options.scriptedVoting then
+			startLuaCoroutine(Global, 'waitReturnVoteCardsCoroutine')
+		end
 	else
 		voteNotes = getPrelimVoteString()
 		setNotes(voteNotes .. '\n\n' .. mainNotes)
 	end
+end
+
+function waitReturnVoteCardsCoroutine()
+	sleep(5)
+	returnVoteCardsToHand()
+	if options.autoPlacards then
+		disableVote = false
+		blockDraw = false
+	end
+
+	return true
 end
 
 function flipVotes()
@@ -1352,6 +1413,9 @@ function getFinalVoteString()
 			if tracker then
 				tracker.translate({electionTrackerMoveX, 0, 0})
 			end
+		end
+		if options.autoPlacards then
+			movePlacards(nextPres(getPres()))
 		end
 	end
 
@@ -4277,7 +4341,7 @@ function defaultsSecretHitlerCE(selfIn)
 		maxLines = 19
 	end
 
-	electionTrackerOrgPos = {x = -3.970001, y = 2.51625061, z = -9.385004}
+	electionTrackerOrgPos = {x = -3.970005, y = 1.27525151, z = -9.385001}
 	electionTrackerMoveX = 2.7
 	rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 2.5, Yellow = -2.5, Green = 0, Teal = 0, Blue = 0, Purple = 2.5, Pink = -2.5}
 	prevForward = 11
