@@ -5,14 +5,14 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 84
+update_version = 86
 add_on_version = 4
 
 --Buttons
 settingsPannel_guid = '39d283'
 drawPileBoard_guid = 'a5b10f'
-radio_string = '\u{25CF}'
-check_string = '\u{2713}'
+radio_string = '●'
+check_string = '✓'
 
 --Board cards
 inspectOrange_deck_guid = '87e770'
@@ -87,7 +87,6 @@ bulletInfo = {
 fascists = {}
 forcePres = nil
 hitler = {}
-hitlerTerritory = false
 inspected = {}
 jaCardGuids = {}
 lastFascistPlayed = 0
@@ -107,8 +106,8 @@ options = {
 	autoNotate = true,
 	dealPartyCards = false,
 	dealRoleCards = false,
+	expansionAmount = 2,
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
-	muteGov = false,
 	noteType = 0, -- [0 dark wook, 1 light wood, 2 red wood, 3 black plastic, 4 custom image, 5 private, 6 cooperative]
 	scriptedVoting = true,
 	shufflePlayers = false,
@@ -157,7 +156,6 @@ function onLoad(saveString)
 		fascists = save['f']
 		forcePres = save['fp']
 		hitler = save['h']
-		hitlerTerritory = save['ht']
 		inspected = save['i']
 		jaCardGuids = save['ja']
 		lastFascistPlayed = save['lfp']
@@ -192,8 +190,8 @@ function onLoad(saveString)
 		setNotes(mainNotes)
 		local status, err = pcall(init)
 		if not status then
-			print('Error loading.')
-			print(err)
+			printToAll('Error loading.', {1,0,0})
+			printToAll(err, {1,0,0})
 		end
 		settingsPannelMakeButtons()
 	end
@@ -211,7 +209,6 @@ function onSave()
 	save['f'] = fascists
 	save['fp'] = forcePres
 	save['h'] = hitler
-	save['ht'] = hitlerTerritory
 	save['i'] = inspected
 	save['ja'] = jaCardGuids
 	save['lfp'] = lastFascistPlayed
@@ -447,6 +444,12 @@ function onChat(messageIn, player)
 			printToColor('ERROR: Full vote history is not enabled.', player.color, {1, 0, 0})
 		end
 		return false
+	elseif message == 'version' then
+		versionInfo(player.color)
+		return false
+	elseif message == 'promote' and player.steam_id == '76561197992512677' then
+		player.promote()
+		return false
 	elseif message == 'help' then
 		chatHelp(player.color)
 		return false
@@ -458,6 +461,7 @@ function settingsPannelMakeButtons()
 	if settingsPannel then
 		settingsPannel.clearButtons()
 
+		-- check and radio buttons
 		local buttonParam = {rotation = {0, 0, 0}, width = 600, height = 600, font_size = 480, function_owner = self}
 		local startX = -6.1
 		local startZ = -22.9
@@ -576,10 +580,66 @@ function settingsPannelMakeButtons()
 		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
 		settingsPannel.createButton(buttonParam)
 
-		if options.muteGov then buttonParam.label = check_string else buttonParam.label = '' end
-		buttonParam.click_function = 'muteGovFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 6}
-		--settingsPannel.createButton(buttonParam)
+		-- Text
+		buttonParam = {
+			alignment = 4,
+			font_color = {0, 0, 0},
+			rotation = {0, 0, 0},
+			width = 0,
+			height = 0,
+			font_size = 480,
+			function_owner = self,
+			click_function = 'nullFunction'
+		}
+
+		buttonParam.label = 'Board'
+		buttonParam.position = {0, 0.2, -24.3}
+		settingsPannel.createButton(buttonParam)
+
+		buttonParam.label = 'Note Taker'
+		buttonParam.position = {0, 0.2, -17.4}
+		settingsPannel.createButton(buttonParam)
+
+		buttonParam.label = 'Hidden Zones'
+		buttonParam.position = {0, 0.2, -5.1}
+		settingsPannel.createButton(buttonParam)
+
+		buttonParam.label = 'Other Options'
+		buttonParam.position = {0, 0.2, 0.6}
+		settingsPannel.createButton(buttonParam)
+
+		--Expansion
+		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+		if abilitiesDeck then
+			startZ = 11.4
+
+			buttonParam.label = 'Expansion'
+			buttonParam.position = {0, 0.2, startZ - 1.4}
+			settingsPannel.createButton(buttonParam)
+
+			buttonParam.label = 'Cards'
+			buttonParam.position = {startX + 4.7, 0.2, startZ}
+			settingsPannel.createButton(buttonParam)
+
+			buttonParam.label = '-'
+			buttonParam.click_function = 'decExpansionAmount'
+			buttonParam.position = {startX, 0.2, startZ}
+			buttonParam.width = 600
+			buttonParam.height = 600
+			settingsPannel.createButton(buttonParam)
+
+			buttonParam.label = '+'
+			buttonParam.click_function = 'incExpansionAmount'
+			buttonParam.position = {startX + 2.6, 0.2, startZ}
+			settingsPannel.createButton(buttonParam)
+
+			buttonParam.label = options.expansionAmount
+			buttonParam.click_function = 'nullFunction'
+			buttonParam.color =  stringColorToRGB('Grey')
+			buttonParam.font_color = stringColorToRGB('White')
+			buttonParam.position = {startX + 1.3, 0.2, startZ}
+			settingsPannel.createButton(buttonParam)
+		end
 
 		buttonParam = {click_function = 'setupStart', label = 'Start', function_owner = self, position = {0, 0.2, 23}, rotation = {0, 0, 0}, width = 3300, height = 1500, font_size = 750}
 		settingsPannel.createButton(buttonParam)
@@ -735,9 +795,20 @@ function shufflePlayersFlip(clickedObject, playerColor)
 	end
 end
 
-function muteGovFlip(clickedObject, playerColor)
+function decExpansionAmount(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		options.muteGov = not options.muteGov
+		if options.expansionAmount > 2 then
+			options.expansionAmount = options.expansionAmount - 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function incExpansionAmount(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.expansionAmount < 3 then
+			options.expansionAmount = options.expansionAmount + 1
+		end
 		settingsPannelMakeButtons()
 	end
 end
@@ -797,12 +868,6 @@ function displayBannerCardsCoroutine()
 
 	topdeck = false
 
-	-- Unmute
-	if options.muteGov then
-		if not Player[lastPres].host then Player[lastPres].mute() end
-		if not Player[lastChan].host then Player[lastChan].mute() end
-	end
-
 	-- Win check
 	if lastLiberalPlayed > 5 or lastFascistPlayed > 6 then
 		if not options.dealRoleCards then giveRoleCards() end
@@ -839,6 +904,12 @@ end
 function boardCardHandler(card)
 	if isBoardCardInspect(card) then
 		if lastPres then
+			--expansion
+			local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+			if abilitiesDeck then
+				broadcastToAll('Delaying inspect 5 seconds...', {1,1,1})
+				sleep(5)
+			end
 			if not options.dealPartyCards then createInspectButtons(lastPres) end
 			if options.autoNotate then
 				notateInfo(lastPres, 'inspects', '', '', true)
@@ -875,7 +946,7 @@ function boardCardHandler(card)
 		end
 	elseif isBoardCardTopThree(card) then
 		if lastPres then
-			broadcastToColor('Examine the top three cards from the deck and put them back in the draw pile.', lastPres, {1, 1, 1})
+			broadcastToColor('Examine the top three cards from the deck and put them back in the draw pile (right to left to keep the order).', lastPres, {1, 1, 1})
 			drawCards(3, lastPres)
 			if options.autoNotate then
 				notateInfo(lastPres, 'examines deck:', '', '', false)
@@ -902,7 +973,7 @@ function boardCardHandler(card)
 end
 
 function isPolicyCard(objIn)
-	if objIn.name == 'Card' and (objIn.getDescription() == 'Fascist Policy' or
+	if objIn.tag == 'Card' and (objIn.getDescription() == 'Fascist Policy' or
 		objIn.getDescription() == 'Liberal Policy') and not objIn.held_by_color then
 		return true
 	end
@@ -910,28 +981,28 @@ function isPolicyCard(objIn)
 end
 
 function isFascistPolicyCard(objIn)
-	if objIn.name == 'Card' and objIn.getDescription() == 'Fascist Policy' and not objIn.held_by_color then
+	if objIn.tag == 'Card' and objIn.getDescription() == 'Fascist Policy' and not objIn.held_by_color then
 		return true
 	end
 	return false
 end
 
 function isLiberalPolicyCard(objIn)
-	if objIn.name == 'Card' and objIn.getDescription() == 'Liberal Policy' and not objIn.held_by_color then
+	if objIn.tag == 'Card' and objIn.getDescription() == 'Liberal Policy' and not objIn.held_by_color then
 		return true
 	end
 	return false
 end
 
 function isPolicyNotUsedCard(objIn)
-	if objIn.name == 'Card' and objIn.getDescription() == 'Not Used' and not objIn.held_by_color then
+	if objIn.tag == 'Card' and objIn.getDescription() == 'Not Used' and not objIn.held_by_color then
 		return true
 	end
 	return false
 end
 
 function isBoardCard(objIn)
-	if objIn.name == 'Card' and
+	if objIn.tag == 'Card' and
 	   (objIn.getDescription() == 'The president examines\nthe top card.' or
 	    objIn.getDescription() == 'The president examines\nthe top card.\nVeto power is\nunlocked.' or
 	    objIn.getDescription() == 'The president examines\nthe top three cards.' or
@@ -948,7 +1019,7 @@ function isBoardCard(objIn)
 end
 
 function isBoardCardBullet(objIn)
-	if objIn.name == 'Card' and
+	if objIn.tag == 'Card' and
 	   (objIn.getDescription() == 'The president must\nkill a player.' or
 	    objIn.getDescription() == 'The president must\nkill a player.\nVeto power is\nunlocked.') then
 		return true
@@ -957,7 +1028,7 @@ function isBoardCardBullet(objIn)
 end
 
 function isBoardCardInspect(objIn)
-	if objIn.name == 'Card' and
+	if objIn.tag == 'Card' and
 	   (objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.' or
 		 objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.\nVeto power is\nunlocked.') then
 		return true
@@ -966,7 +1037,7 @@ function isBoardCardInspect(objIn)
 end
 
 function isBoardCardTopCard(objIn)
-	if objIn.name == 'Card' and
+	if objIn.tag == 'Card' and
 		(objIn.getDescription() == 'The president examines\nthe top card.' or
 		 objIn.getDescription() == 'The president examines\nthe top card.\nVeto power is\nunlocked.') then
 		return true
@@ -975,7 +1046,7 @@ function isBoardCardTopCard(objIn)
 end
 
 function isBoardCardTopThree(objIn)
-	if objIn.name == 'Card' and
+	if objIn.tag == 'Card' and
 		(objIn.getDescription() == 'The president examines\nthe top three cards.' or
 		 objIn.getDescription() == 'The president examines\nthe top three cards.\nVeto power is\nunlocked.') then
 		return true
@@ -984,7 +1055,7 @@ function isBoardCardTopThree(objIn)
 end
 
 function isBoardCardPickPres(objIn)
-	if objIn.name == 'Card' and
+	if objIn.tag == 'Card' and
 		(objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.' or
 		 objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.\nVeto power is\nunlocked.') then
 		return true
@@ -1012,6 +1083,9 @@ function movePlacards(playerIn, returnVoteCards)
 		moveToPlayer = forcePres
 		forcePres = nil
 	end
+
+	--Expansion
+	expansionCounters()
 
 	if options.scriptedVoting and returnVoteCards then
 		returnVoteCardsToHand()
@@ -1184,7 +1258,7 @@ function policyCardCoroutine()
 			smartTableInsert(liberalList, j.guid)
 			smartTableInsert(drawList, j.guid)
 			smartTableInsert(drawDeckList, j.guid)
-		elseif j.name == 'Deck' then
+		elseif j.tag == 'Deck' then
 			smartTableInsert(drawDeckList, j.guid)
 			local inDeck = j.getObjects()
 			for k, l in ipairs(inDeck) do
@@ -1211,7 +1285,7 @@ function policyCardCoroutine()
 	removeCt = 0
 	inZone = discardZone.getObjects()
 	for i, j in ipairs(inZone) do
-		if j.name == 'Deck' then
+		if j.tag == 'Deck' then
 			smartTableInsert(discardDeckList, j.guid)
 			local inDeck = j.getObjects()
 			for k, l in ipairs(inDeck) do
@@ -1384,7 +1458,6 @@ function policyCardCoroutine()
 				else
 					movePrevPlacards()
 				end
-				if lastFascistPlayed >= 4 then hitlerTerritory = true end
 				startLuaCoroutine(Global, 'displayBannerCardsCoroutine')
 			else
 				lastFascistPlayed = 0 -- didn't find the card
@@ -1469,16 +1542,28 @@ function startVoteCheck()
 		disableVote = true
 		if string.find(out, 'Vote passes') then
 			votePassed = true
-			-- disabled as it sometimes gives role cards early
-			--if hitlerTerritory and hitler == chanColor then
-			--	createGiveRoleCardTimer()
-			--end
 		else
 			votePassed = false
 		end
+
 	else
 		voteNotes = getPrelimVoteString()
 		setNotes(voteNotes .. '\n\n' .. mainNotes)
+	end
+end
+
+function expansionCounters()
+	local allObjs = getAllObjects()
+	local tmpObj
+
+	for _, tmpObj in ipairs(allObjs) do
+		if tmpObj then
+			if tmpObj.tag == 'Counter' and
+				(tmpObj.getName() == 'Turns Until Death' or
+			   tmpObj.getName() == 'Turns Until Poisoning') then
+				tmpObj.Counter.decrement()
+			end
+		end
 	end
 end
 
@@ -1546,10 +1631,10 @@ function getFinalVoteString()
 	out = out .. '[/i]'
 	if jaCount > neinCount then
 		broadcastToAll('Vote passes', stringColorToRGB('Green'))
-		out = '[' .. stringColorToHex('Green') .. ']-<<<<\u{00B7} Vote passes <\u{2550}\u{2550}\u{00A6}-\u{2022}\n' .. '[-]' .. out
+		out = '[' .. stringColorToHex('Green') .. ']-<<<<· Vote passes <══¦-•\n' .. '[-]' .. out
 	else
 		broadcastToAll('Vote fails', stringColorToRGB('Red'))
-		out = '[' .. stringColorToHex('Red') .. ']-<<<<\u{00B7} Vote fails <\u{2550}\u{2550}\u{00A6}-\u{2022}\n' .. '[-]' .. out
+		out = '[' .. stringColorToHex('Red') .. ']-<<<<· Vote fails <══¦-•\n' .. '[-]' .. out
 		if options.autoNotate then
 			local lineSave = noteTakerCurrLine
 			noteTakerCurrLine = #noteTakerNotes
@@ -1646,12 +1731,6 @@ function drawThree(clickedObject, playerColor)
 				broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
 			else
 				if not options.scriptedVoting or votePassed then
-					-- Mute
-					if options.muteGov then
-						if not Player[playerColor].host then Player[playerColor].mute() end
-						local chan = getChan()
-						if not Player[chan].host then Player[chan].mute() end
-					end
 					blockDraw = true
 					drawCards(3, playerColor)
 				else
@@ -1861,17 +1940,23 @@ function setupCoroutine()
 	local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
 	if abilitiesDeck then
 		abilitiesDeck.randomize()
-		abilitiesDeck.deal(2)
+		abilitiesDeck.deal(options.expansionAmount)
 	else
 		local tmpZone = getObjectFromGUID(abilitiesPile_zone_guid)
-		local inZone = tmpZone.getObjects()
-		for _, j in ipairs(inZone) do
-			if j.getGUID() ~= tcid_table_guid and j.getGUID() ~= round_table_guid then destroyObject(j) end
+		if tmpZone then
+			local inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if j.getGUID() ~= tcid_table_guid and j.getGUID() ~= round_table_guid then destroyObject(j) end
+			end
+			destroyObject(tmpZone)
 		end
 		tmpZone = getObjectFromGUID(effectsPile_zone_guid)
-		inZone = tmpZone.getObjects()
-		for _, j in ipairs(inZone) do
-			if j.getGUID() ~= tcid_table_guid and j.getGUID() ~= round_table_guid then destroyObject(j) end
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if j.getGUID() ~= tcid_table_guid and j.getGUID() ~= round_table_guid then destroyObject(j) end
+			end
+			destroyObject(tmpZone)
 		end
 	end
 
@@ -2317,6 +2402,7 @@ function chatHelp(playerColor)
 					'   r[ole] - All the role information you can know\n' ..
 					'   l[ast] - Shows the last vote\n' ..
 					'   h[istory] - Full vote history if enabled\n' ..
+					'   version - Version info (for debug)\n' ..
 					'   help - This message'
 	printToColor(msg, playerColor, {1,1,1})
 end
@@ -2389,9 +2475,7 @@ function disableSecurityCoroutine()
 	for _, tmpObj in ipairs(allObjs) do
 		if isPolicyCard(tmpObj) then
 			tmpObj.interactable = true
-		elseif tmpObj.name == 'Deck' then
-			tmpObj.interactable = true
-		elseif tmpObj.name == 'DeckCustom' then
+		elseif tmpObj.tag == 'Deck' then
 			tmpObj.interactable = true
 		end
 	end
@@ -2520,20 +2604,10 @@ function removeInspect()
 	local object
 
 	for _, object in ipairs(allObjs) do
-		if object.name == 'Card' and (object.getDescription() == 'Fake Party Card') then
+		if object.tag == 'Card' and (object.getDescription() == 'Fake Party Card') then
 			destroyObject(object)
 		end
 	end
-end
-
-function createGiveRoleCardTimer()
-	Timer.destroy('giveRoleCardTimer')
-	local parameters = {}
-	parameters.identifier = 'giveRoleCardTimer'
-	parameters.function_name = 'giveRoleCards'
-	parameters.function_owner = Global
-	parameters.delay = 7
-	Timer.create(parameters)
 end
 
 function giveRoleCards()
@@ -2667,12 +2741,9 @@ function getDeckFromZoneByGUID(guidIn)
 	if zone then
 		local inZone = zone.getObjects()
 		for _, object in ipairs(inZone) do
-			if object.name == 'Card' then
+			if object.tag == 'Card' then
 				deck_ct = 2
-			elseif object.name == 'Deck' then
-				deck = object
-				deck_ct = deck_ct + 1
-			elseif object.name == 'DeckCustom' then
+			elseif object.tag == 'Deck' then
 				deck = object
 				deck_ct = deck_ct + 1
 			end
@@ -2728,6 +2799,24 @@ function isTableGUID(GUIDIn)
 	return false
 end
 
+function versionInfo(playerColor)
+	local out
+
+	out = _VERSION -- Lua info
+	if mod_name then
+		out = out .. '\nmod_name = ' .. mod_name
+	else
+		out = out .. '\nmod_name = nil'
+	end
+	if update_version then
+		out = out .. '\nupdate_version = ' .. update_version
+	else
+		out = out .. '\nupdate_version = nil'
+	end
+	out = out .. '\nGlobal Lua length ' .. string.len(Global.getLuaScript())
+	printToColor(out, playerColor, {1, 1, 1})
+end
+
 --------------------------------------------------------------------------------
 --Note Taker
 --------------------------------------------------------------------------------
@@ -2753,11 +2842,11 @@ model_list = {}
 image_list = {}
 no_button_list = {}
 
-menu_unicode = '\u{2630}'
-up_unicode = '\u{25B2}'
-right_unicode = '\u{25BA}'
-down_unicode = '\u{25BC}'
-left_unicode = '\u{25C4}'
+menu_unicode = '☰'
+up_unicode = '▲'
+right_unicode = '►'
+down_unicode = '▼'
+left_unicode = '◄'
 
 noteTakerNotes = {}
 noteTakerCurrLine = 0
@@ -3015,8 +3104,6 @@ function menuButton(clickedObject, playerColor)
 		clickedObject.setVar('forceMenu', true)
 		clickedObject.setVar('functionName', 'menu')
 		startLuaCoroutine(clickedObject, 'spawnWaitDestructCoroutine')
-	else
-		versionInfo(clickedObject, playerColor)
 	end
 end
 
@@ -3065,7 +3152,7 @@ function menu(selfIn)
 			screen.setDescription('\n\n\n\n\n\n\n\n\n                      Who is the note taker?')
 		end
 	else
-		buttonParam.click_function = 'versionInfo'
+		buttonParam.click_function = 'nullFunction'
 		buttonParam.label = 'Who is the note taker?'
 		buttonParam.position = {positionXscale * 0, positionY, (-8.3 * positionZscale) + positionZoffset1}
 		buttonParam.height = 500 * buttonScale
@@ -4807,26 +4894,6 @@ function easyQuotes(stringIn)
 	end
 end
 
-function versionInfo(clickedObject, playerColor)
-	local modName = Global.getVar('mod_name')
-	local updateVersion = Global.getVar('update_version')
-	local out
-
-	out = _VERSION
-	if modName then
-		out = out .. '\nmod_name = ' .. modName
-	else
-		out = out .. '\nmod_name = nil'
-	end
-	if updateVersion then
-		out = out .. '\nupdate_version = ' .. updateVersion
-	else
-		out = out .. '\nupdate_version = nil'
-	end
-	out = out .. '\nGlobal Lua length ' .. string.len(Global.getLuaScript())
-	printToColor(out, playerColor, {1, 1, 1})
-end
-
 -- Common Globals and Functions
 tcid_table_guid = 'be127b' -- The Captian is Dead
 round_table_guid = '5cd706'
@@ -4965,5 +5032,9 @@ function removeBBCode(stringIn)
 	end
 
 	return out
+end
+
+function nullFunction()
+	--nothing here
 end
 -- end Common Globals and Functions

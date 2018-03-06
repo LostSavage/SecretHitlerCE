@@ -1,0 +1,34 @@
+-- Based on Card Counter created by Rodney
+loadDone = false
+
+function onLoad()
+	loadDone = true
+end
+
+function onCollisionEnter(info)
+	if info and loadDone then
+		local target = getObjectFromGUID(info.collision_object.guid)
+		local count = -1
+
+		if target then
+			if target.tag == "Card" then
+				count = 1
+			elseif target.tag == "Deck" then
+				count = #target.getObjects()
+			end
+
+			-- card/deck only
+			if count > -1 then
+				self.setName(count)
+				Global.call('createPolicyCardTimer')
+			end
+		end
+	end
+end
+
+function onCollisionExit(info)
+	if info and loadDone then
+		self.setName("0")
+		Global.call('createPolicyCardTimer')
+	end
+end
