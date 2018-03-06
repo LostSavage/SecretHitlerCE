@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 81
+update_version = 82
 add_on_version = 4
 
 --Buttons
@@ -131,6 +131,7 @@ playerStatus = {
 	Pink = 1
 }
 roles = {}
+roleButtons = {}
 started = nil
 text = {
 	hitler = 'Hitler',
@@ -176,6 +177,7 @@ function onLoad(saveString)
 		playerStatus = save['ps']
 		playerStatusButtonGuids = save['psbg']
 		roles = save['r']
+		roleButtons = save['rb']
 		started = save['s']
 		text = save['t']
 		voteNotes = save['vn']
@@ -183,7 +185,7 @@ function onLoad(saveString)
 	end
 	alwaysInit()
 	if not started then
-		mainNotes = '[FFFF00]' .. mod_name .. '\n' ..
+		mainNotes = '[FFFF00]Secret Hitler: Consolidator Edition\n' ..
 						'Version ' ..  update_version .. ' (' .. string.len(Global.getLuaScript()) .. ')\n' ..
 						'\n[-]Based on the board game:\n\n[FF0000]Secret Hitler[-]\ndesigned by\n[0080F8]Max Temkin[-],\n[0080F8]Mike Boxleiter[-],\n[0080F8]Tommy Maranges[-]\nand Illustrated by\n[0080F8]Mackenzie Schubert.[-]\n\n' ..
 						'Check the notebook for additional\ninformation and subscribe on the\nworkshop to make sure you have the\nlatest version.\n\n' ..
@@ -230,6 +232,7 @@ function onSave()
 	save['ps'] = playerStatus
 	save['psbg'] = playerStatusButtonGuids
 	save['r'] = roles
+	save['rb'] = roleButtons
 	save['s'] = started
 	save['t'] = text
 	save['vn'] = voteNotes
@@ -280,6 +283,23 @@ function alwaysInit()
 
 	--Player Status Buttons
 	refreshStatusButtons()
+
+	--Player Role Buttons
+	for _, buttonGUID in ipairs(roleButtons) do
+		tmpObj = getObjectFromGUID(buttonGUID)
+		if tmpObj then
+			local button = {}
+			button.click_function = 'tellRoleButton'
+			button.label = 'Role?'
+			button.function_owner = self
+			button.position = {0, 0.2, 0}
+			button.rotation = {0, 0, 0}
+			button.width = 800
+			button.height = 600
+			button.font_size = 300
+			tmpObj.createButton(button)
+		end
+	end
 
 	-- Extra role cards not interactable unless in hand
 	local cardGUID
@@ -414,7 +434,8 @@ function init()
 	if customOnly and options.gameType < 2 then options.gameType = 2 end
 end
 
-function onChat(message, player)
+function onChat(messageIn, player)
+	local message = string.gsub(string.lower(messageIn), ' ', '')
 	if message == 'role' or message == 'r' then
 		tellRole(player.color)
 		return false
@@ -1792,12 +1813,13 @@ function setupCoroutine()
 				tmpObj.setScale({15.3268776, 5.1, 6.35014629})
 				forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
 			end
+			-- Player Status Buttons
 			local params = {}
 			params.type = 'backgammon_piece_white'
 			params.position = {-100, 100, -100}
 			params.callback_owner = selfIn
 			params.callback = 'statusButtonCallback'
-			buttonBase = spawnObject(params)
+			local buttonBase = spawnObject(params)
 			buttonBase.setColorTint(stringColorToRGB(player))
 			buttonBase.setLock(true)
 			forceObjectToPlayer(buttonBase, player, {forward = 11, right = -8.5, up = 0, forceHeight = 1.09}, flip_y)
@@ -1811,6 +1833,22 @@ function setupCoroutine()
 			button.width = 2800
 			button.height = 1500
 			button.font_size = 600
+			buttonBase.createButton(button)
+			-- Player Role Buttons
+			params.callback = 'roleButtonCallback'
+			buttonBase = spawnObject(params)
+			buttonBase.setColorTint(stringColorToRGB(player))
+			buttonBase.setLock(true)
+			local forwardAdd = 0
+			if options.zoneType ~= 1 then forwardAdd = 2.5 end
+			forceObjectToPlayer(buttonBase, player, {forward = 2.5 + forwardAdd, right = 6.8, up = 0, forceHeight = 1.09}, flip_y)
+			button.click_function = 'tellRoleButton'
+			button.color = {1, 1, 1}
+			button.label = 'Role?'
+			button.rotation = {0, 0, 0}
+			button.width = 800
+			button.height = 600
+			button.font_size = 300
 			buttonBase.createButton(button)
 		end
 	end
@@ -2277,6 +2315,10 @@ function chatHelp(playerColor)
 					'   h[istory] - Full vote history if enabled\n' ..
 					'   help - This message'
 	printToColor(msg, playerColor, {1,1,1})
+end
+
+function tellRoleButton(clickedObject, playerColor)
+	tellRole(playerColor)
 end
 
 function tellRole(player)
