@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 72
+update_version = 73
 add_on_version = 3
 
 --Buttons
@@ -24,7 +24,7 @@ bulletveto_red_deck_guid = 'eb57e4'
 --Decks/Cards
 hitler_deck_guid = '5997ea'
 fascist_deck_guids = {'5f2055','fb58cf', '4a3cf4'}
-liberal_deck_guids = {'b156f7', 'd1735a', 'c8ab2a', 'b2873d', '313939', '40d8f5' }
+liberal_deck_guids = {'b156f7', 'd1735a', 'c8ab2a', 'b2873d', '313939', '40d8f5'}
 policy_deck_guid = '386233'
 policy_notusedfas_card_guid = 'c7138a'
 policy_notusedlib_card_guid = '2c1d40'
@@ -56,7 +56,6 @@ hold = false
 votes = {}
 disableVote = false
 blockDraw = false
-shufflePlayersRunning = false
 
 -- Saved data
 bannerGuids = {}
@@ -501,7 +500,7 @@ function settingsPannelMakeButtons()
 		if options.shufflePlayers then buttonParam.label = label_check else buttonParam.label = '' end
 		buttonParam.click_function = 'shufflePlayersFlip'
 		buttonParam.position = {startX, 0.2, startZ + offsetZ * 7}
-		--settingsPannel.createButton(buttonParam)
+		settingsPannel.createButton(buttonParam)
 
 		buttonParam = {click_function = 'setupStart', label = 'Start', function_owner = self, position = {0, 0.2, 23}, rotation = {0, 0, 0}, width = 3300, height = 1500, font_size = 750}
 		settingsPannel.createButton(buttonParam)
@@ -1641,7 +1640,7 @@ function getChan()
 end
 
 function onPlayerChangedColor(color)
-	if not shufflePlayersRunning then
+	if started then
 		if not (color == 'Grey') and not (color == 'Black') then
 			printToColor('--------------------------------------',color,{1,1,1})
 			printToColor('Welcome! ' .. Player[color].steam_name,color, {1, 1, 1})
@@ -1724,10 +1723,7 @@ function setupCoroutine()
 			printToAll('Hotseat game detected unable to shuffle players.', {1,1,1})
 		else
 			printToAll('Shuffling Players...', {1,1,1})
-			shufflePlayersRunning = true
 			shufflePlayers()
-			sleep(1)
-			shufflePlayersRunning = false
 			printToAll('shuffling done.', {1,1,1})
 		end
 	end
@@ -1906,7 +1902,7 @@ function setupCoroutine()
 
 	--Deal the Cards
 	for i, player in ipairs(players) do
-		for j=1,4 do
+		for j=1, #player_decks[i].getObjects() do
 			local params = {}
 			local card = player_decks[i].takeObject(params)
 
@@ -2398,7 +2394,7 @@ function giveRoleCards()
 end
 
 function findUnusedColor()
-	local checkList = {'Black', 'Grey', 'Brown', 'Teal', 'White', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink'}
+	local checkList = {'Brown', 'Teal', 'Black', 'White', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink'}
 
 	for i, playerColor in ipairs(checkList) do
 		if not Player[playerColor].seated then
@@ -2407,96 +2403,55 @@ function findUnusedColor()
 	end
 end
 
---Based on COLOUR SHUFFLER SCRIPT BY MARKIMUS ON STEAM
 function shufflePlayers()
-	swapColour = findUnusedColor()
+	swapColor = findUnusedColor()
 
-	local ranColours = {}
-
-   --INSERT THE COLOURS
-
+	local ranColors = {}
    for _, v in pairs(getSeatedPlayers()) do
-     table.insert(ranColours, v)
+     table.insert(ranColors, 1, v)
    end
-
-   shuffleTable(ranColours)
+   shuffleTable(ranColors)
 
    seatedPlayers = {}
    for i, v in pairs(getSeatedPlayers()) do
-   	seatedPlayers[v] = {}
-      seatedPlayers[v].target = ranColours[i]
-      seatedPlayers[v].myColour = v
-      --printToAll(Player[v].steam_name .. "(".. v ..") -> ".. ranColours[i], {1, 1, 1})
-      if seatedPlayers[v].target == v then
-         seatedPlayers[v].prevMoved = true
-         seatedPlayers[v].moved = true
-      else
-         seatedPlayers[v].prevMoved = false
-         seatedPlayers[v].moved = false
-      end
+   	local playerInfo = {}
+      playerInfo.target = ranColors[i]
+      playerInfo.myColor = v
+		table.insert(seatedPlayers, 1, playerInfo)
    end
 
-	for timeout = 1, 50 do
-      --GO THROUGH SEATED PLAYERS. IF THEY HAVEN'T MOVED, CHECK IF THEY CAN BE MOVED.
-      for i, v in pairs(seatedPlayers) do
-         if v.moved == false then
-         	if Player[v.target].seated == false then
-               local myC = v.myColour
-               if Player[myC].seated == true then
-               	--print("Moving player ".. myC)
-                  Player[myC]:changeColor(v.target)
-                  while Player[myC].seated == true and Player[v.target].seated == false do
-                  	coroutine.yield()
-                  end
-                  v.myColour = v.target
-                  v.moved = true
-               else
-               	table.remove(seatedPlayers, i)
-               end
-            end
-         end
-
-         local checkIfSame = true
-         for _, v in pairs(seatedPlayers) do
-         	if v.prevMoved ~= v.moved then
-            	checkIfSame = false
-               break
-            end
-         end
-
-         if checkIfSame == true then
-            --print("Is same.")
-            local allNonMovedPlayers = {}
-            for i, v in pairs(seatedPlayers) do
-            	if v.moved == false then
-               	table.insert(allNonMovedPlayers, v)
-               end
-            end
-
-            if #allNonMovedPlayers ~= 0 then
-            	local lastPlayer = allNonMovedPlayers[#allNonMovedPlayers]
-               Player[lastPlayer.myColour]:changeColor(swapColour)
-               lastPlayer.myColour = swapColour
-               while Player[swapColour].seated == false do
-               	coroutine.yield()
-               end
-            end
-         end
-
-         local count1, count2 = 0, 0
-         for _, v in pairs(seatedPlayers) do
-            count1 = count1 + 1
-            if v.moved == true then
-            	count2 = count2 + 1
-            end
-         end
-
-         if count1 == count2 then break end
-
-         for _, v in pairs(seatedPlayers) do
-            v.prevMoved = v.moved
-         end
-     	end
+	local doneCount = 0
+	local tryCount = #seatedPlayers
+	while doneCount ~= #seatedPlayers and tryCount > 0 do
+		doneCount = 0
+	   for i, v in pairs(seatedPlayers) do
+	      if v.target ~= v.myColor then
+	      	if Player[v.target].seated == false then
+	            local myC = v.myColor
+	            if Player[myC].seated == true then
+	               Player[myC]:changeColor(v.target)
+	               while Player[myC].seated and not Player[v.target].seated do
+	               	coroutine.yield()
+	               end
+	               v.myColor = v.target
+						doneCount = doneCount + 1
+	            end
+				elseif Player[swapColor].seated == false then
+					local myC = v.myColor
+					if Player[myC].seated == true then
+						Player[myC]:changeColor(swapColor)
+						while Player[myC].seated and not Player[swapColor].seated do
+							coroutine.yield()
+						end
+						v.myColor = swapColor
+					end
+	         end
+			else
+				doneCount = doneCount + 1
+	      end
+		end
+		tryCount = tryCount - 1
+		coroutine.yield()
 	end
 end
 
@@ -3075,7 +3030,7 @@ function menuBase(selfIn)
 		buttonParam.width = 300 * buttonScale
 		buttonParam.height = 300 * buttonScale
 		selfIn.createButton(buttonParam)
-		buttonParam.label = 'Swap L and F'
+		buttonParam.label = 'Swap ' .. text.liberalLetter .. ' and ' .. text.fascistLetter
 		buttonParam.position = {positionXscale * -4, positionY, (7.25 * positionZscale) + positionZoffset2}
 		buttonParam.width = 2700 * buttonScale
 		buttonParam.height = 700 * buttonScale
