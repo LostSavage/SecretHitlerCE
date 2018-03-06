@@ -4,11 +4,11 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 62
+update_version = 63
 
 --Buttons
 settings_pannel_guid = '39d283'
-draw_button_guid = '25ed5d'
+draw_pile_board_guid = 'a5b10f'
 label_radio = '\u{25CF}'
 label_check = '\u{2713}'
 
@@ -41,9 +41,10 @@ liberal_zone_guids = {'12b8ce', '3cabfa', '6f02b7', '939e6d', '3f80ba', 'a6b76f'
 tracker_zone = 'c0b577'
 
 -- @{-100, 100, -100} is used to delete/spawn objects
-bullet_bag_guid = '2a3f62' -- @{100, 100, 100}
-fake_party_bag_guid = '473632' -- @{100, 100, 102}
--- @{100, 100, 104+} hidden zones
+bullet_bag_guid = 'feeecc' -- @{100, 100, 102}
+bullet_sound_bag_guid = '2a3f62' -- @{100, 100, 104}
+fake_party_bag_guid = '473632' -- @{100, 100, 106}
+-- @{100, 100, 108+} hidden zones
 fake_role_card_guid = 'cf946e' -- on table
 
 -- Markers
@@ -77,12 +78,16 @@ inspected = {}
 jaCardGuids = {}
 lastFascistPlayed = 0
 lastLiberalPlayed = 0
+lastChan = nil
 lastPres = nil
 mainNotes = ''
 neinCardGuids = {}
 noteTakerNotes = {}
 noteTakerCurrLine = 0
 options = {
+	autoNotate = true,
+	autoPrevPlacards = true,
+	bulletSound = true,
 	dealPartyCards = false,
 	dealRoleCards = false,
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
@@ -111,6 +116,7 @@ function onLoad(saveString)
 		jaCardGuids = save['ja']
 		lastFascistPlayed = save['lfp']
 		lastLiberalPlayed = save['llp']
+		lastChan = save['lc']
 		lastPres = save['lp']
 		mainNotes = save['mn']
 		neinCardGuids = save['nein']
@@ -138,6 +144,11 @@ function onLoad(saveString)
 		end
 		settingsPannelMakeButtons()
 	end
+	if not noteTakerCurrLine or noteTakerCurrLine == 0 then
+		noteTakerNotes = {}
+		noteTakerCurrLine = 0
+		addNewLine()
+	end
 end
 
 function onSave()
@@ -151,6 +162,7 @@ function onSave()
 	save['ja'] = jaCardGuids
 	save['lfp'] = lastFascistPlayed
 	save['llp'] = lastLiberalPlayed
+	save['lc'] = lastChan
 	save['lp'] = lastPres
 	save['mn'] = mainNotes
 	save['nein'] = neinCardGuids
@@ -169,13 +181,13 @@ end
 
 function onObjectEnterScriptingZone(zone, enterObject)
 	if zone.guid == tracker_zone and enterObject.guid == election_tracker_guid then
-		editButtonByLabel(draw_button_guid, 'Draw 3', 'Topdeck', 'topdeckCard')
+		editButtonByLabel(draw_pile_board_guid, 'Draw 3', 'Topdeck', 'topdeckCard')
 	end
 end
 
 function onObjectLeaveScriptingZone(zone, leaveObject)
 	if zone.guid == tracker_zone and leaveObject.guid == election_tracker_guid then
-		editButtonByLabel(draw_button_guid, 'Topdeck', 'Draw 3', 'drawThree')
+		editButtonByLabel(draw_pile_board_guid, 'Topdeck', 'Draw 3', 'drawThree')
 	end
 end
 
@@ -188,7 +200,19 @@ function alwaysInit()
 		tableHeightAdd = 0.44
 	end
 
-	setupButtonByGUID(draw_button_guid, 'Draw 3', 'drawThree')
+	local drawPileBoard = getObjectFromGUID(draw_pile_board_guid)
+	if drawPileBoard then
+		local button = {}
+		button.click_function = 'drawThree'
+		button.label = 'Draw 3'
+		button.function_owner = Global
+		button.position = {0, 0.14, 3.7}
+		button.rotation = {0, 0, 0}
+		button.width = 2700
+		button.height = 1300
+		button.font_size = 650
+		drawPileBoard.createButton(button)
+	end
 
 	tmpObj = getObjectFromGUID(fake_role_card_guid)
 	if tmpObj then
@@ -414,6 +438,21 @@ function settingsPannelMakeButtons()
 		buttonParam.position = {startX, 0.2, startZ + offsetZ * 4}
 		settingsPannel.createButton(buttonParam)
 
+		if options.autoPrevPlacards then buttonParam.label = label_check else buttonParam.label = '' end
+		buttonParam.click_function = 'autoPrevPlacardsFlip'
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
+		settingsPannel.createButton(buttonParam)
+
+		if options.autoNotate then buttonParam.label = label_check else buttonParam.label = '' end
+		buttonParam.click_function = 'autoNotateFlip'
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 6}
+		settingsPannel.createButton(buttonParam)
+
+		if options.bulletSound then buttonParam.label = label_check else buttonParam.label = '' end
+		buttonParam.click_function = 'bulletSoundFlip'
+		buttonParam.position = {startX, 0.2, startZ + offsetZ * 7}
+		settingsPannel.createButton(buttonParam)
+
 		buttonParam = {click_function = 'setupStart', label = 'Start', function_owner = self, position = {0, 0.2, 23}, rotation = {0, 0, 0}, width = 3300, height = 1500, font_size = 750}
 		settingsPannel.createButton(buttonParam)
 	else
@@ -561,6 +600,27 @@ function scriptedVotingFlip(clickedObject, playerColor)
 	end
 end
 
+function autoPrevPlacardsFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.autoPrevPlacards = not options.autoPrevPlacards
+		settingsPannelMakeButtons()
+	end
+end
+
+function autoNotateFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.autoNotate = not options.autoNotate
+		settingsPannelMakeButtons()
+	end
+end
+
+function bulletSoundFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.bulletSound = not options.bulletSound
+		settingsPannelMakeButtons()
+	end
+end
+
 function displayBannerCardsCoroutine()
 	local tmpZone = getObjectFromGUID(bannerZoneGuid)
 	local inZone = tmpZone.getObjects()
@@ -629,15 +689,36 @@ function displayBannerCard(card, offset, bannerGuidsOffset)
 end
 
 function boardCardHandler(card)
+	local notateAction = function(actionIn)
+		local lineSave = noteTakerCurrLine
+		noteTakerCurrLine = #noteTakerNotes
+		if not noteTakerBlankLine(noteTakerCurrLine) then
+			addNewLine()
+			noteTakerCurrLine = #noteTakerNotes
+		end
+		noteTakerNotes[noteTakerCurrLine].color1 = lastPres
+		noteTakerNotes[noteTakerCurrLine].action = actionIn
+		noteTakerCurrLine = lineSave
+		refreshNotes(nil)
+	end
+
 	if isBoardCardInspect(card) then
 		if lastPres then
 			if not options.dealPartyCards then createInspectButtons(lastPres) end
+			if options.autoNotate then
+				notateAction('inspects')
+			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
 		end
 	elseif isBoardCardBullet(card) then
 		if lastPres then
-			local bullet_bag = getObjectFromGUID(bullet_bag_guid)
+			local bullet_bag
+			if options.bulletSound then
+				bullet_bag = getObjectFromGUID(bullet_sound_bag_guid)
+			else
+				bullet_bag = getObjectFromGUID(bullet_bag_guid)
+			end
 			local params = {}
 			local bullet = bullet_bag.takeObject(params)
 			bullet.setLuaScript(
@@ -651,6 +732,9 @@ function boardCardHandler(card)
 			table.insert(bulletGUIDs, 1, bullet.getGUID())
 			bullet.setPosition({0, 30, 0})
 			giveObjectToPlayer(bullet, lastPres, {forward = 20, right = 0, up = 0, forceHeight = 6}, no_rotation)
+			if options.autoNotate then
+				notateAction('shoots')
+			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
 		end
@@ -658,6 +742,9 @@ function boardCardHandler(card)
 		if lastPres then
 			broadcastToColor('Examine the top card from the deck and put it back in the draw pile.', lastPres, {1, 1, 1})
 			drawCards(1, lastPres)
+			if options.autoNotate then
+				notateAction('examines deck:')
+			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
 		end
@@ -665,6 +752,9 @@ function boardCardHandler(card)
 		if lastPres then
 			broadcastToColor('Examine the top three cards from the deck and put them back in the draw pile.', lastPres, {1, 1, 1})
 			drawCards(3, lastPres)
+			if options.autoNotate then
+				notateAction('examines deck:')
+			end
 		else
 			printToAll('ERROR: Last president not found.', {1,0,0})
 		end
@@ -759,15 +849,14 @@ function createPolicyCardTimer()
 	parameters.identifier = 'policyCardTimer'
 	parameters.function_name = 'startPolicyCardCheck'
 	parameters.function_owner = Global
-	parameters.delay = 4
+	parameters.delay = 1
 	Timer.create(parameters)
 end
 
 function startPolicyCardCheck()
-	if not hold then
-		hold = true
+	if not Global.getVar('hold') then
+		Global.setVar('hold', true)
 		startLuaCoroutine(Global, 'policyCardCoroutine')
-		hold = false
 	end
 end
 
@@ -788,6 +877,50 @@ function policyCardCoroutine()
 	local discardZone = nil
 	local maxFascist = 11
 	local maxLiberal = 6
+	local autoNotateReshuffle = false
+
+	local notateReshuffle = function()
+		local lineSave = noteTakerCurrLine
+		noteTakerCurrLine = #noteTakerNotes
+		if not noteTakerBlankLine(noteTakerCurrLine) then
+			addNewLine()
+			noteTakerCurrLine = #noteTakerNotes
+		end
+		noteTakerNotes[noteTakerCurrLine].result = '*Reshuffle*'
+		noteTakerCurrLine = lineSave
+		refreshNotes(nil)
+   end
+
+	local notateCardPlayed = function(resultIn)
+		if lastPres and lastChan then
+			local lineSave = noteTakerCurrLine
+			noteTakerCurrLine = #noteTakerNotes
+			if not noteTakerBlankLine(noteTakerCurrLine) then
+				addNewLine()
+				noteTakerCurrLine = #noteTakerNotes
+			end
+			noteTakerNotes[noteTakerCurrLine].color1 = lastPres
+			noteTakerNotes[noteTakerCurrLine].action = '>'
+			noteTakerNotes[noteTakerCurrLine].color2 = lastChan
+			noteTakerNotes[noteTakerCurrLine].result = resultIn
+			noteTakerCurrLine = lineSave
+			refreshNotes(nil)
+		end
+		local tracker = getObjectFromGUID(election_tracker_guid)
+		if tracker then
+			tracker.setPositionSmooth(electionTrackerOrgPos)
+			tracker.setRotationSmooth({0, 315, 0})
+		end
+	end
+
+	local movePrevPlacards = function(resultIn)
+		if lastPres and lastChan then
+			local tmpPres = getObjectFromGUID(prev_president_guid)
+			if tmpPres then giveObjectToPlayer(tmpPres, lastPres, {forward = prevForward, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, true) end
+			local tmpChan = getObjectFromGUID(prev_chancelor_guid)
+			if tmpChan then giveObjectToPlayer(tmpChan, lastChan, {forward = prevForward, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, true) end
+		end
+	end
 
 	if options.gameType == 1 or options.gameType == 3 then
 		maxFascist = 13
@@ -950,6 +1083,7 @@ function policyCardCoroutine()
 				lastDrawCt = expectedCards
 				drawDeck.shuffle()
 				broadcastToAll('reshuffle done.', {1,1,1})
+				autoNotateReshuffle = true
 			else
 				broadcastToAll('ERROR: reshuffle FAILED! Please fix the issue.', {1,0,0})
 				startLuaCoroutine(Global, 'disableSecurityCoroutine')
@@ -970,6 +1104,11 @@ function policyCardCoroutine()
 				end
 			end
 			if liberalCardFound then
+				if options.autoNotate then
+					notateCardPlayed('[0080F8]L[-]')
+					if autoNotateReshuffle then notateReshuffle() end
+				end
+				if options.autoPrevPlacards then movePrevPlacards() end
 				startLuaCoroutine(Global, 'displayBannerCardsCoroutine')
 			else
 				lastLiberalPlayed = 0 -- didn't find the card
@@ -986,12 +1125,19 @@ function policyCardCoroutine()
 				end
 			end
 			if fascistCardFound then
+				if options.autoNotate then
+					notateCardPlayed('[FF0000]F[-]')
+					if autoNotateReshuffle then notateReshuffle() end
+				end
+				if options.autoPrevPlacards then movePrevPlacards() end
 				startLuaCoroutine(Global, 'displayBannerCardsCoroutine')
 			else
 				lastFascistPlayed = 0 -- didn't find the card
 			end
 		end
 	end
+
+	Global.setVar('hold', false)
 
 	return true
 end
@@ -1047,12 +1193,17 @@ function startVoteCheck()
 
 	if voteDone then
 		voteNotes = getFinalVoteString()
-		setNotes(voteNotes .. mainNotes)
+		setNotes(voteNotes .. '\n\n' .. mainNotes)
+		local presColor = getPres()
+		local chanColor = getChan()
+		local out = '[' .. stringColorToHex(presColor) .. ']' .. presColor .. '[-]'
+		out = out .. ' >  [' .. stringColorToHex(chanColor) .. ']' .. chanColor .. '[-] '
+		printToAll(out .. voteNotes, {1, 1, 1})
 		flipVotes()
 		disableVote = true
 	else
 		voteNotes = getPrelimVoteString()
-		setNotes(voteNotes .. mainNotes)
+		setNotes(voteNotes .. '\n\n' .. mainNotes)
 	end
 end
 
@@ -1107,13 +1258,29 @@ function getFinalVoteString()
 		end
 	end
 	if neinCount == 0 then out = out .. 'None' end
-	out = out .. '[/i]\n\n'
+	out = out .. '[/i]'
 	if jaCount > neinCount then
-		broadcastToAll("Vote passes", stringColorToRGB('Green'))
 		out = '[' .. stringColorToHex('Green') .. ']-<<<<\u{00B7} Vote passes <\u{2550}\u{2550}\u{00A6}-\u{2022}\n' .. '[-]' .. out
 	else
-		broadcastToAll("Vote fails", stringColorToRGB('Red'))
 		out = '[' .. stringColorToHex('Red') .. ']-<<<<\u{00B7} Vote fails <\u{2550}\u{2550}\u{00A6}-\u{2022}\n' .. '[-]' .. out
+		if options.autoNotate then
+			local lineSave = noteTakerCurrLine
+			noteTakerCurrLine = #noteTakerNotes
+			if not noteTakerBlankLine(noteTakerCurrLine) then
+				addNewLine()
+				noteTakerCurrLine = #noteTakerNotes
+			end
+			noteTakerNotes[noteTakerCurrLine].color1 = getPres()
+			noteTakerNotes[noteTakerCurrLine].action = '>'
+			noteTakerNotes[noteTakerCurrLine].color2 = getChan()
+			noteTakerNotes[noteTakerCurrLine].result = '[222222]Downvoted[-]'
+			noteTakerCurrLine = lineSave
+			refreshNotes(nil)
+			local tracker = getObjectFromGUID(election_tracker_guid)
+			if tracker then
+				tracker.translate({electionTrackerMoveX, 0, 0})
+			end
+		end
 	end
 
 	return out
@@ -1134,7 +1301,7 @@ function getPrelimVoteString()
 			out = out .. '[' .. stringColorToHex(playerColor) .. ']' .. playerColor .. '[-]'
 		end
 	end
-	out = out .. '[/i]\n\n'
+	out = out .. '[/i]'
 
 	return out
 end
@@ -1149,23 +1316,6 @@ function updateDeadList()
 				deadPlayer[player] = true
 			end
 		end
-	end
-end
-
-function setupButtonByGUID(objectGUIDIn, labelIn, functionIn)
-	local bObject = getObjectFromGUID(objectGUIDIn)
-
-	if bObject then
-		local button = {}
-		button.click_function = functionIn
-		button.label = labelIn
-		button.function_owner = nil
-		button.position = {0, 0.14, 0}
-		button.rotation = {0, 180, 0}
-		button.width = 1100
-		button.height = 500
-		button.font_size = 250
-		bObject.createButton(button)
 	end
 end
 
@@ -1239,6 +1389,7 @@ function drawCards(amount, playerColor)
 		drawCt = #drawDeck.getObjects()
 		if drawCt > (amount - 1) then
 			lastPres = playerColor
+			lastChan = getChan()
 			drawDeck.dealToColor(amount, playerColor)
 			if amount == 1 then
 				broadcastToAll('Dealing 1 card to ' .. playerColor .. '.', stringColorToRGB(playerColor))
@@ -1255,6 +1406,11 @@ end
 
 function getPres()
 	local tempObj = getObjectFromGUID(president_guid)
+	return closestPlayer(tempObj, players, 1000)
+end
+
+function getChan()
+	local tempObj = getObjectFromGUID(chancelor_guid)
 	return closestPlayer(tempObj, players, 1000)
 end
 
@@ -1357,7 +1513,7 @@ function setupCoroutine()
 				--Hide it so we can still use the color for the screen
 				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 				tmpObj.setScale({0.01, 0.01, 0.01})
-				tmpObj.setPosition({100, 100, 104 + i * 2})
+				tmpObj.setPosition({100, 100, 108 + i * 2})
 			elseif options.zoneType == 1 then
 				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 				tmpObj.setScale({15.3268776, 3.5, 6.35014629})
@@ -1397,9 +1553,9 @@ function setupCoroutine()
 			if options.noteType < 6 then
 				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'true', 'false', 'true', 'false', 'false', 'false', 'true'))
 			elseif options.noteType == 6 then
-				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'true', 'false', 'true', 'false', 'false', 'false', 'false'))
+				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'false', 'true', 'false', 'false', 'false', 'false'))
 			elseif options.noteType == 7 then
-				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'true', 'true', 'true', 'false', 'false', 'false', 'false'))
+				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'true', 'true', 'false', 'false', 'false', 'false'))
 			end
 			if options.noteType == 4 then
 				local custom = {}
@@ -1814,7 +1970,7 @@ function disableSecurityCoroutine()
 	local allObjs = getAllObjects()
 	local object
 
-	hold = true
+	Global.setVar('hold', true)
 	broadcastToAll('Warning: Policy security has been disabled for 30 seconds!', {1,0,0})
 	for _, object in ipairs(allObjs) do
 		if isPolicyCard(object) then
@@ -1824,7 +1980,7 @@ function disableSecurityCoroutine()
 		end
 	end
 	sleep(30)
-	hold = false
+	Global.setVar('hold', false)
 
 	return true
 end
@@ -2130,6 +2286,7 @@ buttonScale = 1
 fontScale = 1
 maxLines = 25
 prevForward = 15
+textColorReplace = 'FFFFFF]'
 
 -- tracker (default)
 electionTrackerOrgPos = {x = -4.14867, y = 2.51325083, z = -9.337429}
@@ -2182,6 +2339,12 @@ function noteTakerOnLoad(saveString)
 			Global.call('defaultsSecretHitlerSSRT')
 		else
 			defaultsSecretHitlerSSRT()
+		end
+	elseif Global.getVar('president_guid') == 'bb4b47' then -- Secret Hitler Cheat/Troll Proof
+		if sharedHistory then
+			Global.call('defaultsSecretHitlerCTP', {self})
+		else
+			defaultsSecretHitlerCTP(self)
 		end
 	end
 
@@ -2278,9 +2441,10 @@ function initNoteTakerValues(boardName)
 		buttonScale = 0.9
 		fontScale = 0.9
 		maxLines = 10
+		textColorReplace = '000000]'
 
 		noteTakerSetNotes = function(stringIn)
-			local out = string.gsub(stringIn, stringColorToHex('White'), '000000')
+			local out = string.gsub(stringIn, stringColorToHex('White') .. ']', textColorReplace)
 			local screen = getObjectFromGUID(privateScreenGUID)
 			if screen then
 				screen.setDescription(out)
@@ -2358,11 +2522,11 @@ function menu(selfIn)
 	if selfIn.name == 'backgammon_board' then
 		local screen = getObjectFromGUID(privateScreenGUID)
 		if screen then
-			forceObjectToPlayer(screen, playerNoteTaker, {forward = giveForward + 12.5, right = rightOffset[playerNoteTaker], up = 0, forceHeight = 0.9}, {x = 0, y = 180 - rotationZ, z = 0})
+			forceObjectToPlayer(screen, selfIn.getVar('playerNoteTaker'), {forward = giveForward + 12.5, right = rightOffset[selfIn.getVar('playerNoteTaker')], up = 0, forceHeight = 0.9}, {x = 0, y = 180 - rotationZ, z = 0})
 			screen.lock()
 			startLuaCoroutine(selfIn, 'spawnFogCoroutine')
 		else
-			if playerNoteTaker ~= '' then
+			if selfIn.getVar('playerNoteTaker') ~= '' then
 				forceMenu = true
 				startLuaCoroutine(selfIn, 'spawnScreenCoroutine')
 				return
@@ -2383,9 +2547,9 @@ function menu(selfIn)
 	selfIn.clearButtons()
 
 	local fakePlayerNoteTaker = false
-	if playerNoteTaker == '' then
+	if selfIn.getVar('playerNoteTaker') == '' then
 		fakePlayerNoteTaker = true
-		playerNoteTaker = 'White'
+		selfIn.setVar('playerNoteTaker', 'White')
 	end
 
 	-- Who is the note taker?
@@ -2406,7 +2570,7 @@ function menu(selfIn)
 	-- Player Options
 	buttonParam.height = 700 * buttonScale
 	buttonParam.width = 1800 * buttonScale
-	if not cooperative or Player[playerNoteTaker].admin then
+	if not cooperative or Player[selfIn.getVar('playerNoteTaker')].admin then
 		buttonParam.click_function = 'setupWhite'
 		buttonParam.label = 'White'
 		buttonParam.position = {positionXscale * 4, positionY, (-2.25 * positionZscale) + positionZoffset1}
@@ -2467,7 +2631,7 @@ function menu(selfIn)
 	menuExtended(zOffset)
 
 	if fakePlayerNoteTaker then
-		playerNoteTaker = ''
+		selfIn.setVar('playerNoteTaker', '')
 	end
 end
 
@@ -2517,7 +2681,7 @@ function menuBase(selfIn)
 	buttonParam.height = 700 * buttonScale
 	selfIn.createButton(buttonParam)
 
-	if selfIn.name ~= 'backgammon_board' or Player[playerNoteTaker].admin then
+	if selfIn.name ~= 'backgammon_board' or Player[selfIn.getVar('playerNoteTaker')].admin then
 		buttonParam.click_function = 'flipMoveTracker'
 		if moveTracker then buttonParam.label = 'x' else buttonParam.label = '' end
 		buttonParam.position = {positionXscale * -7.5, positionY, (5.75 * positionZscale) + positionZoffset2}
@@ -2558,7 +2722,7 @@ function menuBase(selfIn)
 		buttonParam.height = 700 * buttonScale
 		selfIn.createButton(buttonParam)
 		zOffset = 1.5
-	elseif selfIn.name == 'backgammon_board' and Player[playerNoteTaker].admin then
+	elseif selfIn.name == 'backgammon_board' and Player[selfIn.getVar('playerNoteTaker')].admin then
 		buttonParam.click_function = 'flipCooperative'
 		if cooperative then buttonParam.label = 'x' else buttonParam.label = '' end
 		buttonParam.position = {positionXscale * 0.5, positionY, (1.25 * positionZscale) + positionZoffset2}
@@ -2601,7 +2765,7 @@ function setupBoard(selfIn)
 	if selfIn.name == 'backgammon_board' then
 		local screen = getObjectFromGUID(privateScreenGUID)
 		if screen then
-			forceObjectToPlayer(screen, playerNT, {forward = giveForward + 12.5, right = rightOffset[playerNoteTaker], up = 0, forceHeight = 0.9}, {x = 0, y = 180 - rotationZ, z = 0})
+			forceObjectToPlayer(screen, playerNT, {forward = giveForward + 12.5, right = rightOffset[playerNT], up = 0, forceHeight = 0.9}, {x = 0, y = 180 - rotationZ, z = 0})
 			screen.lock()
 			refreshNotes(selfIn)
 			startLuaCoroutine(selfIn, 'spawnFogCoroutine')
@@ -2691,6 +2855,7 @@ end
 function flipUseNames(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		useNames = not useNames
+		refreshNotes(clickedObject)
 		menu(clickedObject)
 	end
 end
@@ -2698,6 +2863,7 @@ end
 function flipUseColor(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		useColor = not useColor
+		refreshNotes(clickedObject)
 		menu(clickedObject)
 	end
 end
@@ -3258,14 +3424,14 @@ function postButton(clickedObject, playerColor)
 			Global.setVar('noteTakerCurrLine', noteTakerCurrLine)
 			local options = Global.getTable('options')
 			if Global.getVar('mod_name') == 'Secret Hitler: CE' and options.scriptedVoting then
-				local notesString = noteTakerNotesString(19, false)
+				local notesString = noteTakerNotesString(19, false, true)
 				Global.setVar('mainNotes', notesString)
-				setNotes(Global.getVar('voteNotes') .. notesString)
+				setNotes(Global.getVar('voteNotes') .. '\n\n' .. notesString)
 			elseif Global.getVar('key') then
-				local notesString = noteTakerNotesString(17, false)
+				local notesString = noteTakerNotesString(17, false, true)
 				setNotes(notesString)
 			else
-				local notesString = noteTakerNotesString(25, false)
+				local notesString = noteTakerNotesString(25, false, true)
 				setNotes(notesString)
  			end
 		else
@@ -3296,10 +3462,10 @@ function addNewLine()
 end
 
 function refreshNotes(selfIn)
-	local tempNotes = noteTakerNotesString(maxLines, true)
+	local tempNotes = noteTakerNotesString(maxLines, true, useColor)
 
-	if selfIn.name == 'backgammon_board' then
-		tempNotes = string.gsub(tempNotes, stringColorToHex('White'), '000000')
+	if selfIn and selfIn.name == 'backgammon_board' then
+		tempNotes = string.gsub(tempNotes, stringColorToHex('White') .. ']', textColorReplace)
 		local screen = getObjectFromGUID(privateScreenGUID)
 		if screen then -- save the long version by not using noteTakerSetNotes
 			screen.setDescription(tempNotes)
@@ -3402,11 +3568,7 @@ end
 
 function downvotedButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if useColor then
-			noteTakerNotes[noteTakerCurrLine].result = '[222222]Downvoted[-]'
-		else
-			noteTakerNotes[noteTakerCurrLine].result = 'Downvoted'
-		end
+		noteTakerNotes[noteTakerCurrLine].result = '[222222]Downvoted[-]'
 		noteTakerNotes[noteTakerCurrLine].action = '>'
 		noteTakerNotes[noteTakerCurrLine].claim3 = ''
 		noteTakerNotes[noteTakerCurrLine].claim2 = ''
@@ -3435,9 +3597,9 @@ end
 
 function conflictButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if noteTakerNotes[noteTakerCurrLine].conflict == '(Conflict)' then
+		if noteTakerConflict(noteTakerCurrLine) then
 			noteTakerNotes[noteTakerCurrLine].conflict = ''
-			noteTakerNotes[noteTakerCurrLine].claim1 = ''
+			noteTakerNotes[noteTakerCurrLine].claim2 = ''
 		else
 			noteTakerNotes[noteTakerCurrLine].conflict = '(Conflict)'
 		end
@@ -3462,12 +3624,6 @@ end
 
 function hZoneButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = '[FF0000]Hitler territory![-]'
-		else
-			text = 'Hitler territory!'
-		end
 		noteTakerNotes[noteTakerCurrLine].conflict = ''
 		noteTakerNotes[noteTakerCurrLine].color1 = ''
 		noteTakerNotes[noteTakerCurrLine].action = ''
@@ -3475,7 +3631,7 @@ function hZoneButton(clickedObject, playerColor)
 		noteTakerNotes[noteTakerCurrLine].claim3 = ''
 		noteTakerNotes[noteTakerCurrLine].claim2 = ''
 		noteTakerNotes[noteTakerCurrLine].claim1 = ''
-		noteTakerNotes[noteTakerCurrLine].result = text
+		noteTakerNotes[noteTakerCurrLine].result = '[FF0000]Hitler territory![-]'
 		addNewLine()
 		refreshNotes(clickedObject)
 	end
@@ -3503,11 +3659,16 @@ end
 
 function revisedButton(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if noteTakerNotes[noteTakerCurrLine].conflict == '(Rev)' then
+		if noteTakerConflict(noteTakerCurrLine) then
+			if noteTakerNotes[noteTakerCurrLine].conflict == '(Rev Con)' then
+				noteTakerNotes[noteTakerCurrLine].conflict = '(Conflict)'
+			else
+				noteTakerNotes[noteTakerCurrLine].conflict = '(Rev Con)'
+			end
+		elseif noteTakerNotes[noteTakerCurrLine].conflict == '(Rev)' then
 			noteTakerNotes[noteTakerCurrLine].conflict = ''
 		else
 			noteTakerNotes[noteTakerCurrLine].conflict = '(Rev)'
-			noteTakerNotes[noteTakerCurrLine].claim1 = ''
 		end
 		refreshNotes(clickedObject)
 	end
@@ -3643,13 +3804,7 @@ end
 
 function liberal(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = 'claims [0080F8]Liberal[-]'
-		else
-			text = 'claims Liberal'
-		end
-		noteTakerNotes[noteTakerCurrLine].result = text
+		noteTakerNotes[noteTakerCurrLine].result = 'claims [0080F8]Liberal[-]'
 		addNewLine()
 		refreshNotes(clickedObject)
 	end
@@ -3657,13 +3812,7 @@ end
 
 function fascist(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = 'claims [FF0000]Fascist[-]'
-		else
-			text = 'claims Fascist'
-		end
-		noteTakerNotes[noteTakerCurrLine].result = text
+		noteTakerNotes[noteTakerCurrLine].result = 'claims [FF0000]Fascist[-]'
 		addNewLine()
 		refreshNotes(clickedObject)
 	end
@@ -3679,18 +3828,13 @@ end
 
 function LLL(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = '[0080F8]LLL[-]'
-		else
-			text = 'LLL'
-		end
+		local text = '[0080F8]LLL[-]'
 		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
 			noteTakerNotes[noteTakerCurrLine].result = text
 			addNewLine()
 		else
 			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
 					and noteTakerNotes[noteTakerCurrLine].result ~= ''
 					and noteTakerCurrLine == #noteTakerNotes then
 				addNewLine()
@@ -3702,18 +3846,13 @@ end
 
 function FLL(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = '[FF0000]F[-][0080F8]LL[-]'
-		else
-			text = 'FLL'
-		end
+		local text = '[FF0000]F[-][0080F8]LL[-]'
 		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
 			noteTakerNotes[noteTakerCurrLine].result = text
 			addNewLine()
 		else
 			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
 					and noteTakerNotes[noteTakerCurrLine].result ~= ''
 					and noteTakerCurrLine == #noteTakerNotes then
 				addNewLine()
@@ -3725,18 +3864,13 @@ end
 
 function FFL(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = '[FF0000]FF[-][0080F8]L[-]'
-		else
-			text = 'FFL'
-		end
+		local text = '[FF0000]FF[-][0080F8]L[-]'
 		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
 			noteTakerNotes[noteTakerCurrLine].result = text
 			addNewLine()
 		else
 			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
 					and noteTakerNotes[noteTakerCurrLine].result ~= ''
 					and noteTakerCurrLine == #noteTakerNotes then
 				addNewLine()
@@ -3748,18 +3882,13 @@ end
 
 function FFF(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = '[FF0000]FFF[-]'
-		else
-			text = 'FFF'
-		end
+		local text = '[FF0000]FFF[-]'
 		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
 			noteTakerNotes[noteTakerCurrLine].result = text
 			addNewLine()
 		else
 			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
 					and noteTakerNotes[noteTakerCurrLine].result ~= ''
 					and noteTakerCurrLine == #noteTakerNotes then
 				addNewLine()
@@ -3777,7 +3906,7 @@ function QQQ(clickedObject, playerColor)
 			addNewLine()
 		else
 			noteTakerNotes[noteTakerCurrLine].claim3 = text
-			if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+			if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
 					and noteTakerNotes[noteTakerCurrLine].result ~= ''
 					and noteTakerCurrLine == #noteTakerNotes then
 				addNewLine()
@@ -3789,14 +3918,9 @@ end
 
 function LL(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = '[0080F8]LL[-]'
-		else
-			text = 'LL'
-		end
-		if not editMode or noteTakerNotes[noteTakerCurrLine].claim2 == ''
-			or noteTakerNotes[noteTakerCurrLine].conflict ~= '(Conflict)' then
+		local text = '[0080F8]LL[-]'
+		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
+			and noteTakerConflict(noteTakerCurrLine)) then
 			noteTakerNotes[noteTakerCurrLine].claim2 = text
 		else
 			noteTakerNotes[noteTakerCurrLine].claim1 = text
@@ -3807,14 +3931,9 @@ end
 
 function FL(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = '[FF0000]F[-][0080F8]L[-]'
-		else
-			text = 'FL'
-		end
-		if not editMode or noteTakerNotes[noteTakerCurrLine].claim2 == ''
-			or noteTakerNotes[noteTakerCurrLine].conflict ~= '(Conflict)' then
+		local text = '[FF0000]F[-][0080F8]L[-]'
+		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
+			and noteTakerConflict(noteTakerCurrLine)) then
 			noteTakerNotes[noteTakerCurrLine].claim2 = text
 		else
 			noteTakerNotes[noteTakerCurrLine].claim1 = text
@@ -3825,14 +3944,9 @@ end
 
 function FF(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		local text
-		if useColor then
-			text = '[FF0000]FF[-]'
-		else
-			text = 'FF'
-		end
-		if not editMode or noteTakerNotes[noteTakerCurrLine].claim2 == ''
-			or noteTakerNotes[noteTakerCurrLine].conflict ~= '(Conflict)' then
+		local text = '[FF0000]FF[-]'
+		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
+			and noteTakerConflict(noteTakerCurrLine)) then
 			noteTakerNotes[noteTakerCurrLine].claim2 = text
 		else
 			noteTakerNotes[noteTakerCurrLine].claim1 = text
@@ -3844,8 +3958,8 @@ end
 function QQ(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
 		local text = '??'
-		if not editMode or noteTakerNotes[noteTakerCurrLine].claim2 == ''
-			or noteTakerNotes[noteTakerCurrLine].conflict ~= '(Conflict)' then
+		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
+			and noteTakerConflict(noteTakerCurrLine)) then
 			noteTakerNotes[noteTakerCurrLine].claim2 = text
 		else
 			noteTakerNotes[noteTakerCurrLine].claim1 = text
@@ -3856,12 +3970,8 @@ end
 
 function L(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if useColor then
-			noteTakerNotes[noteTakerCurrLine].result = '[0080F8]L[-]'
-		else
-			noteTakerNotes[noteTakerCurrLine].result = 'L'
-		end
-		if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+		noteTakerNotes[noteTakerCurrLine].result = '[0080F8]L[-]'
+		if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
 				and noteTakerNotes[noteTakerCurrLine].claim3 ~= ''
 				and noteTakerCurrLine == #noteTakerNotes then
 			addNewLine()
@@ -3873,12 +3983,8 @@ end
 
 function F(clickedObject, playerColor)
 	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
-		if useColor then
-			noteTakerNotes[noteTakerCurrLine].result = '[FF0000]F[-]'
-		else
-			noteTakerNotes[noteTakerCurrLine].result = 'F'
-		end
-		if noteTakerNotes[noteTakerCurrLine].claim2 ~= ''
+		noteTakerNotes[noteTakerCurrLine].result = '[FF0000]F[-]'
+		if noteTakerNotes[noteTakerCurrLine].claim1 ~= ''
 				and noteTakerNotes[noteTakerCurrLine].claim3 ~= ''
 				and noteTakerCurrLine == #noteTakerNotes then
 			addNewLine()
@@ -3931,7 +4037,7 @@ function defaultLine()
 	return {conflict = '', color1 = '', action = '', color2 = '', claim3 = '', claim2 = '', claim1 = '', result = ''}
 end
 
-function noteTakerNotesString(maxLinesIn, showArrow)
+function noteTakerNotesString(maxLinesIn, showArrow, useColorIn)
 	local stringOut = ''
 	local startLine = 1
 	local lastLine = #noteTakerNotes
@@ -3965,7 +4071,7 @@ function noteTakerNotesString(maxLinesIn, showArrow)
 			if player.steam_name and useNames then
 				text = player.steam_name
 			end
-			if useColor then
+			if useColorIn then
 				text = '[' .. stringColorToHex(noteTakerNotes[i].color1) .. ']' .. text .. '[-]'
 			end
 			stringOut = stringOut .. '[i]' .. text .. '[/i]' .. ' '
@@ -3979,7 +4085,7 @@ function noteTakerNotesString(maxLinesIn, showArrow)
 			if player.steam_name and useNames then
 				text = player.steam_name
 			end
-			if useColor then
+			if useColorIn then
 				text = '[' .. stringColorToHex(noteTakerNotes[i].color2) .. ']' .. text .. '[-]'
 			end
 			stringOut = stringOut .. '[i]' .. text .. '[/i]'
@@ -4008,14 +4114,45 @@ function noteTakerNotesString(maxLinesIn, showArrow)
 		stringOut = stringOut .. '\n'
 	end
 
+	if not useColorIn then
+		stringOut = string.gsub(stringOut, '0080F8]', textColorReplace) -- Liberal color
+		stringOut = string.gsub(stringOut, 'FF0000]', textColorReplace) -- Fascist color
+		stringOut = string.gsub(stringOut, '222222]', textColorReplace) -- Downvote color
+	end
+
 	return stringOut
+end
+
+function noteTakerConflict(currLineIn)
+	if noteTakerNotes[currLineIn].conflict == '(Conflict)' then
+		return true
+	elseif noteTakerNotes[currLineIn].conflict == '(Rev Con)' then
+		return true
+	end
+
+	return false
+end
+
+function noteTakerBlankLine(currLineIn)
+	if noteTakerNotes[noteTakerCurrLine].conflict == ''
+		and noteTakerNotes[noteTakerCurrLine].color1 == ''
+		and noteTakerNotes[noteTakerCurrLine].action == ''
+		and noteTakerNotes[noteTakerCurrLine].color2 == ''
+		and noteTakerNotes[noteTakerCurrLine].claim3 == ''
+		and noteTakerNotes[noteTakerCurrLine].claim2 == ''
+		and noteTakerNotes[noteTakerCurrLine].claim1 == ''
+		and noteTakerNotes[noteTakerCurrLine].result == '' then
+			return true
+	end
+
+	return false
 end
 
 function noteTakerSetNotes(stringIn)
 	local options = Global.getTable('options')
 	if Global.getVar('mod_name') == 'Secret Hitler: CE' and options.scriptedVoting then
 		Global.setVar('mainNotes', stringIn)
-		setNotes(Global.getVar('voteNotes') .. stringIn)
+		setNotes(Global.getVar('voteNotes') .. '\n\n' .. stringIn)
 	else
 		setNotes(stringIn)
 	end
@@ -4171,7 +4308,7 @@ function defaultsSecretHitlerCE(selfIn)
 end
 
 function shuffleDrawDeckButton(clickedObject, playerColor)
-	if not lockNoteTaker or playerNoteTaker == playerColor or Player[playerColor].admin then
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if not Global.call('shuffleDrawDeck') then
 			broadcastToColor('ERROR: Failed to shuffle draw deck.', playerColor, {1,0,0})
 		end
@@ -4179,19 +4316,19 @@ function shuffleDrawDeckButton(clickedObject, playerColor)
 end
 
 function disableSecurityButton(clickedObject, playerColor)
-	if not lockNoteTaker or playerNoteTaker == playerColor or Player[playerColor].admin then
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		Global.call('disableSecurity')
 	end
 end
 
 function removeMarkersButton(clickedObject, playerColor)
-	if not lockNoteTaker or playerNoteTaker == playerColor or Player[playerColor].admin then
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		Global.call('removeMarkers')
 	end
 end
 
 function giveRoleCardsButton(clickedObject, playerColor)
-	if not lockNoteTaker or playerNoteTaker == playerColor or Player[playerColor].admin then
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		Global.call('giveRoleCards')
 	end
 end
@@ -4218,6 +4355,71 @@ function defaultsSecretHitlerSSRT()
 	end
 end
 -- end Secret Hitler: Super Scripted Round Table
+
+-- Begin Secret Hitler Cheat/Troll Proof
+function defaultsSecretHitlerCTP(selfIn)
+	if type(selfIn) == 'table' then
+		selfIn = selfIn[1]
+	end
+
+	president_guid = 'bb4b47'
+
+	menuExtended = function(zOffset)
+		local buttonParam = {rotation = {0, 0, rotationZ}, width = 2700 * buttonScale, height = 700 * buttonScale, font_size = 300 * fontScale}
+
+		if sharedHistory then
+			buttonParam.function_owner = Global
+		else
+			buttonParam.function_owner = self
+		end
+
+		buttonParam.click_function = 'resetDeckCTP'
+		buttonParam.label = 'Reset Deck'
+		buttonParam.position = {positionXscale * 4, positionY, (1.25 + zOffset) * positionZscale + positionZoffset2}
+		selfIn.createButton(buttonParam)
+
+		buttonParam.click_function = 'topdeckCTP'
+		buttonParam.label = 'Topdeck Card'
+		buttonParam.position = {positionXscale * 4, positionY, (2.75 + zOffset) * positionZscale + positionZoffset2}
+		selfIn.createButton(buttonParam)
+
+		buttonParam.click_function = 'showRoleCardsCTP'
+		buttonParam.label = 'Show Role Cards'
+		buttonParam.position = {positionXscale * 4, positionY, (4.25 + zOffset) * positionZscale + positionZoffset2}
+		selfIn.createButton(buttonParam)
+
+		buttonParam.click_function = 'deckSecurityCTP'
+		buttonParam.label = 'Deck Security'
+		buttonParam.position = {positionXscale * 4, positionY, (5.75 + zOffset) * positionZscale + positionZoffset2}
+		selfIn.createButton(buttonParam)
+	end
+end
+
+function resetDeckCTP(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+		startLuaCoroutine(Global, 'ResetDeck')
+	end
+end
+
+function topdeckCTP(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+		startLuaCoroutine(Global, 'topdeckCard')
+		startLuaCoroutine(Global, 'trackerSleep')
+	end
+end
+
+function showRoleCardsCTP(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+		startLuaCoroutine(Global, 'spawnRoleCards')
+	end
+end
+
+function deckSecurityCTP(clickedObject, playerColor)
+	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+		Global.call('flipDeckSecurity')
+	end
+end
+-- end Secret Hitler Cheat/Troll Proof
 
 -- Common Globals and Functions
 table_guid = 'be127b' -- The Captian is Dead
