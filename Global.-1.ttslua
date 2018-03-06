@@ -4,7 +4,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 68
+update_version = 69
 
 --Buttons
 settings_pannel_guid = '39d283'
@@ -732,7 +732,7 @@ function boardCardHandler(card)
 			local params = {}
 			local bullet = bullet_bag.takeObject(params)
 			bullet.setLuaScript(
-					'function onDropped(playerColor)\r\n' ..
+					'function onDrop(playerColor)\r\n' ..
 					'	local options = Global.getTable(\'options\')\r\n' ..
 					'	if options.scriptedVoting then\r\n' ..
 					'		Global.call(\'updateDeadList\')\r\n' ..
@@ -1813,7 +1813,7 @@ function setupCoroutine()
 				card.setLuaScript(
 					'collision = false -- workaround for rewind error\r\n' ..
 					'\r\n' ..
-					'function onDropped(playerColor)\r\n' ..
+					'function onDrop(playerColor)\r\n' ..
 					'	local options = Global.getTable(\'options\')\r\n' ..
 					'	if options.scriptedVoting then\r\n' ..
 					'		collision = true\r\n' ..
@@ -1835,7 +1835,7 @@ function setupCoroutine()
 				card.setLuaScript(
 					'collision = false -- workaround for rewind error\r\n' ..
 					'\r\n' ..
-					'function onDropped(playerColor)\r\n' ..
+					'function onDrop(playerColor)\r\n' ..
 					'	local options = Global.getTable(\'options\')\r\n' ..
 					'	if options.scriptedVoting then\r\n' ..
 					'		collision = true\r\n' ..
