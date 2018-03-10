@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 86
+update_version = 87
 add_on_version = 4
 
 --Buttons
@@ -108,9 +108,10 @@ options = {
 	dealRoleCards = false,
 	expansionAmount = 2,
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
-	noteType = 0, -- [0 dark wook, 1 light wood, 2 red wood, 3 black plastic, 4 custom image, 5 private, 6 cooperative]
+	noteType = 0, -- [0 Dark wood, 1 Light wood, 2 Red wood, 3 Black plastic, 4 Board image, 5 Swiss cheese, 6 Private only, 7 Cooperative]
 	scriptedVoting = true,
 	shufflePlayers = false,
+	shuffleHost = true,
 	voteHistory = false,
 	zoneType = 1 -- [0 None, 1 Small, 2 Large]
 }
@@ -461,127 +462,7 @@ function settingsPannelMakeButtons()
 	if settingsPannel then
 		settingsPannel.clearButtons()
 
-		-- check and radio buttons
-		local buttonParam = {rotation = {0, 0, 0}, width = 600, height = 600, font_size = 480, function_owner = self}
-		local startX = -6.1
-		local startZ = -22.9
-		local offsetZ = 1.32
-
-		if not customOnly then
-			if options.gameType == 0 then buttonParam.label = radio_string else buttonParam.label = '' end
-			buttonParam.click_function = 'gameTypeZero'
-			buttonParam.position = {startX, 0.2, startZ}
-			settingsPannel.createButton(buttonParam)
-
-			if options.gameType == 1 then buttonParam.label = radio_string else buttonParam.label = '' end
-			buttonParam.click_function = 'gameTypeOne'
-			buttonParam.position = {startX, 0.2, startZ + offsetZ}
-			settingsPannel.createButton(buttonParam)
-		end
-
-		if options.gameType == 2 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'gameTypeTwo'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 2}
-		settingsPannel.createButton(buttonParam)
-
-		if options.gameType == 3 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'gameTypeThree'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 3}
-		settingsPannel.createButton(buttonParam)
-
-		startZ = -16
-
-		if options.noteType == 0 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'noteTypeZero'
-		buttonParam.position = {startX, 0.2, startZ}
-		settingsPannel.createButton(buttonParam)
-
-		if options.noteType == 1 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'noteTypeOne'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ}
-		settingsPannel.createButton(buttonParam)
-
-		if options.noteType == 2 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'noteTypeTwo'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 2}
-		settingsPannel.createButton(buttonParam)
-
-		if options.noteType == 3 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'noteTypeThree'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 3}
-		settingsPannel.createButton(buttonParam)
-
-		if options.noteType == 4 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'noteTypeFour'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 4}
-		settingsPannel.createButton(buttonParam)
-
-		if options.noteType == 5 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'noteTypeFive'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
-		settingsPannel.createButton(buttonParam)
-
-		if options.noteType == 6 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'noteTypeSix'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 6}
-		settingsPannel.createButton(buttonParam)
-
-		if options.noteType == 7 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'noteTypeSeven'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 7}
-		settingsPannel.createButton(buttonParam)
-
-		startZ = -3.7
-
-		if options.zoneType == 0 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'zoneTypeZero'
-		buttonParam.position = {startX, 0.2, startZ}
-		settingsPannel.createButton(buttonParam)
-
-		if options.zoneType == 1 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'zoneTypeOne'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ}
-		settingsPannel.createButton(buttonParam)
-
-		if options.zoneType == 2 then buttonParam.label = radio_string else buttonParam.label = '' end
-		buttonParam.click_function = 'zoneTypeTwo'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 2}
-		settingsPannel.createButton(buttonParam)
-
-		startZ = 2
-
-		if options.dealRoleCards then buttonParam.label = check_string else buttonParam.label = '' end
-		buttonParam.click_function = 'roleCardFlip'
-		buttonParam.position = {startX, 0.2, startZ}
-		settingsPannel.createButton(buttonParam)
-
-		if options.dealPartyCards then buttonParam.label = check_string else buttonParam.label = '' end
-		buttonParam.click_function = 'partyCardFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ}
-		settingsPannel.createButton(buttonParam)
-
-		if options.scriptedVoting then buttonParam.label = check_string else buttonParam.label = '' end
-		buttonParam.click_function = 'scriptedVotingFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 2}
-		settingsPannel.createButton(buttonParam)
-
-		if options.autoNotate then buttonParam.label = check_string else buttonParam.label = '' end
-		buttonParam.click_function = 'autoNotateFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 3}
-		settingsPannel.createButton(buttonParam)
-
-		if options.voteHistory then buttonParam.label = check_string else buttonParam.label = '' end
-		buttonParam.click_function = 'voteHistoryFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 4}
-		settingsPannel.createButton(buttonParam)
-
-		if options.shufflePlayers then buttonParam.label = check_string else buttonParam.label = '' end
-		buttonParam.click_function = 'shufflePlayersFlip'
-		buttonParam.position = {startX, 0.2, startZ + offsetZ * 5}
-		settingsPannel.createButton(buttonParam)
-
-		-- Text
-		buttonParam = {
+		local buttonParam = {
 			alignment = 4,
 			font_color = {0, 0, 0},
 			rotation = {0, 0, 0},
@@ -591,27 +472,55 @@ function settingsPannelMakeButtons()
 			function_owner = self,
 			click_function = 'nullFunction'
 		}
+		local startX = -6.1
+		local offsetZ = 1.32
 
-		buttonParam.label = 'Board'
-		buttonParam.position = {0, 0.2, -24.3}
+		local startZ = -22.9
+		buttonParam.label = 'Game Type'
+		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
+		makeSquareButtonLabel(settingsPannel, (options.gameType == 0), radio_string, '', 'Original (17 policy cards)', 'gameTypeZero', {startX, 0.2, startZ}, 6.1, (not customOnly))
+		makeSquareButtonLabel(settingsPannel, (options.gameType == 1), radio_string, '', 'Extended (20 policy cards)', 'gameTypeOne', {startX, 0.2, startZ + offsetZ}, 6.5, (not customOnly))
+		makeSquareButtonLabel(settingsPannel, (options.gameType == 2), radio_string, '', 'Custom (17 policy cards)', 'gameTypeTwo', {startX, 0.2, startZ + offsetZ * 2}, 6, true)
+		makeSquareButtonLabel(settingsPannel, (options.gameType == 3), radio_string, '', 'Custom (20 policy cards)', 'gameTypeThree', {startX, 0.2, startZ + offsetZ * 3}, 6.1, true)
 
+		startZ = -16
 		buttonParam.label = 'Note Taker'
-		buttonParam.position = {0, 0.2, -17.4}
+		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
+		makeSquareButtonLabel(settingsPannel, (options.noteType == 0), radio_string, '', 'Dark wood', 'noteTypeZero', {startX, 0.2, startZ}, 3.1, true)
+		makeSquareButtonLabel(settingsPannel, (options.noteType == 1), radio_string, '', 'Light wood (tintable)', 'noteTypeOne', {startX, 0.2, startZ + offsetZ}, 5.4, true)
+		makeSquareButtonLabel(settingsPannel, (options.noteType == 2), radio_string, '', 'Red wood (tintable)', 'noteTypeTwo', {startX, 0.2, startZ + offsetZ * 2}, 5.1, true)
+		makeSquareButtonLabel(settingsPannel, (options.noteType == 3), radio_string, '', 'Black plastic', 'noteTypeThree', {startX, 0.2, startZ + offsetZ * 3}, 3.5, true)
+		makeSquareButtonLabel(settingsPannel, (options.noteType == 4), radio_string, '', 'Board image', 'noteTypeFour', {startX, 0.2, startZ + offsetZ * 4}, 3.5, true)
+		makeSquareButtonLabel(settingsPannel, (options.noteType == 5), radio_string, '', 'Swiss cheese', 'noteTypeFive', {startX, 0.2, startZ + offsetZ * 5}, 3.5, true)
+		makeSquareButtonLabel(settingsPannel, (options.noteType == 6), radio_string, '', 'Private only', 'noteTypeSix', {startX, 0.2, startZ + offsetZ * 6}, 3.4, true)
+		makeSquareButtonLabel(settingsPannel, (options.noteType == 7), radio_string, '', 'Cooperative', 'noteTypeSeven', {startX, 0.2, startZ + offsetZ * 7}, 3.3, true)
 
+		startZ = -3.7
 		buttonParam.label = 'Hidden Zones'
-		buttonParam.position = {0, 0.2, -5.1}
+		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
+		makeSquareButtonLabel(settingsPannel, (options.zoneType == 0), radio_string, '', 'None', 'zoneTypeZero', {startX, 0.2, startZ}, 1.9, true)
+		makeSquareButtonLabel(settingsPannel, (options.zoneType == 1), radio_string, '', 'Small', 'zoneTypeOne', {startX, 0.2, startZ + offsetZ}, 2, true)
+		makeSquareButtonLabel(settingsPannel, (options.zoneType == 2), radio_string, '', 'Large', 'zoneTypeTwo', {startX, 0.2, startZ + offsetZ * 2}, 2, true)
 
+		startZ = 2
 		buttonParam.label = 'Other Options'
-		buttonParam.position = {0, 0.2, 0.6}
+		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
+		makeSquareButtonLabel(settingsPannel, options.dealRoleCards, check_string, '', 'Deal role', 'roleCardFlip', {startX, 0.2, startZ}, 2.7, true)
+		makeSquareButtonLabel(settingsPannel, options.dealPartyCards, check_string, '', 'Deal party membership', 'partyCardFlip', {startX, 0.2, startZ + offsetZ}, 5.8, true)
+		makeSquareButtonLabel(settingsPannel, options.scriptedVoting, check_string, '', 'Scripted voting', 'scriptedVotingFlip', {startX, 0.2, startZ + offsetZ * 2}, 4, true)
+		makeSquareButtonLabel(settingsPannel, options.autoNotate, check_string, '', 'Auto notate', 'autoNotateFlip', {startX, 0.2, startZ + offsetZ * 3}, 3.4, true)
+		makeSquareButtonLabel(settingsPannel, options.voteHistory, check_string, '', 'Vote history', 'voteHistoryFlip', {startX, 0.2, startZ + offsetZ * 4}, 3.4, true)
+		makeSquareButtonLabel(settingsPannel, options.shufflePlayers, check_string, '', 'Shuffle players', 'shufflePlayersFlip', {startX, 0.2, startZ + offsetZ * 5}, 4, true)
+		makeSquareButtonLabel(settingsPannel, options.shuffleHost, check_string, '', 'Shuffle host', 'shuffleHostFlip', {startX + 1.3, 0.2, startZ + offsetZ * 6}, 3.3, options.shufflePlayers)
 
 		--Expansion
 		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
 		if abilitiesDeck then
-			startZ = 11.4
+			startZ = 12.9
 
 			buttonParam.label = 'Expansion'
 			buttonParam.position = {0, 0.2, startZ - 1.4}
@@ -646,6 +555,41 @@ function settingsPannelMakeButtons()
 	else
 		printToAll('ERROR: Settings pannel not found.', {1,0,0})
 	end
+end
+
+function makeSquareButtonLabel(objectIn, valueIn, trueButtonTextIn, falseButtonTextIn, labelTextIn, clickFunctionIn, buttonPositionIn, textOffsetIn, enabledIn)
+	local buttonParam = {
+		rotation = {0, 0, 0},
+		width = 600,
+		height = 600,
+		font_size = 480,
+		function_owner = self,
+		click_function = clickFunctionIn,
+		position = buttonPositionIn
+	}
+	local textParam = {
+		label = labelTextIn,
+		font_color = {0, 0, 0},
+		rotation = {0, 0, 0},
+		width = 0,
+		height = 0,
+		font_size = 480,
+		function_owner = self,
+		click_function = 'nullFunction',
+		position = {buttonPositionIn[1] + textOffsetIn, buttonPositionIn[2], buttonPositionIn[3]}
+	}
+	if valueIn then
+		buttonParam.label = trueButtonTextIn
+	else
+		buttonParam.label = falseButtonTextIn
+	end
+	if not enabledIn then
+		buttonParam.click_function = 'nullFunction'
+		buttonParam.color = stringColorToRGB('Grey')
+		textParam.font_color = stringColorToRGB('Grey')
+	end
+	objectIn.createButton(buttonParam)
+	objectIn.createButton(textParam)
 end
 
 function gameTypeZero(clickedObject, playerColor)
@@ -791,6 +735,13 @@ end
 function shufflePlayersFlip(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.shufflePlayers = not options.shufflePlayers
+		settingsPannelMakeButtons()
+	end
+end
+
+function shuffleHostFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.shuffleHost = not options.shuffleHost
 		settingsPannelMakeButtons()
 	end
 end
@@ -1856,14 +1807,9 @@ function setupCoroutine()
 	end
 
 	if options.shufflePlayers then
-		local playerOneName = Player[players[1]].steam_name
-		if not playerOneName or string.match(playerOneName, 'Player %d') then
-			printToAll('Hotseat game detected unable to shuffle players.', {1,1,1})
-		else
-			printToAll('Shuffling Players...', {1,1,1})
-			shufflePlayers()
-			printToAll('shuffling done.', {1,1,1})
-		end
+		printToAll('Shuffling Players...', {1,1,1})
+		shufflePlayers()
+		printToAll('shuffling done.', {1,1,1})
 	end
 
 	--Hidden zones and status buttons
@@ -2641,20 +2587,33 @@ function findUnusedColor()
 end
 
 function shufflePlayers()
+	if #getSeatedPlayers() == 10 and Player['Black'].seated then
+		printToAll('Moving Black to Grey for shuffle.', {1,1,1})
+		Player['Black']:changeColor('Grey')
+		while Player['Black'].seated do
+			coroutine.yield()
+		end
+	end
 	swapColor = findUnusedColor()
 
 	local ranColors = {}
 	for _, v in pairs(getSeatedPlayers()) do
-		table.insert(ranColors, 1, v)
+		if (not Player[v].host) or options.shuffleHost then
+			table.insert(ranColors, 1, v)
+		end
 	end
 	shuffleTable(ranColors)
 
 	seatedPlayers = {}
-	for i, v in pairs(getSeatedPlayers()) do
-		local playerInfo = {}
-		playerInfo.target = ranColors[i]
-		playerInfo.myColor = v
-		table.insert(seatedPlayers, 1, playerInfo)
+	local j = 1
+	for _, v in pairs(getSeatedPlayers()) do
+		if (not Player[v].host) or options.shuffleHost then
+			local playerInfo = {}
+			playerInfo.target = ranColors[j]
+			playerInfo.myColor = v
+			table.insert(seatedPlayers, 1, playerInfo)
+			j = j + 1
+		end
 	end
 
 	local doneCount = 0
