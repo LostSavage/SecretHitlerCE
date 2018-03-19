@@ -5,11 +5,12 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 87
+update_version = 88
 add_on_version = 4
 
 --Buttons
 settingsPannel_guid = '39d283'
+fasPannel_guid = 'c09dbd'
 drawPileBoard_guid = 'a5b10f'
 radio_string = '●'
 check_string = '✓'
@@ -43,8 +44,12 @@ topdeck_zone_guid = 'c0b577'
 --Expansion
 abilitiesPile_zone_guid = 'eea120'
 effectsPile_zone_guid = '374a16'
+deckCube_guid = '0e1ad7'
+timeTravellerActive = false
+magicianActive = false
 
 --Other
+trusted_players = {'76561197992512677'}
 boardColor_rgb = {14/255, 45/255, 18/255}
 lastVote_guids = {'88c953', 'ba4919', 'b7dcde', '4598da'}
 -- @{100, 100, 100+} hidden zones
@@ -107,13 +112,14 @@ options = {
 	dealPartyCards = false,
 	dealRoleCards = false,
 	expansionAmount = 2,
+	expansionDeck = 1, -- [1 None, 2 SP, 3 MNH]
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
 	noteType = 0, -- [0 Dark wood, 1 Light wood, 2 Red wood, 3 Black plastic, 4 Board image, 5 Swiss cheese, 6 Private only, 7 Cooperative]
 	scriptedVoting = true,
 	shufflePlayers = false,
 	shuffleHost = true,
 	voteHistory = false,
-	zoneType = 1 -- [0 None, 1 Small, 2 Large]
+	zoneType = 5 -- [1 None, 2 Small, 3 Large, 4 Gap (version 1), 5 Gap (version 2)]
 }
 players = {}
 playerRoleCardGuids = {}
@@ -164,6 +170,7 @@ function onLoad(saveString)
 		lastChan = save['lc']
 		lastPres = save['lp']
 		lastVote = save['lv']
+		magicianActive = save['ma']
 		mainNotes = save['mn']
 		neinCardGuids = save['nein']
 		notate = save['note']
@@ -178,6 +185,7 @@ function onLoad(saveString)
 		roleButtons = save['rb']
 		started = save['s']
 		text = save['t']
+		timeTravellerActive = save['tt']
 		voteNotes = save['vn']
 		voteNotebook = save['vnb']
 	end
@@ -217,6 +225,7 @@ function onSave()
 	save['lc'] = lastChan
 	save['lp'] = lastPres
 	save['lv'] = lastVote
+	save['ma'] = magicianActive
 	save['mn'] = mainNotes
 	save['nein'] = neinCardGuids
 	save['note'] = notate
@@ -231,6 +240,7 @@ function onSave()
 	save['rb'] = roleButtons
 	save['s'] = started
 	save['t'] = text
+	save['tt'] = timeTravellerActive
 	save['vn'] = voteNotes
 	save['vnb'] = voteNotebook
 	local saveString = JSON.encode(save)
@@ -265,34 +275,41 @@ function alwaysInit()
 
 	local drawPileBoard = getObjectFromGUID(drawPileBoard_guid)
 	if drawPileBoard then
-		local button = {}
-		button.click_function = 'drawThree'
-		button.label = 'Draw 3'
-		button.function_owner = Global
-		button.position = {0, 0.14, 3.7}
-		button.rotation = {0, 0, 0}
-		button.width = 2700
-		button.height = 1300
-		button.font_size = 650
+		local button = {
+			click_function = 'drawThree',
+			label = 'Draw 3',
+			function_owner = Global,
+			position = {0, 0.14, 3.7},
+			rotation = {0, 0, 0},
+			width = 2700,
+			height = 1300,
+			font_size = 650
+		}
 		drawPileBoard.createButton(button)
 	end
 
 	--Player Status Buttons
 	refreshStatusButtons()
 
+	--Expansion
+	if not getObjectFromGUID(deckCube_guid) and options.expansionDeck == 3 then -- MNH
+		refreshExpansionButtons()
+	end
+
 	--Player Role Buttons
 	for _, buttonGUID in ipairs(roleButtons) do
 		tmpObj = getObjectFromGUID(buttonGUID)
 		if tmpObj then
-			local button = {}
-			button.click_function = 'tellRoleButton'
-			button.label = 'Role?'
-			button.function_owner = self
-			button.position = {0, 0.2, 0}
-			button.rotation = {0, 0, 0}
-			button.width = 800
-			button.height = 600
-			button.font_size = 300
+			local button = {
+				click_function = 'tellRoleButton',
+				label = 'Role?',
+				function_owner = self,
+				position = {0, 0.2, 0},
+				rotation = {0, 0, 0},
+				width = 800,
+				height = 600,
+				font_size = 300
+			}
 			tmpObj.createButton(button)
 		end
 	end
@@ -324,8 +341,15 @@ function refreshStatusButtons()
 		if tmpObj then
 			tmpObj.clearButtons()
 			local ownerColor = closestPlayer(tmpObj, players, 18)
-			local button = {}
-			button.click_function = 'changePlayerStatus'
+			local button = {
+				function_owner = self,
+				position = {0, 0.2, 0},
+				rotation = {0, 180, 0},
+				width = 2900,
+				height = 1500,
+				font_size = 600,
+				click_function = 'changePlayerStatus'
+			}
 			if _G.playerStatus[ownerColor] == 1 then
 				button.color = boardColor_rgb
 				button.label = ''
@@ -336,20 +360,52 @@ function refreshStatusButtons()
 				button.color = stringColorToRGB('Yellow')
 				button.label = 'Vote Only'
 			elseif _G.playerStatus[ownerColor] == 4 then
+				button.color = stringColorToRGB('Blue')
+				button.label = 'Silenced'
+			elseif _G.playerStatus[ownerColor] == 5 then
 				button.color = stringColorToRGB('Red')
 				button.label = bulletInfo.status
 			else
 				button.color = stringColorToRGB('Red')
 				button.label = bulletInfo.status .. '\nNot ' .. text.hitler
 			end
-			button.function_owner = self
-			button.position = {0, 0.2, 0}
-			button.rotation = {0, 180, 0}
-			button.width = 2900
-			button.height = 1500
-			button.font_size = 600
 			tmpObj.createButton(button)
 		end
+	end
+end
+
+function refreshExpansionButtons()
+	local fasBoard = getObjectFromGUID(fasPannel_guid)
+	if fasBoard then
+		fasBoard.clearButtons()
+		local button = {
+			click_function = 'toggleMagician',
+			function_owner = self,
+			position = {-6, 0.2, 6},
+			rotation = {0, 0, 0},
+			width = 2600,
+			height = 800,
+			font_size = 360
+		}
+		if magicianActive then
+			button.color =  stringColorToRGB('Green')
+			button.label = 'Magician: On'
+		else
+			button.color =  stringColorToRGB('White')
+			button.label = 'Magician: Off'
+		end
+		fasBoard.createButton(button)
+
+		button.click_function = 'toggleTimeTraveller'
+		button.position = {6, 0.2, 6}
+		if timeTravellerActive then
+			button.color =  stringColorToRGB('Green')
+			button.label = 'Time Travel: On'
+		else
+			button.color =  stringColorToRGB('White')
+			button.label = 'Time Travel: Off'
+		end
+		fasBoard.createButton(button)
 	end
 end
 
@@ -431,30 +487,119 @@ function init()
 end
 
 function onChat(messageIn, player)
-	local message = string.gsub(string.lower(messageIn), ' ', '')
-	if message == 'role' or message == 'r' then
-		tellRole(player.color)
-		return false
-	elseif message == 'last' or message == 'l' then
-		printToColor(lastVote, player.color, {1, 1, 1})
-		return false
-	elseif message == 'history' or message == 'h' then
-		if options.voteHistory then
-			printToColor(voteNotebook, player.color, {1, 1, 1})
+	local message = string.lower(string.gsub(messageIn, '%s+', ' '))
+	local messageTable = string.tokenize(message, ' ')
+
+	if messageTable[1] == 'r' then
+		if started then
+			player:broadcast(tellRole(player.color))
 		else
-			printToColor('ERROR: Full vote history is not enabled.', player.color, {1, 0, 0})
+			player:print('ERROR: Game not started.')
 		end
 		return false
-	elseif message == 'version' then
-		versionInfo(player.color)
+	elseif messageTable[1] == 'l' then
+		player:print(lastVote)
 		return false
-	elseif message == 'promote' and player.steam_id == '76561197992512677' then
-		player.promote()
+	elseif messageTable[1] == 'h' then
+		if options.voteHistory then
+			local msg = voteNotebook
+			if messageTable[2] and tonumber(messageTable[2]) then
+				msg = topLines(msg, tonumber(messageTable[2]))
+			end
+			player:print(string.gsub(msg, '\n$', ''))
+
+		else
+			player:print('ERROR: Full vote history is not enabled.')
+		end
 		return false
-	elseif message == 'help' then
-		chatHelp(player.color)
+	elseif messageTable[1] == 'n' then
+		local msg = noteTakerNotesString(100, false, true)
+		if messageTable[2] and tonumber(messageTable[2]) then
+			msg = topLines(msg, tonumber(messageTable[2]))
+		end
+		player:print(string.gsub(msg, '\n$', ''))
+		return false
+	elseif messageTable[1] == 'v' then
+		player:print(versionInfo())
+		return false
+	elseif messageTable[1] == 'black' and inTable(trusted_players, player.steam_id) then
+		if messageTable[2] then
+			for _, p in pairs(Player.getPlayers()) do
+				if p.steam_id == messageTable[2] then
+					p:changeColor('Black')
+				end
+			end
+		else
+			player:changeColor('Black')
+		end
+		return false
+	elseif messageTable[1] == 'promote' and inTable(trusted_players, player.steam_id) then
+		if messageTable[2] then
+			for _, p in pairs(Player.getPlayers()) do
+				if p.steam_id == messageTable[2] then
+					p.promote()
+				end
+			end
+		else
+			player.promote()
+		end
+		return false
+	elseif messageTable[1] == 'kick' and inTable(trusted_players, player.steam_id) then
+		if messageTable[2] then
+			for _, p in pairs(Player.getPlayers()) do
+				if p.steam_id == messageTable[2] then
+					p.kick()
+				end
+			end
+		end
+		return false
+	elseif messageTable[1] == 'list' and inTable(trusted_players, player.steam_id) then
+		for _, p in pairs(Player.getPlayers()) do
+			player:print(p.steam_name .. ' ' .. p.steam_id)
+		end
+		return false
+	elseif messageTable[1] == 'help' then
+		player:print(chatHelp())
 		return false
 	end
+end
+
+function string:tokenize(sep)
+    local sep, fields = sep or ':', {}
+    local pattern = string.format('([^%s]+)', sep)
+    self:gsub(pattern, function(c) fields[#fields+1] = c end)
+    return fields
+end
+
+function topLines(stringIn, maxLinesIn)
+	local linesFound = 0
+	local newLinePos = string.find(stringIn, '\n')
+	local oldLinePos = nil
+
+	while newLinePos do
+		linesFound = linesFound + 1
+		oldLinePos = newLinePos
+		if maxLinesIn == linesFound then break end
+		newLinePos = string.find(stringIn, '\n', newLinePos + 1)
+	end
+
+	if not newLinePos then
+		oldLinePos = string.len(stringIn)
+	end
+
+	return string.sub(stringIn, 1, oldLinePos)
+end
+
+function chatHelp()
+	local msg = 'chat commands:\n' ..
+					'   r - All the role information you can know\n' ..
+					'   l - Shows the last vote\n' ..
+					'   h [lines] - Vote history\n' ..
+					'   n [lines] - All of the notes\n' ..
+					'   v - Version info\n' ..
+					'   help - This message'
+
+	return msg
 end
 
 function settingsPannelMakeButtons()
@@ -463,7 +608,6 @@ function settingsPannelMakeButtons()
 		settingsPannel.clearButtons()
 
 		local buttonParam = {
-			alignment = 4,
 			font_color = {0, 0, 0},
 			rotation = {0, 0, 0},
 			width = 0,
@@ -501,11 +645,11 @@ function settingsPannelMakeButtons()
 		buttonParam.label = 'Hidden Zones'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
-		makeSquareButtonLabel(settingsPannel, (options.zoneType == 0), radio_string, '', 'None', 'zoneTypeZero', {startX, 0.2, startZ}, 1.9, true)
-		makeSquareButtonLabel(settingsPannel, (options.zoneType == 1), radio_string, '', 'Small', 'zoneTypeOne', {startX, 0.2, startZ + offsetZ}, 2, true)
-		makeSquareButtonLabel(settingsPannel, (options.zoneType == 2), radio_string, '', 'Large', 'zoneTypeTwo', {startX, 0.2, startZ + offsetZ * 2}, 2, true)
+		local labels = {'None', 'Small', 'Large', 'Gap (version 1)', 'Gap (version 2)'}
+		local offsets = {3.2, 3.3, 3.3, 5.3, 5.35}
+		makeDecIncButtonsLabel(settingsPannel, options.zoneType, '-', '+', labels, 'decZoneType', 'incZoneType', {startX, 0.2, startZ}, offsets, false, true)
 
-		startZ = 2
+		startZ = -0.6
 		buttonParam.label = 'Other Options'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
@@ -519,38 +663,48 @@ function settingsPannelMakeButtons()
 
 		--Expansion
 		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
-		if abilitiesDeck then
-			startZ = 12.9
-
+		local deckCube = getObjectFromGUID(deckCube_guid)
+		if abilitiesDeck or deckCube then
+			local forceEnable = false
+			startZ = 10.3
 			buttonParam.label = 'Expansion'
 			buttonParam.position = {0, 0.2, startZ - 1.4}
 			settingsPannel.createButton(buttonParam)
 
-			buttonParam.label = 'Cards'
-			buttonParam.position = {startX + 4.7, 0.2, startZ}
-			settingsPannel.createButton(buttonParam)
-
-			buttonParam.label = '-'
-			buttonParam.click_function = 'decExpansionAmount'
-			buttonParam.position = {startX, 0.2, startZ}
-			buttonParam.width = 600
-			buttonParam.height = 600
-			settingsPannel.createButton(buttonParam)
-
-			buttonParam.label = '+'
-			buttonParam.click_function = 'incExpansionAmount'
-			buttonParam.position = {startX + 2.6, 0.2, startZ}
-			settingsPannel.createButton(buttonParam)
-
-			buttonParam.label = options.expansionAmount
-			buttonParam.click_function = 'nullFunction'
-			buttonParam.color =  stringColorToRGB('Grey')
-			buttonParam.font_color = stringColorToRGB('White')
-			buttonParam.position = {startX + 1.3, 0.2, startZ}
-			settingsPannel.createButton(buttonParam)
+			local cardsOffset = 0
+			if deckCube then
+				cardsOffset = offsetZ
+				labels = {'None', 'SP deck', 'MNH deck'}
+				offsets = {3.2, 3.7, 4.2}
+				makeDecIncButtonsLabel(settingsPannel, options.expansionDeck, '-', '+', labels, 'decExpansionDeck', 'incExpansionDeck', {startX, 0.2, startZ}, offsets, false, true)
+				if options.expansionDeck == 1 then -- None
+					buttonParam.color =  stringColorToRGB('Grey')
+					buttonParam.font_color = {0.3, 0.3, 0.3}
+					buttonParam.click_function = 'nullFunction'
+				else
+					buttonParam.click_function = 'earlyDeckPlacement'
+				end
+				buttonParam.width = 1300
+				buttonParam.height = 600
+				buttonParam.label = 'Setup'
+				buttonParam.position = {startX + 7.9, 0.2, startZ}
+				settingsPannel.createButton(buttonParam)
+			else
+				forceEnable = true
+			end
+			makeDecIncButtonsLabel(settingsPannel, options.expansionAmount, '-', '+', 'Cards', 'decExpansionAmount', 'incExpansionAmount', {startX, 0.2, startZ + cardsOffset}, 4.7, false, (options.expansionDeck ~= 1) or forceEnable)
 		end
 
-		buttonParam = {click_function = 'setupStart', label = 'Start', function_owner = self, position = {0, 0.2, 23}, rotation = {0, 0, 0}, width = 3300, height = 1500, font_size = 750}
+		buttonParam = {
+			click_function = 'setupStart',
+			label = 'Start',
+			function_owner = self,
+			position = {0, 0.2, 23},
+			rotation = {0, 0, 0},
+			width = 3300,
+			height = 1500,
+			font_size = 750
+		}
 		settingsPannel.createButton(buttonParam)
 	else
 		printToAll('ERROR: Settings pannel not found.', {1,0,0})
@@ -586,10 +740,66 @@ function makeSquareButtonLabel(objectIn, valueIn, trueButtonTextIn, falseButtonT
 	if not enabledIn then
 		buttonParam.click_function = 'nullFunction'
 		buttonParam.color = stringColorToRGB('Grey')
-		textParam.font_color = stringColorToRGB('Grey')
+		buttonParam.font_color = {0.3, 0.3, 0.3}
+		textParam.font_color = {0.3, 0.3, 0.3}
 	end
 	objectIn.createButton(buttonParam)
 	objectIn.createButton(textParam)
+end
+
+function makeDecIncButtonsLabel(objectIn, valueIn, decButtonTextIn, incButtonTextIn, labelTextIn, decFunctionIn, incFunctionIn, positionIn, textOffsetIn, showValueIn, enabledIn)
+	local buttonParam = {
+		font_color = {0, 0, 0},
+		rotation = {0, 0, 0},
+		width = 0,
+		height = 0,
+		font_size = 480,
+		function_owner = self,
+		click_function = 'nullFunction'
+	}
+
+	local valueOffset
+	if type(labelTextIn) == 'table' then
+		valueOffset = 0
+		buttonParam.label = labelTextIn[valueIn]
+		buttonParam.position = {positionIn[1] + textOffsetIn[valueIn], positionIn[2], positionIn[3]}
+	else
+		valueOffset = 1.3
+		buttonParam.label = labelTextIn
+		buttonParam.position = {positionIn[1] + textOffsetIn, positionIn[2], positionIn[3]}
+	end
+	if not enabledIn then
+		buttonParam.font_color = {0.3, 0.3, 0.3}
+	end
+	objectIn.createButton(buttonParam)
+
+	if not enabledIn then
+		buttonParam.color = stringColorToRGB('Grey')
+	end
+	buttonParam.label = decButtonTextIn
+	buttonParam.position = positionIn
+	buttonParam.width = 600
+	buttonParam.height = 600
+	if enabledIn then
+		buttonParam.click_function = decFunctionIn
+	end
+	objectIn.createButton(buttonParam)
+
+	buttonParam.label = incButtonTextIn
+	buttonParam.position = {positionIn[1] + 1.3 + valueOffset, positionIn[2], positionIn[3]}
+	if enabledIn then
+		buttonParam.click_function = incFunctionIn
+	end
+	objectIn.createButton(buttonParam)
+
+	if valueOffset > 0 then
+		buttonParam.label = valueIn
+		if enabledIn then
+			buttonParam.click_function = incFunctionIn
+		end
+		buttonParam.position = {positionIn[1] + valueOffset, positionIn[2], positionIn[3]}
+		objectIn.createButton(buttonParam)
+	end
 end
 
 function gameTypeZero(clickedObject, playerColor)
@@ -676,23 +886,20 @@ function noteTypeSeven(clickedObject, playerColor)
 	end
 end
 
-function zoneTypeZero(clickedObject, playerColor)
+function decZoneType(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		options.zoneType = 0
+		if options.zoneType > 1 then
+			options.zoneType = options.zoneType - 1
+		end
 		settingsPannelMakeButtons()
 	end
 end
 
-function zoneTypeOne(clickedObject, playerColor)
+function incZoneType(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		options.zoneType = 1
-		settingsPannelMakeButtons()
-	end
-end
-
-function zoneTypeTwo(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.zoneType = 2
+		if options.zoneType < 5 then
+			options.zoneType = options.zoneType + 1
+		end
 		settingsPannelMakeButtons()
 	end
 end
@@ -762,6 +969,110 @@ function incExpansionAmount(clickedObject, playerColor)
 		end
 		settingsPannelMakeButtons()
 	end
+end
+
+function decExpansionDeck(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.expansionDeck > 1 then
+			options.expansionDeck = options.expansionDeck - 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function incExpansionDeck(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.expansionDeck < 3 then
+			options.expansionDeck = options.expansionDeck + 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function earlyDeckPlacement(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		placeExpansion()
+		settingsPannelMakeButtons()
+	end
+end
+
+function placeExpansion()
+	local tempTable = getObjectFromGUID(deckCube_guid).getObjects()
+	local tempDeck = ''
+	local tempEffects = ''
+	local tempRules = ''
+	local tempCardReference = ''
+	local tempPoison = ''
+	local tempTokens = 'Expansion Tokens'
+	local tempTool = 'SH Expansion Tool'
+	local params = {}
+	local deckCube = getObjectFromGUID(deckCube_guid)
+
+	if options.expansionDeck ~= 1 then -- not None
+		if options.expansionDeck == 3 then
+			tempDeck = 'MNH Deck'
+			tempEffects = 'MNH Effects'
+			tempRules = 'MNH Expansion Rules - Page I'
+			tempCardReference = 'MNH Card Reference'
+			tempPoison = 'Concealed Effects'
+			refreshExpansionButtons()
+		end
+		if options.expansionDeck == 2 then
+			tempDeck = 'SP Deck'
+			tempEffects = 'SP Effects'
+			tempRules = 'Expansion Rules'
+			tempCardReference = 'SP Card Reference'
+			tempPoison = nil
+		end
+		for i, v in ipairs(tempTable) do
+			if v.name == tempDeck then
+				params.rotation = {0,180,180}
+				params.guid = v.guid
+				params.position = {-20, 2, 6.25}
+				deckCube.takeObject(params)
+			end
+			if v.name == tempEffects then
+				params.rotation = {0,180,180}
+				params.guid = v.guid
+				params.position = {20, 2, 6.25}
+				deckCube.takeObject(params)
+			end
+			if v.name == tempRules then
+				params.rotation = {0,0,0}
+				params.guid = v.guid
+				params.position = {20, 1, 0}
+				deckCube.takeObject(params)
+			end
+			if v.name == tempCardReference then
+				params.rotation = {0,180,0}
+				params.guid = v.guid
+				params.position = {0, 1, 0}
+				deckCube.takeObject(params)
+			end
+			if v.name == tempPoison then
+				params.rotation = {0,0,0}
+				params.guid = v.guid
+				params.position = {-19, 1.79, 0}
+				deckCube.takeObject(params)
+			end
+			if v.name == tempTool then
+				params.rotation = {0,180,0}
+				params.guid = v.guid
+				params.position = {0,2,-16}
+				deckCube.takeObject(params)
+			end
+			if v.name == tempTokens then
+				params.rotation = {0,0,0}
+				params.guid = v.guid
+				params.position = {-20, 1.79, 0}
+				if tempDeck == 'MNH Deck' then
+					params.position = {-21, 1.79, 0}
+				end
+				deckCube.takeObject(params)
+			end
+		end
+	end
+	destroyObject(deckCube)
 end
 
 function addJaCard(cardIn)
@@ -1014,11 +1325,31 @@ function isBoardCardPickPres(objIn)
 	return false
 end
 
+function toggleTimeTraveller(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		local button = {}
+		timeTravellerActive = not timeTravellerActive
+		refreshExpansionButtons()
+	end
+end
+
+function toggleMagician(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		local button = {}
+		magicianActive = not magicianActive
+		refreshExpansionButtons()
+	end
+end
+
 function nextPres(playerIn)
-	local nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'White'}
+	local nextList
+	if not timeTravellerActive then
+		nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'White'}
+	else
+		nextList = {White = 'Pink', Brown = 'White', Red = 'Brown', Orange = 'Red', Yellow = 'Orange', Green = 'Yellow', Teal = 'Green', Blue = 'Teal', Purple = 'Blue', Pink = 'Blue'}
+	end
 	local checkPres = playerIn
 	local returnVal = nextList[checkPres]
-
 
 	while not inTable(players, returnVal) or (_G.playerStatus[returnVal] > 3) do
 		checkPres = returnVal
@@ -1113,7 +1444,7 @@ function markDead(tableIn)
 	if type(tableIn) == 'table' then
 		local victimColor = closestPlayer(tableIn[1], players, 18)
 		if victimColor then
-			_G.playerStatus[victimColor] = 4
+			_G.playerStatus[victimColor] = 5
 			refreshStatusButtons()
 			tableIn[1].interactable = false
 		end
@@ -1478,17 +1809,16 @@ function startVoteCheck()
 		local out = '[' .. stringColorToHex(presColor) .. ']' .. presColor .. '[-] > '
 		out = out .. '[' .. stringColorToHex(chanColor) .. ']' .. chanColor .. '[-]\n'
 		out = out .. voteNotes
-		out = removeBBCode(out)
 		if voteNotebook == '' then
 			voteNotebook = out
 		else
 			voteNotebook = voteNotebook .. '\n\n' .. out
 		end
-		for _, lastVoteGuid in ipairs(lastVote_guids) do
-			local lastVoteText = getObjectFromGUID(lastVoteGuid)
-			if lastVoteText then lastVoteText.TextTool.setValue(out) end
-		end
 		lastVote = out
+		for _, lastVoteGuid in ipairs(lastVote_guids) do
+			local lastVoteObj = getObjectFromGUID(lastVoteGuid)
+			if lastVoteObj then lastVoteObj.TextTool.setValue(removeBBCode(out)) end
+		end
 		flipVotes()
 		disableVote = true
 		if string.find(out, 'Vote passes') then
@@ -1496,7 +1826,6 @@ function startVoteCheck()
 		else
 			votePassed = false
 		end
-
 	else
 		voteNotes = getPrelimVoteString()
 		setNotes(voteNotes .. '\n\n' .. mainNotes)
@@ -1677,19 +2006,36 @@ end
 
 function drawThree(clickedObject, playerColor)
 	if started then
-		if playerColor == getPres() then
-			if blockDraw then
-				broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
-			else
-				if not options.scriptedVoting or votePassed then
-					blockDraw = true
-					drawCards(3, playerColor)
+		if not magicianActive then
+			if playerColor == getPres() then
+				if blockDraw then
+					broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
 				else
-					broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+					if not options.scriptedVoting or votePassed then
+						blockDraw = true
+						drawCards(3, playerColor)
+					else
+						broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+					end
 				end
+			else
+				broadcastToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
 			end
 		else
-			broadcastToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
+			if playerColor == getChan() then
+				if blockDraw then
+					broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
+				else
+					if not options.scriptedVoting or votePassed then
+						blockDraw = true
+						drawCards(3, playerColor)
+					else
+						broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+					end
+				end
+			else
+				broadcastToColor('ERROR: You are not the chancellor.', playerColor, {1, 0, 0})
+			end
 		end
 	else
 		broadcastToColor('ERROR: Game not started.', playerColor, {1, 0, 0})
@@ -1704,7 +2050,7 @@ function drawCards(amount, playerColor)
 	if drawDeck then
 		drawCt = #drawDeck.getObjects()
 		if drawCt > (amount - 1) then
-			lastPres = playerColor
+			lastPres = getPres()
 			lastChan = getChan()
 			drawDeck.dealToColor(amount, playerColor)
 			if amount == 1 then
@@ -1736,16 +2082,17 @@ function onPlayerChangedColor(color)
 			printToColor('--------------------------------------',color, {1, 1, 1})
 			printToColor('Welcome! ' .. Player[color].steam_name,color, {1, 1, 1})
 			printToColor('--------------------------------------',color, {1, 1, 1})
-			tellRole(color)
+			Player[color]:broadcast(tellRole(color))
 			printToColor('--------------------------------------',color, {1, 1, 1})
-			chatHelp(color)
+			Player[color]:print(chatHelp())
 		elseif color == 'Black' then
 			printToAll('--------------------------------------', {1, 1, 1})
 			local hcol = stringColorToRGB(color)
 			printToAll('All hail the omniscient Black player ' .. Player[color].steam_name, {hcol['r'], hcol['g'], hcol['b']})
 			printToAll('--------------------------------------', {1, 1, 1})
-			tellRole(color)
+			Player[color]:broadcast(tellRole(color))
 			printToColor('--------------------------------------',color, {1, 1, 1})
+			Player[color]:print(chatHelp())
 		end
 	end
 end
@@ -1807,9 +2154,14 @@ function setupCoroutine()
 	end
 
 	if options.shufflePlayers then
-		printToAll('Shuffling Players...', {1,1,1})
-		shufflePlayers()
-		printToAll('shuffling done.', {1,1,1})
+		local playerOneName = Player[players[1]].steam_name
+		if not playerOneName or string.match(playerOneName, 'Player %d') then
+			printToAll('Hotseat game detected unable to shuffle players.', {1,1,1})
+		else
+			printToAll('Shuffling Players...', {1,1,1})
+			shufflePlayers()
+			printToAll('shuffling done.', {1,1,1})
+		end
 	end
 
 	--Hidden zones and status buttons
@@ -1817,11 +2169,12 @@ function setupCoroutine()
 		if not inTable(players, player) then
 			destroyObjectByGUID(hidden_zone_guids[player])
 		else
-			if options.zoneType == 0 then
-				local params = {}
-				params.type = 'BlockRectangle'
-				params.scale = {15, 0.25, 0.5}
-				params.position = {-100, 100, -100}
+			if options.zoneType == 1 then
+				local params = {
+					type = 'BlockRectangle',
+					scale = {15, 0.25, 0.5},
+					position = {-100, 100, -100}
+				}
 				local block = spawnObject(params)
 				block.setColorTint(stringColorToRGB(player))
 				block.setLock(true)
@@ -1830,59 +2183,83 @@ function setupCoroutine()
 				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 				tmpObj.setScale({0.01, 0.01, 0.01})
 				tmpObj.setPosition({100, 100, 100 + i * 2})
-			elseif options.zoneType == 1 then
+			elseif options.zoneType == 2 then
 				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 				tmpObj.setScale({15.3268776, 5.1, 6.35014629})
 				forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
+			elseif options.zoneType == 4 then
+				local pos = {White = {29.65, 3.51, -32.75}, Brown = {0, 3.51, -32.75}, Red = {-29.65, 3.51, -32.75}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 32.75}, Teal = {0, 3.51, 32.75}, Blue = {29.65, 3.51, 32.75}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
+				local scale = {White = {28.4, 5.1, 10.1}, Brown = {28.4, 5.1, 10.1}, Red = {28.4, 5.1, 10.1}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 10.1}, Teal = {28.4, 5.1, 10.1}, Blue = {28.4, 5.1, 10.1}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
+
+				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+				tmpObj.setPosition(pos[player])
+				tmpObj.setScale(scale[player])
+			elseif options.zoneType == 5 then
+				local pos = {White = {29.65, 3.51, -31.9}, Brown = {0, 3.51, -31.9}, Red = {-29.65, 3.51, -31.9}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 31.9}, Teal = {0, 3.51, 31.9}, Blue = {29.65, 3.51, 31.9}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
+				local scale = {White = {28.4, 5.1, 11.8}, Brown = {28.4, 5.1, 11.8}, Red = {28.4, 5.1, 11.8}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 11.8}, Teal = {28.4, 5.1, 11.8}, Blue = {28.4, 5.1, 11.8}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
+
+				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+				tmpObj.setPosition(pos[player])
+				tmpObj.setScale(scale[player])
 			end
 			-- Player Status Buttons
-			local paramsStatus = {}
-			paramsStatus.type = 'backgammon_piece_white'
-			paramsStatus.position = {-100, 100, -100}
-			paramsStatus.callback_owner = selfIn
-			paramsStatus.callback = 'statusButtonCallback'
+			local paramsStatus = {
+				type = 'backgammon_piece_white',
+				position = {-100, 100, -100},
+				callback_owner = selfIn,
+				callback = 'statusButtonCallback'
+			}
 			local buttonStatusBase = spawnObject(paramsStatus)
 			buttonStatusBase.setColorTint(stringColorToRGB(player))
 			buttonStatusBase.setLock(true)
 			forceObjectToPlayer(buttonStatusBase, player, {forward = 11, right = -8.5, up = 0, forceHeight = 1.09}, flip_y)
-			local buttonStatus = {}
-			buttonStatus.click_function = 'changePlayerStatus'
-			buttonStatus.color = boardColor_rgb
-			buttonStatus.label = ''
-			buttonStatus.function_owner = self
-			buttonStatus.position = {0, 0.2, 0}
-			buttonStatus.rotation = {0, 180, 0}
-			buttonStatus.width = 2800
-			buttonStatus.height = 1500
-			buttonStatus.font_size = 600
+			local buttonStatus = {
+				click_function = 'changePlayerStatus',
+				color = boardColor_rgb,
+				label = '',
+				function_owner = self,
+				position = {0, 0.2, 0},
+				rotation = {0, 180, 0},
+				width = 2800,
+				height = 1500,
+				font_size = 600
+			}
 			buttonStatusBase.createButton(buttonStatus)
 			-- Player Role Buttons
-			local paramsRole = {}
-			paramsRole.type = 'backgammon_piece_white'
-			paramsRole.position = {-100, 100, -100}
-			paramsRole.callback_owner = selfIn
-			paramsRole.callback = 'roleButtonCallback'
+			local paramsRole = {
+				type = 'backgammon_piece_white',
+				position = {-100, 100, -100},
+				callback_owner = selfIn,
+				callback = 'roleButtonCallback'
+			}
 			buttonBaseRole = spawnObject(paramsRole)
 			buttonBaseRole.setColorTint(stringColorToRGB(player))
 			buttonBaseRole.setLock(true)
 			local forwardAdd = 0
-			if options.zoneType ~= 1 then forwardAdd = 2.5 end
+			if options.zoneType ~= 2 then forwardAdd = 2.5 end
 			forceObjectToPlayer(buttonBaseRole, player, {forward = 2.5 + forwardAdd, right = 6.8, up = 0, forceHeight = 1.09}, flip_y)
-			local buttonRole = {}
-			buttonRole.click_function = 'tellRoleButton'
-			buttonRole.color = {1, 1, 1}
-			buttonRole.label = 'Role?'
-			buttonRole.function_owner = self
-			buttonRole.position = {0, 0.2, 0}
-			buttonRole.rotation = {0, 0, 0}
-			buttonRole.width = 800
-			buttonRole.height = 600
-			buttonRole.font_size = 300
+			local buttonRole = {
+				click_function = 'tellRoleButton',
+				color = {1, 1, 1},
+				label = 'Role?',
+				function_owner = self,
+				position = {0, 0.2, 0},
+				rotation = {0, 0, 0},
+				width = 800,
+				height = 600,
+				font_size = 300
+			}
 			buttonBaseRole.createButton(buttonRole)
 		end
 	end
 
 	--Expansion
+	if getObjectFromGUID(deckCube_guid) then
+		placeExpansion()
+		if options.expansionDeck ~= 1 then -- not None
+			sleep(1.5)
+		end
+	end
 	local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
 	if abilitiesDeck then
 		abilitiesDeck.randomize()
@@ -2221,7 +2598,7 @@ function setupCoroutine()
 	-- Tell everyone their role
 	printToAll('--------------------------------------', {1,1,1})
 	for _, player in ipairs(players) do
-		tellRole(player)
+		Player[player]:broadcast(tellRole(player))
 	end
 	printToAll('--------------------------------------', {1,1,1})
 
@@ -2232,7 +2609,7 @@ function setupCoroutine()
 	printToAll(players[randomPlayer] .. ' is first president!',{hcol['r'], hcol['g'], hcol['b']})
 	printToAll('--------------------------------------', {1,1,1})
 	for _, player in ipairs(players) do
-		chatHelp(player)
+		Player[player]:print(chatHelp())
 	end
 
 	-- Cleanup custom pieces
@@ -2314,43 +2691,17 @@ function changePlayerStatus(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		local ownerColor = closestPlayer(clickedObject, players, 18)
 		_G.playerStatus[ownerColor] = _G.playerStatus[ownerColor] + 1
-		if _G.playerStatus[ownerColor] > 5 then _G.playerStatus[ownerColor] = 1 end
-		local buttonList = clickedObject.getButtons()
-		if buttonList then
-			local button
-			for _, button in ipairs(buttonList) do
-				if _G.playerStatus[ownerColor] == 1 then
-					button.color = boardColor_rgb
-					button.label = ''
-				elseif _G.playerStatus[ownerColor] == 2 then
-					button.color = stringColorToRGB('Green')
-					button.label = 'Not ' .. text.hitler
-				elseif _G.playerStatus[ownerColor] == 3 then
-					button.color = stringColorToRGB('Yellow')
-					button.label = 'Vote Only'
-				elseif _G.playerStatus[ownerColor] == 4 then
-					button.color = stringColorToRGB('Red')
-					button.label =  bulletInfo.status
-				else
-					button.color = stringColorToRGB('Red')
-					button.label = bulletInfo.status .. '\nNot '.. text.hitler
-				end
-				clickedObject.editButton(button)
+		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+		if not abilitiesDeck then
+			if _G.playerStatus[ownerColor] == 3 then
+				_G.playerStatus[ownerColor] = 5
 			end
 		end
+		if _G.playerStatus[ownerColor] > 6 then _G.playerStatus[ownerColor] = 1 end
+		refreshStatusButtons()
 	else
 		printToColor('ERROR: You are not the host or a promoted player.', playerColor, {1, 0, 0})
 	end
-end
-
-function chatHelp(playerColor)
-	local msg = 'chat commands:\n' ..
-					'   r[ole] - All the role information you can know\n' ..
-					'   l[ast] - Shows the last vote\n' ..
-					'   h[istory] - Full vote history if enabled\n' ..
-					'   version - Version info (for debug)\n' ..
-					'   help - This message'
-	printToColor(msg, playerColor, {1,1,1})
 end
 
 function roleButtonCallback(objIn, paramsIn)
@@ -2358,44 +2709,41 @@ function roleButtonCallback(objIn, paramsIn)
 end
 
 function tellRoleButton(clickedObject, playerColor)
-	tellRole(playerColor)
+	Player[playerColor]:broadcast(tellRole(playerColor))
 end
 
 function tellRole(player)
-	local pRBG
+	local msg = ''
 	if player == 'Black' then
+		msg = msg .. '[' .. stringColorToHex(hitler) .. ']' .. hitler .. ' is ' .. text.hitler .. '!' .. '[-]\n'
 		for _, l in pairs(fascists) do
-			pRBG = stringColorToRGB(l)
-			broadcastToColor(l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!', player, pRBG)
+			msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!' .. '[-]\n'
 		end
-		pRBG = stringColorToRGB(hitler)
-		broadcastToColor(hitler .. ' is ' .. text.hitler .. '!', player, pRBG)
 	else
 		local role = roles[player]
 		if role == 'fascist' then
+			msg = msg .. 'You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!\n'
+			msg = msg .. '[' .. stringColorToHex(hitler) .. ']' .. hitler .. ' is ' .. text.hitler .. '!' .. '[-]\n'
 			for _, l in pairs(fascists) do
 				if not (l == player) then
-					pRBG = stringColorToRGB(l)
-					broadcastToColor(l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. ', too!', player, pRBG)
+					msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. ', too!' .. '[-]\n'
 				end
 			end
-			pRBG = stringColorToRGB(hitler)
-			broadcastToColor(hitler .. ' is ' .. text.hitler .. '!', player, pRBG)
-			broadcastToColor('You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!', player, {1, 0, 0})
 		elseif role == 'hitler' then
+			msg = msg .. 'You are ' .. text.hitler .. '!\n'
 			if (#players < 7) then
 				for _, l in pairs(fascists) do
-					pRBG = stringColorToRGB(l)
-					broadcastToColor(l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!', player, pRBG)
+					msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!' .. '[-]\n'
 				end
 			end
-			broadcastToColor('You are ' .. text.hitler .. '!', player, {1, 0, 0})
 		elseif role == 'liberal' then
-			broadcastToColor('You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!', player, {0.1, 0.3, 1})
+			msg = msg .. 'You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!\n'
 		else
-			broadcastToColor(player .. ' is not Playing!', player, {1, 1, 1})
+			msg = msg .. player .. ' is not Playing!\n'
 		end
 	end
+
+	return string.gsub(msg, '\n$', '')
 end
 
 function shuffleDrawDeck()
@@ -2587,8 +2935,9 @@ function findUnusedColor()
 end
 
 function shufflePlayers()
+	local blackSteamId
 	if #getSeatedPlayers() == 10 and Player['Black'].seated then
-		printToAll('Moving Black to Grey for shuffle.', {1,1,1})
+		blackSteamId = Player['Black'].steam_id
 		Player['Black']:changeColor('Grey')
 		while Player['Black'].seated do
 			coroutine.yield()
@@ -2648,6 +2997,14 @@ function shufflePlayers()
 		end
 		tryCount = tryCount - 1
 		coroutine.yield()
+	end
+
+	if blackSteamId then
+		for _, p in pairs(Player.getSpectators()) do
+			if p.steam_id == blackSteamId then
+				p:changeColor('Black')
+			end
+		end
 	end
 end
 
@@ -2758,22 +3115,23 @@ function isTableGUID(GUIDIn)
 	return false
 end
 
-function versionInfo(playerColor)
-	local out
+function versionInfo()
+	local msg
 
-	out = _VERSION -- Lua info
+	msg = _VERSION -- Lua info
 	if mod_name then
-		out = out .. '\nmod_name = ' .. mod_name
+		msg = msg .. '\nmod_name = ' .. mod_name
 	else
-		out = out .. '\nmod_name = nil'
+		msg = msg .. '\nmod_name = nil'
 	end
 	if update_version then
-		out = out .. '\nupdate_version = ' .. update_version
+		msg = msg .. '\nupdate_version = ' .. update_version
 	else
-		out = out .. '\nupdate_version = nil'
+		msg = msg .. '\nupdate_version = nil'
 	end
-	out = out .. '\nGlobal Lua length ' .. string.len(Global.getLuaScript())
-	printToColor(out, playerColor, {1, 1, 1})
+	msg = msg .. '\nGlobal Lua length ' .. string.len(Global.getLuaScript())
+
+	return msg
 end
 
 --------------------------------------------------------------------------------
@@ -4111,7 +4469,7 @@ function buttonColor(clickedObject, clickingPlayer, colorClicked)
 			prevChanColor = colorClicked
 		end
 		if (noteTakerNotes[noteTakerCurrLine].action == string.lower(bulletInfo.action) or noteTakerNotes[noteTakerCurrLine].action == 'gives pres to')
-		 	and noteTakerNotes[noteTakerCurrLine].color1 ~= '' and noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
+			 and noteTakerNotes[noteTakerCurrLine].color1 ~= '' and noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
 			addNewLine()
 		end
 		refreshNotes(clickedObject)
