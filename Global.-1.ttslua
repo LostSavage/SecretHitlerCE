@@ -1,11 +1,11 @@
 -- Created by LostGod on 5/8/2016
 -- Heavily modified by Lost Savage
 -- Also used code from smiling Aktheon, SwiftPanda, Rodney,
--- Markimus, Sionar and Morten G
+-- Markimus, Sionar, Morten G and Hmmmpf
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 88
+update_version = 89
 add_on_version = 4
 
 --Buttons
@@ -492,9 +492,9 @@ function onChat(messageIn, player)
 
 	if messageTable[1] == 'r' then
 		if started then
-			player:broadcast(tellRole(player.color))
+			player:print(tellRole(player.color))
 		else
-			player:print('ERROR: Game not started.')
+			player:print('[FF0000]ERROR: Game not started.[-]')
 		end
 		return false
 	elseif messageTable[1] == 'l' then
@@ -509,7 +509,7 @@ function onChat(messageIn, player)
 			player:print(string.gsub(msg, '\n$', ''))
 
 		else
-			player:print('ERROR: Full vote history is not enabled.')
+			player:print('[FF0000]ERROR: Full vote history is not enabled.[-]')
 		end
 		return false
 	elseif messageTable[1] == 'n' then
@@ -588,6 +588,14 @@ function topLines(stringIn, maxLinesIn)
 	end
 
 	return string.sub(stringIn, 1, oldLinePos)
+end
+
+function bigBroadcast(msgIn, playerObjIn)
+	local messageTable = string.tokenize(msgIn, '\n')
+
+	for i=#messageTable, 1, -1 do
+		playerObjIn:broadcast(messageTable[i])
+	end
 end
 
 function chatHelp()
@@ -2082,7 +2090,7 @@ function onPlayerChangedColor(color)
 			printToColor('--------------------------------------',color, {1, 1, 1})
 			printToColor('Welcome! ' .. Player[color].steam_name,color, {1, 1, 1})
 			printToColor('--------------------------------------',color, {1, 1, 1})
-			Player[color]:broadcast(tellRole(color))
+			bigBroadcast(tellRole(color), Player[color])
 			printToColor('--------------------------------------',color, {1, 1, 1})
 			Player[color]:print(chatHelp())
 		elseif color == 'Black' then
@@ -2090,7 +2098,7 @@ function onPlayerChangedColor(color)
 			local hcol = stringColorToRGB(color)
 			printToAll('All hail the omniscient Black player ' .. Player[color].steam_name, {hcol['r'], hcol['g'], hcol['b']})
 			printToAll('--------------------------------------', {1, 1, 1})
-			Player[color]:broadcast(tellRole(color))
+			bigBroadcast(tellRole(color), Player[color])
 			printToColor('--------------------------------------',color, {1, 1, 1})
 			Player[color]:print(chatHelp())
 		end
@@ -2598,7 +2606,7 @@ function setupCoroutine()
 	-- Tell everyone their role
 	printToAll('--------------------------------------', {1,1,1})
 	for _, player in ipairs(players) do
-		Player[player]:broadcast(tellRole(player))
+		bigBroadcast(tellRole(player), Player[player])
 	end
 	printToAll('--------------------------------------', {1,1,1})
 
@@ -2709,7 +2717,7 @@ function roleButtonCallback(objIn, paramsIn)
 end
 
 function tellRoleButton(clickedObject, playerColor)
-	Player[playerColor]:broadcast(tellRole(playerColor))
+	bigBroadcast(tellRole(playerColor), Player[playerColor])
 end
 
 function tellRole(player)
@@ -2722,7 +2730,7 @@ function tellRole(player)
 	else
 		local role = roles[player]
 		if role == 'fascist' then
-			msg = msg .. 'You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!\n'
+			msg = msg .. '[' .. stringColorToHex(player) .. ']You are ' .. text.fascistArticle .. ' [FF0000]' .. text.fascist .. '[-]![-]\n'
 			msg = msg .. '[' .. stringColorToHex(hitler) .. ']' .. hitler .. ' is ' .. text.hitler .. '!' .. '[-]\n'
 			for _, l in pairs(fascists) do
 				if not (l == player) then
@@ -2730,14 +2738,14 @@ function tellRole(player)
 				end
 			end
 		elseif role == 'hitler' then
-			msg = msg .. 'You are ' .. text.hitler .. '!\n'
+			msg = msg .. '[' .. stringColorToHex(player) .. ']You are [FF0000]' .. text.hitler .. '[-]![-]\n'
 			if (#players < 7) then
 				for _, l in pairs(fascists) do
 					msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!' .. '[-]\n'
 				end
 			end
 		elseif role == 'liberal' then
-			msg = msg .. 'You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!\n'
+			msg = msg .. '[' .. stringColorToHex(player) .. ']You are ' .. text.liberalArticle .. ' [0080F8]' .. text.liberal .. '[-]![-]\n'
 		else
 			msg = msg .. player .. ' is not Playing!\n'
 		end
