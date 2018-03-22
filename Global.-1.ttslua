@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 89
+update_version = 90
 add_on_version = 4
 
 --Buttons
@@ -40,6 +40,7 @@ discard_zone_guid = 'b9bd6e'
 fascist_zone_guids = {'1f0149', '390247', '6c3840', '13e460', '441bbf', '6a906e', '488053'}
 liberal_zone_guids = {'12b8ce', '3cabfa', '6f02b7', '939e6d', '3f80ba', 'a6b76f'}
 topdeck_zone_guid = 'c0b577'
+policySafety_zone_guids = {'e99663', '13b335', 'd7774a', 'f601b1', '620e09', 'b7c2d8', '162d55', '0aa61b', 'fdc17a', 'c4d8e8'}
 
 --Expansion
 abilitiesPile_zone_guid = 'eea120'
@@ -115,6 +116,7 @@ options = {
 	expansionDeck = 1, -- [1 None, 2 SP, 3 MNH]
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
 	noteType = 0, -- [0 Dark wood, 1 Light wood, 2 Red wood, 3 Black plastic, 4 Board image, 5 Swiss cheese, 6 Private only, 7 Cooperative]
+	policySafety = true,
 	scriptedVoting = true,
 	shufflePlayers = false,
 	shuffleHost = true,
@@ -249,14 +251,27 @@ function onSave()
 end
 
 function onObjectEnterScriptingZone(zone, enterObject)
-	if zone.guid == topdeck_zone_guid and enterObject.guid == election_tracker_guid then
-		editButtonByLabel(drawPileBoard_guid, 'Draw 3', 'Topdeck', 'topdeckCard')
+	if enterObject then
+		if zone.guid == topdeck_zone_guid and enterObject.guid == election_tracker_guid then
+			editButtonByLabel(drawPileBoard_guid, 'Draw 3', 'Topdeck', 'topdeckCard')
+		end
 	end
 end
 
 function onObjectLeaveScriptingZone(zone, leaveObject)
-	if zone.guid == topdeck_zone_guid and leaveObject.guid == election_tracker_guid then
-		editButtonByLabel(drawPileBoard_guid, 'Topdeck', 'Draw 3', 'drawThree')
+	if leaveObject then
+		if zone.guid == topdeck_zone_guid and leaveObject.guid == election_tracker_guid then
+			editButtonByLabel(drawPileBoard_guid, 'Topdeck', 'Draw 3', 'drawThree')
+		elseif options.policySafety then
+			if inTable(policySafety_zone_guids, zone.guid) and leaveObject.tag == 'Card' and
+				(leaveObject.getDescription() == 'Fascist Policy' or
+				 leaveObject.getDescription() == 'Liberal Policy') then
+				if isFaceUp(leaveObject) and leaveObject.held_by_color then
+					leaveObject.deal(1, leaveObject.held_by_color)
+					broadcastToColor('Keep your policy cards face down\nwhen removing them from your hand!', leaveObject.held_by_color, {1, 0, 0})
+				end
+			end
+		end
 	end
 end
 
@@ -665,16 +680,17 @@ function settingsPannelMakeButtons()
 		makeSquareButtonLabel(settingsPannel, options.dealPartyCards, check_string, '', 'Deal party membership', 'partyCardFlip', {startX, 0.2, startZ + offsetZ}, 5.8, true)
 		makeSquareButtonLabel(settingsPannel, options.scriptedVoting, check_string, '', 'Scripted voting', 'scriptedVotingFlip', {startX, 0.2, startZ + offsetZ * 2}, 4, true)
 		makeSquareButtonLabel(settingsPannel, options.autoNotate, check_string, '', 'Auto notate', 'autoNotateFlip', {startX, 0.2, startZ + offsetZ * 3}, 3.4, true)
-		makeSquareButtonLabel(settingsPannel, options.voteHistory, check_string, '', 'Vote history', 'voteHistoryFlip', {startX, 0.2, startZ + offsetZ * 4}, 3.4, true)
-		makeSquareButtonLabel(settingsPannel, options.shufflePlayers, check_string, '', 'Shuffle players', 'shufflePlayersFlip', {startX, 0.2, startZ + offsetZ * 5}, 4, true)
-		makeSquareButtonLabel(settingsPannel, options.shuffleHost, check_string, '', 'Shuffle host', 'shuffleHostFlip', {startX + 1.3, 0.2, startZ + offsetZ * 6}, 3.3, options.shufflePlayers)
+		makeSquareButtonLabel(settingsPannel, options.policySafety, check_string, '', 'Policy safety', 'policySafetyFlip', {startX, 0.2, startZ + offsetZ * 4}, 3.5, true)
+		makeSquareButtonLabel(settingsPannel, options.voteHistory, check_string, '', 'Vote history', 'voteHistoryFlip', {startX, 0.2, startZ + offsetZ * 5}, 3.4, true)
+		makeSquareButtonLabel(settingsPannel, options.shufflePlayers, check_string, '', 'Shuffle players', 'shufflePlayersFlip', {startX, 0.2, startZ + offsetZ * 6}, 4, true)
+		makeSquareButtonLabel(settingsPannel, options.shuffleHost, check_string, '', 'Shuffle host', 'shuffleHostFlip', {startX + 1.3, 0.2, startZ + offsetZ * 7}, 3.3, options.shufflePlayers)
 
 		--Expansion
 		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
 		local deckCube = getObjectFromGUID(deckCube_guid)
 		if abilitiesDeck or deckCube then
 			local forceEnable = false
-			startZ = 10.3
+			startZ = 11.6
 			buttonParam.label = 'Expansion'
 			buttonParam.position = {0, 0.2, startZ - 1.4}
 			settingsPannel.createButton(buttonParam)
@@ -936,6 +952,13 @@ end
 function autoNotateFlip(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.autoNotate = not options.autoNotate
+		settingsPannelMakeButtons()
+	end
+end
+
+function policySafetyFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.policySafety = not options.policySafety
 		settingsPannelMakeButtons()
 	end
 end
@@ -2151,6 +2174,19 @@ function setupCoroutine()
 		return true
 	end
 
+	local playerOneName = Player[players[1]].steam_name
+	if not playerOneName or string.match(playerOneName, 'Player %d') then
+		printToAll('Hotseat game detected.', {1,1,1})
+		if options.shufflePlayers then
+			options.shufflePlayers = false
+			printToAll('Shuffle players is now disabled.', {1,0,0})
+		end
+		if options.policySafety then
+			options.policySafety = false
+			printToAll('Policy safety is now disabled.', {1,0,0})
+		end
+	end
+
 	if customOnly and options.gameType < 2 then
 		broadcastToAll('ERROR: Required items may have been deleted (only custom is allowed)!', {1,0,0})
 		return true
@@ -2162,14 +2198,9 @@ function setupCoroutine()
 	end
 
 	if options.shufflePlayers then
-		local playerOneName = Player[players[1]].steam_name
-		if not playerOneName or string.match(playerOneName, 'Player %d') then
-			printToAll('Hotseat game detected unable to shuffle players.', {1,1,1})
-		else
-			printToAll('Shuffling Players...', {1,1,1})
-			shufflePlayers()
-			printToAll('shuffling done.', {1,1,1})
-		end
+		printToAll('Shuffling Players...', {1,1,1})
+		shufflePlayers()
+		printToAll('shuffling done.', {1,1,1})
 	end
 
 	--Hidden zones and status buttons
