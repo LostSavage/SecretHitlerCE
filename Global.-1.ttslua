@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 90
+update_version = 91
 add_on_version = 4
 
 --Buttons
@@ -126,7 +126,7 @@ options = {
 players = {}
 playerRoleCardGuids = {}
 playerStatusButtonGuids = {}
-playerStatus = {
+playerStatus = { --[1 Board, 2 Not Hitler, 3 Vote Only, 4 Silenced, 5 Dead, 6 Dead not Hitler]
 	White = 1,
 	Brown = 1,
 	Red = 1,
@@ -1382,7 +1382,7 @@ function nextPres(playerIn)
 	local checkPres = playerIn
 	local returnVal = nextList[checkPres]
 
-	while not inTable(players, returnVal) or (_G.playerStatus[returnVal] > 3) do
+	while not inTable(players, returnVal) or (_G.playerStatus[returnVal] == 3) or (_G.playerStatus[returnVal] > 4)  do
 		checkPres = returnVal
 		returnVal = nextList[checkPres]
 	end
@@ -2829,7 +2829,7 @@ function createInspectButtons(pres)
 	if membershipCard then
 		broadcastToColor('Click on the party membership card of the person you want to inspect.', pres, {1, 1, 1})
 		for i, playerColor in ipairs(players) do
-			if playerColor ~= pres and not inTable(inspected, playerColor) and not (_G.playerStatus[playerColor] > 3) then
+			if playerColor ~= pres and not inTable(inspected, playerColor) and not (_G.playerStatus[playerColor] > 4) then
 				local params = {}
 				params.rotation = {0, 0, 180}
 				card = membershipCard.clone(params)
