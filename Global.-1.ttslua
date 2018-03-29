@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 91
+update_version = 92
 add_on_version = 4
 
 --Buttons
@@ -625,15 +625,12 @@ function chatHelp()
 	return msg
 end
 
-function callFunction(packet) -- This allows outside objects to call any function from this code.
+-- This allows outside objects to call any function from this code.
+--  Global.call('callFunction', { fcn = 'drawCards', params = {amountToDraw, color} })
+function callFunction(packet) 
     assert(type(_G[packet.fcn]) == 'function', 'No function named ' .. packet.fcn .. ' exists!')
     return table.pack(_G[packet.fcn](unpack(packet.params or {})))
 end
-
--- Here's an example
---[[
-Global.call('callFunction', { fcn = 'drawCards', params = {amountToDraw, color} })
-]]
 
 function settingsPannelMakeButtons()
 	local settingsPannel = getObjectFromGUID(settingsPannel_guid)
@@ -1387,7 +1384,7 @@ function nextPres(playerIn)
 	if not timeTravellerActive then
 		nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'White'}
 	else
-		nextList = {White = 'Pink', Brown = 'White', Red = 'Brown', Orange = 'Red', Yellow = 'Orange', Green = 'Yellow', Teal = 'Green', Blue = 'Teal', Purple = 'Blue', Pink = 'Blue'}
+		nextList = {White = 'Pink', Brown = 'White', Red = 'Brown', Orange = 'Red', Yellow = 'Orange', Green = 'Yellow', Teal = 'Green', Blue = 'Teal', Purple = 'Blue', Pink = 'Purple'}
 	end
 	local checkPres = playerIn
 	local returnVal = nextList[checkPres]
@@ -4463,7 +4460,7 @@ function postButton(clickedObject, playerColor)
 			else
 				local notesString = noteTakerNotesString(25, false, true)
 				setNotes(notesString)
- 			end
+			end
 		else
 			broadcastToColor('You can only post once every 30 seconds.', playerNoteTaker, {1, 0, 0})
 		end
