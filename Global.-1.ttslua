@@ -625,6 +625,16 @@ function chatHelp()
 	return msg
 end
 
+function callFunction(packet) -- This allows outside objects to call any function from this code.
+    assert(type(_G[packet.fcn]) == 'function', 'No function named ' .. packet.fcn .. ' exists!')
+    return table.pack(_G[packet.fcn](unpack(packet.params or {})))
+end
+
+-- Here's an example
+--[[
+Global.call('callFunction', { fcn = 'drawCards', params = {amountToDraw, color} })
+]]
+
 function settingsPannelMakeButtons()
 	local settingsPannel = getObjectFromGUID(settingsPannel_guid)
 	if settingsPannel then
