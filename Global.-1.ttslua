@@ -6,7 +6,7 @@
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
 update_version = 92
-add_on_version = 4
+add_on_version = 5
 
 --Buttons
 settingsPannel_guid = '39d283'
@@ -46,8 +46,6 @@ policySafety_zone_guids = {'e99663', '13b335', 'd7774a', 'f601b1', '620e09', 'b7
 abilitiesPile_zone_guid = 'eea120'
 effectsPile_zone_guid = '374a16'
 deckCube_guid = '0e1ad7'
-timeTravellerActive = false
-magicianActive = false
 
 --Other
 trusted_players = {'76561197992512677'}
@@ -114,8 +112,9 @@ options = {
 	dealRoleCards = false,
 	expansionAmount = 2,
 	expansionDeck = 1, -- [1 None, 2 SP, 3 MNH]
+	expansionBitwise = 0, -- [1 SwapGov, 2 Reverse, 4 Unused, 8 Unused ...]
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
-	noteType = 0, -- [0 Dark wood, 1 Light wood, 2 Red wood, 3 Black plastic, 4 Board image, 5 Swiss cheese, 6 Private only, 7 Cooperative]
+	noteType = 1, -- [1 Dark wood, 2 Light wood, 3 Red wood, 4 Black plastic, 5 Board image, 6 Swiss cheese, 7 Private only, 8 Cooperative]
 	policySafety = true,
 	scriptedVoting = true,
 	shufflePlayers = false,
@@ -172,7 +171,6 @@ function onLoad(saveString)
 		lastChan = save['lc']
 		lastPres = save['lp']
 		lastVote = save['lv']
-		magicianActive = save['ma']
 		mainNotes = save['mn']
 		neinCardGuids = save['nein']
 		notate = save['note']
@@ -187,7 +185,6 @@ function onLoad(saveString)
 		roleButtons = save['rb']
 		started = save['s']
 		text = save['t']
-		timeTravellerActive = save['tt']
 		voteNotes = save['vn']
 		voteNotebook = save['vnb']
 	end
@@ -227,7 +224,6 @@ function onSave()
 	save['lc'] = lastChan
 	save['lp'] = lastPres
 	save['lv'] = lastVote
-	save['ma'] = magicianActive
 	save['mn'] = mainNotes
 	save['nein'] = neinCardGuids
 	save['note'] = notate
@@ -242,7 +238,6 @@ function onSave()
 	save['rb'] = roleButtons
 	save['s'] = started
 	save['t'] = text
-	save['tt'] = timeTravellerActive
 	save['vn'] = voteNotes
 	save['vnb'] = voteNotebook
 	local saveString = JSON.encode(save)
@@ -394,7 +389,7 @@ function refreshExpansionButtons()
 	if fasBoard then
 		fasBoard.clearButtons()
 		local button = {
-			click_function = 'toggleMagician',
+			click_function = 'expansionBitwiseSwapGov',
 			function_owner = self,
 			position = {-6, 0.2, 6},
 			rotation = {0, 0, 0},
@@ -402,7 +397,7 @@ function refreshExpansionButtons()
 			height = 800,
 			font_size = 360
 		}
-		if magicianActive then
+		if bit32.band(options.expansionBitwise, 1) == 1 then
 			button.color =  stringColorToRGB('Green')
 			button.label = 'Magician: On'
 		else
@@ -411,9 +406,9 @@ function refreshExpansionButtons()
 		end
 		fasBoard.createButton(button)
 
-		button.click_function = 'toggleTimeTraveller'
+		button.click_function = 'expansionBitwiseReverse'
 		button.position = {6, 0.2, 6}
-		if timeTravellerActive then
+		if bit32.band(options.expansionBitwise, 2) == 2 then
 			button.color =  stringColorToRGB('Green')
 			button.label = 'Time Travel: On'
 		else
@@ -627,7 +622,7 @@ end
 
 -- This allows outside objects to call any function from this code.
 --  Global.call('callFunction', { fcn = 'drawCards', params = {amountToDraw, color} })
-function callFunction(packet) 
+function callFunction(packet)
     assert(type(_G[packet.fcn]) == 'function', 'No function named ' .. packet.fcn .. ' exists!')
     return table.pack(_G[packet.fcn](unpack(packet.params or {})))
 end
@@ -650,7 +645,7 @@ function settingsPannelMakeButtons()
 		local offsetZ = 1.32
 
 		local startZ = -22.9
-		buttonParam.label = 'Game Type'
+		buttonParam.label = '[u]Game Type[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
 		makeSquareButtonLabel(settingsPannel, (options.gameType == 0), radio_string, '', 'Original (17 policy cards)', 'gameTypeZero', {startX, 0.2, startZ}, 6.1, (not customOnly))
@@ -659,28 +654,23 @@ function settingsPannelMakeButtons()
 		makeSquareButtonLabel(settingsPannel, (options.gameType == 3), radio_string, '', 'Custom (20 policy cards)', 'gameTypeThree', {startX, 0.2, startZ + offsetZ * 3}, 6.1, true)
 
 		startZ = -16
-		buttonParam.label = 'Note Taker'
+		buttonParam.label = '[u]Note Taker[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
-		makeSquareButtonLabel(settingsPannel, (options.noteType == 0), radio_string, '', 'Dark wood', 'noteTypeZero', {startX, 0.2, startZ}, 3.1, true)
-		makeSquareButtonLabel(settingsPannel, (options.noteType == 1), radio_string, '', 'Light wood (tintable)', 'noteTypeOne', {startX, 0.2, startZ + offsetZ}, 5.4, true)
-		makeSquareButtonLabel(settingsPannel, (options.noteType == 2), radio_string, '', 'Red wood (tintable)', 'noteTypeTwo', {startX, 0.2, startZ + offsetZ * 2}, 5.1, true)
-		makeSquareButtonLabel(settingsPannel, (options.noteType == 3), radio_string, '', 'Black plastic', 'noteTypeThree', {startX, 0.2, startZ + offsetZ * 3}, 3.5, true)
-		makeSquareButtonLabel(settingsPannel, (options.noteType == 4), radio_string, '', 'Board image', 'noteTypeFour', {startX, 0.2, startZ + offsetZ * 4}, 3.5, true)
-		makeSquareButtonLabel(settingsPannel, (options.noteType == 5), radio_string, '', 'Swiss cheese', 'noteTypeFive', {startX, 0.2, startZ + offsetZ * 5}, 3.5, true)
-		makeSquareButtonLabel(settingsPannel, (options.noteType == 6), radio_string, '', 'Private only', 'noteTypeSix', {startX, 0.2, startZ + offsetZ * 6}, 3.4, true)
-		makeSquareButtonLabel(settingsPannel, (options.noteType == 7), radio_string, '', 'Cooperative', 'noteTypeSeven', {startX, 0.2, startZ + offsetZ * 7}, 3.3, true)
+		local labels = {'Dark wood', 'Light wood (tintable)', 'Red wood (tintable)', 'Black plastic', 'Board image', 'Swiss cheese', 'Private only', 'Cooperative'}
+		local offsets = {4.4, 6.6, 6.3, 4.7, 4.7, 4.7, 4.6, 4.6}
+		makeDecIncButtonsLabel(settingsPannel, options.noteType, '-', '+', labels, 'decNoteType', 'incNoteType', {startX, 0.2, startZ}, offsets, false, true)
 
-		startZ = -3.7
-		buttonParam.label = 'Hidden Zones'
+		startZ = -12.9
+		buttonParam.label = '[u]Hidden Zones[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
-		local labels = {'None', 'Small', 'Large', 'Gap (version 1)', 'Gap (version 2)'}
-		local offsets = {3.2, 3.3, 3.3, 5.3, 5.35}
+		labels = {'None', 'Small', 'Large', 'Gap (version 1)', 'Gap (version 2)'}
+		offsets = {3.2, 3.3, 3.3, 5.3, 5.35}
 		makeDecIncButtonsLabel(settingsPannel, options.zoneType, '-', '+', labels, 'decZoneType', 'incZoneType', {startX, 0.2, startZ}, offsets, false, true)
 
-		startZ = -0.6
-		buttonParam.label = 'Other Options'
+		startZ = -9.8
+		buttonParam.label = '[u]Other Options[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
 		makeSquareButtonLabel(settingsPannel, options.dealRoleCards, check_string, '', 'Deal role', 'roleCardFlip', {startX, 0.2, startZ}, 2.7, true)
@@ -697,8 +687,8 @@ function settingsPannelMakeButtons()
 		local deckCube = getObjectFromGUID(deckCube_guid)
 		if abilitiesDeck or deckCube then
 			local forceEnable = false
-			startZ = 11.6
-			buttonParam.label = 'Expansion'
+			startZ = 2.4
+			buttonParam.label = '[u]Expansion[/u]'
 			buttonParam.position = {0, 0.2, startZ - 1.4}
 			settingsPannel.createButton(buttonParam)
 
@@ -861,58 +851,20 @@ function gameTypeThree(clickedObject, playerColor)
 	end
 end
 
-function noteTypeZero(clickedObject, playerColor)
+function decNoteType(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		options.noteType = 0
+		if options.noteType > 1 then
+			options.noteType = options.noteType - 1
+		end
 		settingsPannelMakeButtons()
 	end
 end
 
-function noteTypeOne(clickedObject, playerColor)
+function incNoteType(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		options.noteType = 1
-		settingsPannelMakeButtons()
-	end
-end
-
-function noteTypeTwo(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.noteType = 2
-		settingsPannelMakeButtons()
-	end
-end
-
-function noteTypeThree(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.noteType = 3
-		settingsPannelMakeButtons()
-	end
-end
-
-function noteTypeFour(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.noteType = 4
-		settingsPannelMakeButtons()
-	end
-end
-
-function noteTypeFive(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.noteType = 5
-		settingsPannelMakeButtons()
-	end
-end
-
-function noteTypeSix(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.noteType = 6
-		settingsPannelMakeButtons()
-	end
-end
-
-function noteTypeSeven(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.noteType = 7
+		if options.noteType < 8 then
+			options.noteType = options.noteType + 1
+		end
 		settingsPannelMakeButtons()
 	end
 end
@@ -988,6 +940,28 @@ function shuffleHostFlip(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.shuffleHost = not options.shuffleHost
 		settingsPannelMakeButtons()
+	end
+end
+
+function expansionBitwiseSwapGov(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionBitwise, 1) == 1 then
+			options.expansionBitwise = options.expansionBitwise - 1
+		else
+			options.expansionBitwise = options.expansionBitwise + 1
+		end
+		refreshExpansionButtons()
+	end
+end
+
+function expansionBitwiseReverse(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionBitwise, 2) == 2 then
+			options.expansionBitwise = options.expansionBitwise - 2
+		else
+			options.expansionBitwise = options.expansionBitwise + 2
+		end
+		refreshExpansionButtons()
 	end
 end
 
@@ -1114,19 +1088,11 @@ function placeExpansion()
 end
 
 function addJaCard(cardIn)
-	if type(cardIn) == 'table' then
-		cardIn = cardIn[1]
-	end
-
 	local player = string.gsub(cardIn.getDescription(), '\'s Ja Card', '')
 	jaCardGuids[player] = cardIn.getGUID()
 end
 
 function addNeinCard(cardIn)
-	if type(cardIn) == 'table' then
-		cardIn = cardIn[1]
-	end
-
 	local player = string.gsub(cardIn.getDescription(), '\'s Nein Card', '')
 	neinCardGuids[player] = cardIn.getGUID()
 end
@@ -1363,28 +1329,12 @@ function isBoardCardPickPres(objIn)
 	return false
 end
 
-function toggleTimeTraveller(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		local button = {}
-		timeTravellerActive = not timeTravellerActive
-		refreshExpansionButtons()
-	end
-end
-
-function toggleMagician(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		local button = {}
-		magicianActive = not magicianActive
-		refreshExpansionButtons()
-	end
-end
-
 function nextPres(playerIn)
 	local nextList
-	if not timeTravellerActive then
-		nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'White'}
-	else
+	if bit32.band(options.expansionBitwise, 2) == 2 then
 		nextList = {White = 'Pink', Brown = 'White', Red = 'Brown', Orange = 'Red', Yellow = 'Orange', Green = 'Yellow', Teal = 'Green', Blue = 'Teal', Purple = 'Blue', Pink = 'Purple'}
+	else
+		nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'White'}
 	end
 	local checkPres = playerIn
 	local returnVal = nextList[checkPres]
@@ -1463,7 +1413,7 @@ function giveBullet(playerIn)
 			'		end\r\n' ..
 			'		local options = Global.getTable(\'options\')\r\n' ..
 			'		if options.autoNotate then\r\n' ..
-			'			if Global.call(\'isTableGUID\', {collisionInfo.collision_object.guid}) then\r\n' ..
+			'			if Global.call(\'callFunction\', {fcn = \'isTableGUID\', params = {collisionInfo.collision_object.guid}}) then\r\n' ..
 			'				local bulletInfo = Global.getTable(\'bulletInfo\')\r\n' ..
 			'				local notate = Global.getTable(\'notate\')\r\n' ..
 			'				if notate.line and notate.action == string.lower(bulletInfo.action) then\r\n' ..
@@ -2044,22 +1994,7 @@ end
 
 function drawThree(clickedObject, playerColor)
 	if started then
-		if not magicianActive then
-			if playerColor == getPres() then
-				if blockDraw then
-					broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
-				else
-					if not options.scriptedVoting or votePassed then
-						blockDraw = true
-						drawCards(3, playerColor)
-					else
-						broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
-					end
-				end
-			else
-				broadcastToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
-			end
-		else
+		if bit32.band(options.expansionBitwise, 1) == 1 then
 			if playerColor == getChan() then
 				if blockDraw then
 					broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
@@ -2073,6 +2008,21 @@ function drawThree(clickedObject, playerColor)
 				end
 			else
 				broadcastToColor('ERROR: You are not the chancellor.', playerColor, {1, 0, 0})
+			end
+		else
+			if playerColor == getPres() then
+				if blockDraw then
+					broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
+				else
+					if not options.scriptedVoting or votePassed then
+						blockDraw = true
+						drawCards(3, playerColor)
+					else
+						broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+					end
+				end
+			else
+				broadcastToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
 			end
 		end
 	else
@@ -2332,43 +2282,43 @@ function setupCoroutine()
 	--spawn note taker(s)
 	local params = {}
 	params.position = {-100, 100, -100}
-	if options.noteType == 0 then
+	if options.noteType == 1 then
 		params.type = 'Chess_Board'
 		params.scale = {1.54999959, 1.54999959, 1.54999959}
-	elseif options.noteType == 1 then
+	elseif options.noteType == 2 then
 		params.type = 'Go_Board'
 		params.scale = {1.44999969, 1.44999969, 1.44999969}
-	elseif options.noteType == 2 then
+	elseif options.noteType == 3 then
 		params.type = 'Checker_Board'
 		params.scale = {1.54999959, 1.54999959, 1.54999959}
-	elseif options.noteType == 3 then
+	elseif options.noteType == 4 then
 		params.type = 'reversi_board'
 		params.scale = {1.44999969, 1.44999969, 1.44999969}
-	elseif options.noteType == 4 then
+	elseif options.noteType == 5 then
 		params.type = 'Custom_Board'
 		params.scale = {1, 1, 1}
-	elseif options.noteType == 5 then
+	elseif options.noteType == 6 then
 		params.type = 'Custom_Model'
 		params.scale = {1.05, 1.05, 1.05}
-	elseif options.noteType > 5 then
+	elseif options.noteType > 6 then
 		params.type = 'backgammon_board'
 		params.scale = {1.79999948, 1.79999948, 1.79999948}
 	end
 	for _, player in pairs(players) do
-		if Player[player].admin or options.noteType > 5 then
+		if Player[player].admin or options.noteType > 6 then
 			local notetaker = spawnObject(params)
-			if options.noteType < 6 then
+			if options.noteType < 7 then
 				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'true', 'false', 'true', 'false', 'false', 'false', 'true'))
-			elseif options.noteType == 6 then
-				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'false', 'true', 'false', 'false', 'false', 'false'))
 			elseif options.noteType == 7 then
+				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'false', 'true', 'false', 'false', 'false', 'false'))
+			elseif options.noteType == 8 then
 				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'true', 'true', 'false', 'false', 'false', 'false'))
 			end
-			if options.noteType == 4 then
+			if options.noteType == 5 then
 				local custom = {}
 				custom.image = 'http://cloud-3.steamusercontent.com/ugc/486766424829587499//FDF54ECD5D1706DE0A590239E84D62CDE757FE46/'
 				notetaker.setCustomObject(custom)
-			elseif options.noteType == 5 then
+			elseif options.noteType == 6 then
 					local custom = {}
 					custom.diffuse = 'http://cloud-3.steamusercontent.com/ugc/478894184492866532/6639B6E1AB511AB10D53DB91B2A47A0A63410DDF/'
 					custom.mesh = 'http://cloud-3.steamusercontent.com/ugc/478894184492865468/51C18F993BBDD5D1B55FE5261A625B2CE0B2FD9F/'
@@ -2488,7 +2438,7 @@ function setupCoroutine()
 					'collision = false -- workaround for rewind error\r\n' ..
 					'\r\n' ..
 					'function onObjectSpawn(spawnObject)\r\n' ..
-					'	Global.call(\'addJaCard\', {self})\r\n' ..
+					'	Global.call(\'callFunction\', {fcn = \'addJaCard\', params = {self}})\r\n' ..
 					'end\r\n' ..
 					'\r\n' ..
 					'function onDrop(playerColor)\r\n' ..
@@ -2513,7 +2463,7 @@ function setupCoroutine()
 					'collision = false -- workaround for rewind error\r\n' ..
 					'\r\n' ..
 					'function onObjectSpawn(spawnObject)\r\n' ..
-					'	Global.call(\'addNeinCard\', {self})\r\n' ..
+					'	Global.call(\'callFunction\', {fcn = \'addNeinCard\', params = {self}})\r\n' ..
 					'end\r\n' ..
 					'\r\n' ..
 					'function onDrop(playerColor)\r\n' ..
@@ -3146,10 +3096,6 @@ function smartTableInsert(tableIn, valueIn)
 end
 
 function isTableGUID(GUIDIn)
-	if type(GUIDIn) == 'table' then
-		GUIDIn = GUIDIn[1]
-	end
-
 	if not GUIDIn then -- Base table
 		return true
 	elseif GUIDIn == tcid_table_guid then
