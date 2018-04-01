@@ -2308,11 +2308,11 @@ function setupCoroutine()
 		if Player[player].admin or options.noteType > 6 then
 			local notetaker = spawnObject(params)
 			if options.noteType < 7 then
-				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'true', 'false', 'true', 'false', 'false', 'false', 'true'))
+				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'true', 'false', 'false', 'false', 'false', 'true'))
 			elseif options.noteType == 7 then
-				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'false', 'true', 'false', 'false', 'false', 'false'))
+				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'false', 'false', 'false', 'false', 'false'))
 			elseif options.noteType == 8 then
-				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'true', 'true', 'false', 'false', 'false', 'false'))
+				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'true', 'false', 'false', 'false', 'false'))
 			end
 			if options.noteType == 5 then
 				local custom = {}
@@ -3132,7 +3132,6 @@ end
 
 useColor = true
 cooperative = false
-lockNoteTaker = true
 colorMatch = false
 useNames = false
 playerNoteTaker = ''
@@ -3192,7 +3191,6 @@ function noteTakerOnLoad(saveString)
 		local save = JSON.decode(saveString)
 		useColor = save['c']
 		cooperative = save['co']
-		lockNoteTaker = save['l']
 		colorMatch = save['m']
 		useNames = save['n']
 		noteTakerNotes = save['ntn']
@@ -3250,7 +3248,6 @@ function notetakerOnSave()
 	local save = {}
 	save['c'] = useColor
 	save['co'] = cooperative
-	save['l'] = lockNoteTaker
 	save['m'] = colorMatch
 	save['n'] = useNames
 	save['ntn'] = noteTakerNotes
@@ -3409,7 +3406,7 @@ function spawnWaitDestructCoroutine()
 end
 
 function menuButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		clickedObject.setVar('forceMenu', true)
 		clickedObject.setVar('functionName', 'menu')
 		startLuaCoroutine(clickedObject, 'spawnWaitDestructCoroutine')
@@ -3548,7 +3545,6 @@ function menu(selfIn)
 end
 
 function menuBase(selfIn)
-	local zOffset = 0
 	local buttonParam = {rotation = {0, 0, rotationZ}, font_size = 300 * fontScale}
 	local text = Global.getTable('text')
 
@@ -3582,27 +3578,15 @@ function menuBase(selfIn)
 	buttonParam.height = 700 * buttonScale
 	selfIn.createButton(buttonParam)
 
-	buttonParam.click_function = 'flipLockNoteTaker'
-	if lockNoteTaker then buttonParam.label = 'x' else buttonParam.label = '' end
-	buttonParam.position = {positionXscale * -7.5, positionY, (4.25 * positionZscale) + positionZoffset2}
-	buttonParam.width = 300 * buttonScale
-	buttonParam.height = 300 * buttonScale
-	selfIn.createButton(buttonParam)
-	buttonParam.label = 'Input lock'
-	buttonParam.position = {positionXscale * -4, positionY, (4.25 * positionZscale) + positionZoffset2}
-	buttonParam.width = 2700 * buttonScale
-	buttonParam.height = 700 * buttonScale
-	selfIn.createButton(buttonParam)
-
 	if selfIn.name ~= 'backgammon_board' or Player[selfIn.getVar('playerNoteTaker')].admin then
 		buttonParam.click_function = 'flipMoveTracker'
 		if moveTracker then buttonParam.label = 'x' else buttonParam.label = '' end
-		buttonParam.position = {positionXscale * -7.5, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -7.5, positionY, (4.25 * positionZscale) + positionZoffset2}
 		buttonParam.width = 300 * buttonScale
 		buttonParam.height = 300 * buttonScale
 		selfIn.createButton(buttonParam)
 		buttonParam.label = 'Move tracker'
-		buttonParam.position = {positionXscale * -4, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -4, positionY, (4.25 * positionZscale) + positionZoffset2}
 		buttonParam.width = 2700 * buttonScale
 		buttonParam.height = 700 * buttonScale
 		selfIn.createButton(buttonParam)
@@ -3611,12 +3595,12 @@ function menuBase(selfIn)
 	if not no_button_list['menu'] then
 		buttonParam.click_function = 'flipSwapLF'
 		if swapLF then buttonParam.label = 'x' else buttonParam.label = '' end
-		buttonParam.position = {positionXscale * -7.5, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -7.5, positionY, (5.75 * positionZscale) + positionZoffset2}
 		buttonParam.width = 300 * buttonScale
 		buttonParam.height = 300 * buttonScale
 		selfIn.createButton(buttonParam)
 		buttonParam.label = 'Swap ' .. text.liberalLetter .. ' and ' .. text.fascistLetter
-		buttonParam.position = {positionXscale * -4, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -4, positionY, (5.75 * positionZscale) + positionZoffset2}
 		buttonParam.width = 2700 * buttonScale
 		buttonParam.height = 700 * buttonScale
 		selfIn.createButton(buttonParam)
@@ -3625,49 +3609,47 @@ function menuBase(selfIn)
 	if selfIn.name == 'Checker_Board' or selfIn.name == 'Go_Board' then
 		buttonParam.click_function = 'flipColorMatch'
 		if colorMatch then buttonParam.label = 'x' else buttonParam.label = '' end
-		buttonParam.position = {positionXscale * 0.5, positionY, (1.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -7.5, positionY, (7.25 * positionZscale) + positionZoffset2}
 		buttonParam.width = 300 * buttonScale
 		buttonParam.height = 300 * buttonScale
 		selfIn.createButton(buttonParam)
 		buttonParam.label = 'Color match'
-		buttonParam.position = {positionXscale * 4, positionY, (1.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -4, positionY, (7.25 * positionZscale) + positionZoffset2}
 		buttonParam.width = 2700 * buttonScale
 		buttonParam.height = 700 * buttonScale
 		selfIn.createButton(buttonParam)
-		zOffset = 1.5
 	elseif selfIn.name == 'backgammon_board' and Player[selfIn.getVar('playerNoteTaker')].admin then
 		buttonParam.click_function = 'flipCooperative'
 		if cooperative then buttonParam.label = 'x' else buttonParam.label = '' end
-		buttonParam.position = {positionXscale * 0.5, positionY, (1.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -7.5, positionY, (7.25 * positionZscale) + positionZoffset2}
 		buttonParam.width = 300 * buttonScale
 		buttonParam.height = 300 * buttonScale
 		selfIn.createButton(buttonParam)
 		buttonParam.label = 'Cooperative'
-		buttonParam.position = {positionXscale * 4, positionY, (1.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {positionXscale * -4, positionY, (7.25 * positionZscale) + positionZoffset2}
 		buttonParam.width = 2700 * buttonScale
 		buttonParam.height = 700 * buttonScale
 		selfIn.createButton(buttonParam)
-		zOffset = 1.5
 	end
 
 	buttonParam.click_function = 'shuffleDrawDeckButton'
 	buttonParam.label = 'Shuffle'
-	buttonParam.position = {positionXscale * 4, positionY, (1.25 + zOffset) * positionZscale + positionZoffset2}
+	buttonParam.position = {positionXscale * 4, positionY, 1.25  * positionZscale + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'disableSecurityButton'
 	buttonParam.label = 'Disable security'
-	buttonParam.position = {positionXscale * 4, positionY, (2.75 + zOffset) * positionZscale + positionZoffset2}
+	buttonParam.position = {positionXscale * 4, positionY, 2.75 * positionZscale + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'giveRoleCardsButton'
 	buttonParam.label = 'Give role cards'
-	buttonParam.position = {positionXscale * 4, positionY, (4.25 + zOffset) * positionZscale + positionZoffset2}
+	buttonParam.position = {positionXscale * 4, positionY, 4.25 * positionZscale + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'forceVotePass'
 	buttonParam.label = 'Vote Passed'
-	buttonParam.position = {positionXscale * 4, positionY, (5.75 + zOffset) * positionZscale + positionZoffset2}
+	buttonParam.position = {positionXscale * 4, positionY, 5.75 * positionZscale + positionZoffset2}
 	selfIn.createButton(buttonParam)
 end
 
@@ -3714,73 +3696,73 @@ function setupBoardGetFunction(playerIn)
 end
 
 function setupMe(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, playerColor)
 	end
 end
 
 function setupWhite(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'White')
 	end
 end
 
 function setupBrown(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'Brown')
 	end
 end
 
 function setupRed(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'Red')
 	end
 end
 
 function setupOrange(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'Orange')
 	end
 end
 
 function setupYellow(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'Yellow')
 	end
 end
 
 function setupGreen(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'Green')
 	end
 end
 
 function setupTeal(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'Teal')
 	end
 end
 
 function setupBlue(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'Blue')
 	end
 end
 
 function setupPurple(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'Purple')
 	end
 end
 
 function setupPink(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		setupPlayer(clickedObject, 'Pink')
 	end
 end
 
 function flipUseNames(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		useNames = not useNames
 		refreshNotes(clickedObject)
 		menu(clickedObject)
@@ -3788,50 +3770,43 @@ function flipUseNames(clickedObject, playerColor)
 end
 
 function flipUseColor(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		useColor = not useColor
 		refreshNotes(clickedObject)
 		menu(clickedObject)
 	end
 end
 
-function flipLockNoteTaker(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		lockNoteTaker = not lockNoteTaker
-		menu(clickedObject)
-	end
-end
-
 function flipSwapLF(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		swapLF = not swapLF
 		menu(clickedObject)
 	end
 end
 
 function flipColorMatch(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		colorMatch = not colorMatch
 		menu(clickedObject)
 	end
 end
 
 function flipCooperative(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		cooperative = not cooperative
 		menu(clickedObject)
 	end
 end
 
 function flipMoveTracker(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		moveTracker = not moveTracker
 		menu(clickedObject)
 	end
 end
 
 function shuffleDrawDeckButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if not Global.call('shuffleDrawDeck') then
 			broadcastToColor('ERROR: Failed to shuffle draw deck.', playerColor, {1,0,0})
 		end
@@ -3839,19 +3814,19 @@ function shuffleDrawDeckButton(clickedObject, playerColor)
 end
 
 function disableSecurityButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		Global.call('disableSecurity')
 	end
 end
 
 function giveRoleCardsButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		Global.call('giveRoleCards')
 	end
 end
 
 function forceVotePass(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		Global.setVar('votePassed', true)
 		Global.setVar('blockDraw', false)
 	end
@@ -4449,9 +4424,8 @@ function refreshNotes(selfIn)
 end
 
 function buttonColor(clickedObject, clickingPlayer, colorClicked)
-	local bulletInfo = Global.getTable('bulletInfo')
-
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == clickingPlayer then
+	if clickedObject.getVar('playerNoteTaker') == clickingPlayer or Player[colorClicked].admin then
+		local bulletInfo = Global.getTable('bulletInfo')
 		if noteTakerNotes[noteTakerCurrLine].color1 == '' or not editMode then
 			noteTakerNotes[noteTakerCurrLine].color1 = colorClicked
 			noteTakerNotes[noteTakerCurrLine].action = '>'
@@ -4510,7 +4484,7 @@ end
 
 -- Top
 function autoButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		local tempObj = getObjectFromGUID(president_guid)
 		local pres = closestPlayer(tempObj, all_players, 1000)
 		tempObj = getObjectFromGUID(chancelor_guid)
@@ -4531,7 +4505,7 @@ function autoButton(clickedObject, playerColor)
 end
 
 function setPreviousPlacs(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if prevPresColor and prevChanColor then
 			local tmpPres = getObjectFromGUID(prev_president_guid)
 			if tmpPres then giveObjectToPlayer(tmpPres, prevPresColor, {forward = prevForward, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, true) end
@@ -4542,7 +4516,7 @@ function setPreviousPlacs(clickedObject, playerColor)
 end
 
 function downvotedButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		noteTakerNotes[noteTakerCurrLine].result = '[222222]Downvoted[-]'
 		noteTakerNotes[noteTakerCurrLine].action = '>'
 		noteTakerNotes[noteTakerCurrLine].claim3 = ''
@@ -4556,7 +4530,7 @@ end
 
 -- Left
 function examinesButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
 			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
@@ -4571,7 +4545,7 @@ function examinesButton(clickedObject, playerColor)
 end
 
 function conflictButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerConflict(noteTakerCurrLine) then
 			noteTakerNotes[noteTakerCurrLine].conflict = ''
 			noteTakerNotes[noteTakerCurrLine].claim2 = ''
@@ -4592,7 +4566,7 @@ function hZoneButton(clickedObject, playerColor)
 end
 
 function resultOnly(clickedObject, playerColor, text)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].result == text then
 			noteTakerNotes[noteTakerCurrLine].result = ''
 		else
@@ -4611,7 +4585,7 @@ function resultOnly(clickedObject, playerColor, text)
 end
 
 function topdeckButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].action == 'Topdeck:' then
 			noteTakerNotes[noteTakerCurrLine].action = ''
 		else
@@ -4631,7 +4605,7 @@ function topdeckButton(clickedObject, playerColor)
 end
 
 function revisedButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerConflict(noteTakerCurrLine) then
 			if noteTakerNotes[noteTakerCurrLine].conflict == '(Rev Con)' then
 				noteTakerNotes[noteTakerCurrLine].conflict = '(Conflict)'
@@ -4649,7 +4623,7 @@ end
 
 -- Right
 function deleteLineButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerCurrLine == #noteTakerNotes then
 			table.remove(noteTakerNotes, noteTakerCurrLine)
 			noteTakerCurrLine = noteTakerCurrLine - 1
@@ -4662,14 +4636,14 @@ function deleteLineButton(clickedObject, playerColor)
 end
 
 function insertLineButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		table.insert(noteTakerNotes, noteTakerCurrLine, defaultLine())
 		refreshNotes(clickedObject)
 	end
 end
 
 function topButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		noteTakerCurrLine = 1
 		refreshNotes(clickedObject)
 		editMode = true
@@ -4677,7 +4651,7 @@ function topButton(clickedObject, playerColor)
 end
 
 function bottomButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		noteTakerCurrLine = #noteTakerNotes
 		refreshNotes(clickedObject)
 		editMode = true
@@ -4685,7 +4659,7 @@ function bottomButton(clickedObject, playerColor)
 end
 
 function upButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerCurrLine - 1 > 0 then
 			noteTakerCurrLine = noteTakerCurrLine - 1
 		end
@@ -4701,7 +4675,7 @@ function upButton(clickedObject, playerColor)
 end
 
 function downButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		addNewLine()
 		editMode = true
 		refreshNotes(clickedObject)
@@ -4715,14 +4689,14 @@ function downButton(clickedObject, playerColor)
 end
 
 function rightButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		editMode = true
 		refreshNotes(clickedObject)
 	end
 end
 
 function leftButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		editMode = false
 		refreshNotes(clickedObject)
 	end
@@ -4730,7 +4704,7 @@ end
 
 -- Center
 function investigate(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].action == 'inspects' then
 			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
@@ -4746,7 +4720,7 @@ function investigate(clickedObject, playerColor)
 end
 
 function givesTo(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].action == 'gives pres to' then
 			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
@@ -4761,9 +4735,8 @@ function givesTo(clickedObject, playerColor)
 end
 
 function shoots(clickedObject, playerColor)
-	local bulletInfo = Global.getTable('bulletInfo')
-
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
+		local bulletInfo = Global.getTable('bulletInfo')
 		if noteTakerNotes[noteTakerCurrLine].action == string.lower(bulletInfo.action) then
 			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
@@ -4792,7 +4765,7 @@ function noComment(clickedObject, playerColor)
 end
 
 function resultText(clickedObject, playerColor, text)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].result == text then
 			noteTakerNotes[noteTakerCurrLine].result = ''
 		else
@@ -4828,7 +4801,7 @@ function QQQ(clickedObject, playerColor)
 end
 
 function XXX(clickedObject, playerColor, text)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].action == 'examines deck:' then
 			if noteTakerNotes[noteTakerCurrLine].result == text then
 				noteTakerNotes[noteTakerCurrLine].result = ''
@@ -4872,7 +4845,7 @@ function QQ(clickedObject, playerColor)
 end
 
 function XX(clickedObject, playerColor, text)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
 			and noteTakerConflict(noteTakerCurrLine)) then
 			if noteTakerNotes[noteTakerCurrLine].claim2 == text then
@@ -4902,7 +4875,7 @@ function F(clickedObject, playerColor)
 end
 
 function X(clickedObject, playerColor, text)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].result == text then
 			noteTakerNotes[noteTakerCurrLine].result = ''
 		else
@@ -4921,7 +4894,7 @@ function X(clickedObject, playerColor, text)
 end
 
 function vetoButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		noteTakerNotes[noteTakerCurrLine].result = 'Veto!'
 		addNewLine()
 		refreshNotes(clickedObject)
@@ -4931,7 +4904,7 @@ end
 
 --Bottom
 function exDiscardButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].action == 'examines discard:' then
 			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
@@ -4946,7 +4919,7 @@ function exDiscardButton(clickedObject, playerColor)
 end
 
 function discardsButton(clickedObject, playerColor)
-	if not lockNoteTaker or clickedObject.getVar('playerNoteTaker') == playerColor then
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if noteTakerNotes[noteTakerCurrLine].action == 'discards:' then
 			noteTakerNotes[noteTakerCurrLine].action = '>'
 		else
@@ -5127,13 +5100,12 @@ function noteTakerSetNotes(stringIn)
 	end
 end
 
-function newNoteTakerLuaScript(playerNoteTakerIn, useColorIn, cooperativeIn, lockNoteTakerIn, colorMatchIn, useNamesIn, swapLFIn, moveTrackerIn)
+function newNoteTakerLuaScript(playerNoteTakerIn, useColorIn, cooperativeIn, colorMatchIn, useNamesIn, swapLFIn, moveTrackerIn)
 	local mainScript = Global.getLuaScript()
 	local cutHerePos = string.find(mainScript, '--CUT HERE')
 
 	return 'useColor = ' .. useColorIn .. '\r\n' ..
 	'cooperative = ' .. cooperativeIn .. '\r\n' ..
-	'lockNoteTaker = ' .. lockNoteTakerIn .. '\r\n' ..
 	'colorMatch = ' .. colorMatchIn .. '\r\n' ..
 	'useNames = ' .. useNamesIn .. '\r\n' ..
 	'playerNoteTaker = \'' .. playerNoteTakerIn .. '\'\r\n' ..
@@ -5167,7 +5139,6 @@ function respawnNoteTakerLuaScript()
 
 	return 'useColor = ' .. tostring(useColor) .. '\r\n' ..
 	'cooperative = ' .. tostring(cooperative) .. '\r\n' ..
-	'lockNoteTaker = ' .. tostring(lockNoteTaker) .. '\r\n' ..
 	'colorMatch = ' .. tostring(colorMatch) .. '\r\n' ..
 	'useNames = ' .. tostring(useNames) .. '\r\n' ..
 	'playerNoteTaker = ' .. easyQuotes(playerNoteTaker) .. '\r\n' ..
