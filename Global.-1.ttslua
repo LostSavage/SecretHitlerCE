@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 92
+update_version = 93
 add_on_version = 5
 
 --Buttons
@@ -112,8 +112,9 @@ options = {
 	dealPartyCards = false,
 	dealRoleCards = false,
 	expansionAmount = 2,
-	expansionEnableBitwise = 0, -- [1 SwapGov, 2 Reverse, 4 Unused, 8 Unused ...]
-	expansionValueBitwise = 0, -- [1 SwapGov, 2 Reverse, 4 Unused, 8 Unused ...]
+	expansionOptionEnabled = 0, -- [1 SwapGov, 2 Reverse, 4 SwapPower, 8 Unused ...]
+	expansionOptionStatus = 0, -- [1 SwapGov, 2 Reverse, 4 Unused, 8 Unused ...]
+	expansionOptionText = {'Pres > Chan', 'Chan > Pres', 'Clockwise', 'Reversed'},
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom (17 cards), 3 Custom (20 cards)]
 	noteType = 1, -- [1 Dark wood, 2 Light wood, 3 Red wood, 4 Black plastic, 5 Board image, 6 Swiss cheese, 7 Private only, 8 Cooperative]
 	policySafety = true,
@@ -398,35 +399,39 @@ function refreshExpansionButtons()
 	if fasBoard then
 		fasBoard.clearButtons()
 		local button = {
-			click_function = 'expansionValueBitwiseSwapGov',
+			click_function = 'expansionOptionStatusSwapGov',
 			function_owner = self,
-			position = {-6, 0.2, 6},
+			position = {12, 0.2, 6},
 			rotation = {0, 0, 0},
 			width = 2600,
 			height = 800,
 			font_size = 360
 		}
-		if bit32.band(options.expansionValueBitwise, 1) == 1 then
+		if bit32.band(options.expansionOptionStatus, 1) == 1 then
+			button.font_color = {0, 0, 0}
 			button.color =  stringColorToRGB('Orange')
-			button.label = 'Chan > Pres'
+			button.label = options.expansionOptionText[2]
 		else
-			button.color =  stringColorToRGB('White')
-			button.label = 'Pres > Chan'
+			button.font_color = stringColorToRGB('White')
+			button.color =  boardColor_rgb
+			button.label = options.expansionOptionText[1]
 		end
-		if bit32.band(options.expansionEnableBitwise, 1) == 1 then
+		if bit32.band(options.expansionOptionEnabled, 1) == 1 then
 			fasBoard.createButton(button)
 		end
 
-		button.click_function = 'expansionValueBitwiseReverse'
-		button.position = {6, 0.2, 6}
-		if bit32.band(options.expansionValueBitwise, 2) == 2 then
+		button.click_function = 'expansionOptionStatusReverse'
+		button.position = {-12, 0.2, 6}
+		if bit32.band(options.expansionOptionStatus, 2) == 2 then
+			button.font_color = {0, 0, 0}
 			button.color =  stringColorToRGB('Orange')
-			button.label = 'Reversed'
+			button.label = options.expansionOptionText[4]
 		else
-			button.color =  stringColorToRGB('White')
-			button.label = 'Clockwise'
+			button.font_color = stringColorToRGB('White')
+			button.color =  boardColor_rgb
+			button.label = options.expansionOptionText[3]
 		end
-		if bit32.band(options.expansionEnableBitwise, 2) == 2 then
+		if bit32.band(options.expansionOptionEnabled, 2) == 2 then
 			fasBoard.createButton(button)
 		end
 	end
@@ -703,6 +708,9 @@ function settingsPannelMakeButtons()
 			buttonParam.position = {0, 0.2, startZ - 1.4}
 			settingsPannel.createButton(buttonParam)
 			makeDecIncButtonsLabel(settingsPannel, options.expansionAmount, '-', '+', 'Cards', 'decExpansionAmount', 'incExpansionAmount', {startX, 0.2, startZ}, 4.7, false, true)
+			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 1) == 1, check_string, '', 'Swap Government', 'expansionOptionEnabledSwapGov', {startX, 0.2, startZ + offsetZ}, 4.7, true)
+			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 4) == 4, check_string, '', 'Swap Power', 'expansionOptionEnabledSwapPower', {startX + 1.3, 0.2, startZ + offsetZ * 2}, 3.3, bit32.band(options.expansionOptionEnabled, 1) == 1)
+			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 2) == 2, check_string, '', 'Reverse', 'expansionOptionEnabledReverse', {startX, 0.2, startZ + offsetZ * 3}, 2.4, true)
 		end
 
 		buttonParam = {
@@ -932,23 +940,58 @@ function shuffleHostFlip(clickedObject, playerColor)
 	end
 end
 
-function expansionValueBitwiseSwapGov(clickedObject, playerColor)
+function expansionOptionEnabledSwapGov(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		if bit32.band(options.expansionValueBitwise, 1) == 1 then
-			options.expansionValueBitwise = options.expansionValueBitwise - 1
+		if bit32.band(options.expansionOptionEnabled, 1) == 1 then
+			options.expansionOptionEnabled = options.expansionOptionEnabled - 1
 		else
-			options.expansionValueBitwise = options.expansionValueBitwise + 1
+			options.expansionOptionEnabled = options.expansionOptionEnabled + 1
+		end
+		refreshExpansionButtons()
+		settingsPannelMakeButtons()
+	end
+end
+
+function expansionOptionEnabledReverse(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionOptionEnabled, 2) == 2 then
+			options.expansionOptionEnabled = options.expansionOptionEnabled - 2
+		else
+			options.expansionOptionEnabled = options.expansionOptionEnabled + 2
+		end
+		refreshExpansionButtons()
+		settingsPannelMakeButtons()
+	end
+end
+
+function expansionOptionEnabledSwapPower(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionOptionEnabled, 4) == 4 then
+			options.expansionOptionEnabled = options.expansionOptionEnabled - 4
+		else
+			options.expansionOptionEnabled = options.expansionOptionEnabled + 4
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function expansionOptionStatusSwapGov(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionOptionStatus, 1) == 1 then
+			options.expansionOptionStatus = options.expansionOptionStatus - 1
+		else
+			options.expansionOptionStatus = options.expansionOptionStatus + 1
 		end
 		refreshExpansionButtons()
 	end
 end
 
-function expansionValueBitwiseReverse(clickedObject, playerColor)
+function expansionOptionStatusReverse(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		if bit32.band(options.expansionValueBitwise, 2) == 2 then
-			options.expansionValueBitwise = options.expansionValueBitwise - 2
+		if bit32.band(options.expansionOptionStatus, 2) == 2 then
+			options.expansionOptionStatus = options.expansionOptionStatus - 2
 		else
-			options.expansionValueBitwise = options.expansionValueBitwise + 2
+			options.expansionOptionStatus = options.expansionOptionStatus + 2
 		end
 		refreshExpansionButtons()
 	end
@@ -1216,7 +1259,7 @@ end
 
 function nextPres(playerIn)
 	local nextList
-	if bit32.band(options.expansionValueBitwise, 2) == 2 then
+	if bit32.band(options.expansionOptionStatus, 2) == 2 then
 		nextList = {White = 'Pink', Brown = 'White', Red = 'Brown', Orange = 'Red', Yellow = 'Orange', Green = 'Yellow', Teal = 'Green', Blue = 'Teal', Purple = 'Blue', Pink = 'Purple'}
 	else
 		nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'White'}
@@ -1877,7 +1920,7 @@ end
 
 function drawThree(clickedObject, playerColor)
 	if started then
-		if bit32.band(options.expansionValueBitwise, 1) == 1 then
+		if bit32.band(options.expansionOptionStatus, 1) == 1 then
 			if playerColor == getChan() then
 				if blockDraw then
 					broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
@@ -1921,8 +1964,13 @@ function drawCards(amount, playerColor)
 	if drawDeck then
 		drawCt = #drawDeck.getObjects()
 		if drawCt > (amount - 1) then
-			lastPres = getPres()
-			lastChan = getChan()
+			if bit32.band(options.expansionOptionEnabled, 4) == 4 and bit32.band(options.expansionOptionStatus, 1) == 1 then
+				lastPres = getChan()
+				lastChan = getPres()
+			else
+				lastPres = getPres()
+				lastChan = getChan()
+			end
 			drawDeck.dealToColor(amount, playerColor)
 			if amount == 1 then
 				broadcastToAll('Dealing 1 card to ' .. playerColor .. '.', stringColorToRGB(playerColor))
