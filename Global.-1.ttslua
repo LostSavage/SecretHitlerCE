@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 93
+update_version = 94
 add_on_version = 5
 
 --Buttons
@@ -4348,8 +4348,8 @@ function refreshNotes(selfIn)
 	end
 end
 
-function buttonColor(clickedObject, clickingPlayer, colorClicked)
-	if clickedObject.getVar('playerNoteTaker') == clickingPlayer or Player[colorClicked].admin then
+function buttonColor(clickedObject, playerColor, colorClicked)
+	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		local bulletInfo = Global.getTable('bulletInfo')
 		if noteTakerNotes[noteTakerCurrLine].color1 == '' or not editMode then
 			noteTakerNotes[noteTakerCurrLine].color1 = colorClicked
@@ -4367,44 +4367,44 @@ function buttonColor(clickedObject, clickingPlayer, colorClicked)
 	end
 end
 
-function White(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'White')
+function White(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'White')
 end
 
-function Brown(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'Brown')
+function Brown(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Brown')
 end
 
-function Red(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'Red')
+function Red(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Red')
 end
 
-function Orange(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'Orange')
+function Orange(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Orange')
 end
 
-function Yellow(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'Yellow')
+function Yellow(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Yellow')
 end
 
-function Green(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'Green')
+function Green(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Green')
 end
 
-function Teal(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'Teal')
+function Teal(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Teal')
 end
 
-function Blue(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'Blue')
+function Blue(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Blue')
 end
 
-function Purple(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'Purple')
+function Purple(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Purple')
 end
 
-function Pink(clickedObject, clickingPlayer)
-	buttonColor(clickedObject, clickingPlayer, 'Pink')
+function Pink(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Pink')
 end
 
 -- Top
