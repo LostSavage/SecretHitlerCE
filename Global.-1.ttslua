@@ -16,6 +16,7 @@ radio_string = '●'
 check_string = '✓'
 
 --Board cards
+placedCards = {}
 inspectOrange_deck_guid = '87e770'
 topOneOrange_deck_guid = '6b94d6'
 topThreeOrange_deck_guid = '021287'
@@ -43,13 +44,15 @@ fascist_zone_guids = {'1f0149', '390247', '6c3840', '13e460', '441bbf', '6a906e'
 liberal_zone_guids = {'12b8ce', '3cabfa', '6f02b7', '939e6d', '3f80ba', 'a6b76f'}
 topdeck_zone_guid = 'c0b577'
 policySafety_zone_guids = {'e99663', '13b335', 'd7774a', 'f601b1', '620e09', 'b7c2d8', '162d55', '0aa61b', 'fdc17a', 'c4d8e8'}
+board_card_guids = {"87ca7e", "6b94d6", "c3149f", "b2f6cf", "6eee7a", "17875f", "4a8ebc", "021287", "7ccdc0", "9fa8b0", "c476c3", "6394c2", "74db80", "87e770", "3fb57a", "146a2b", "50c43a", "af97b5", "2dfce5", "0cce08", "d22a6b", "fabda2", "9a6347", "a85bb3", "b1c672", "8354ae", "747b8f", "33edb6", "2b1a81", "eb57e4"}
+all_playable_colors = {"White", "Brown", "Red", "Orange", "Yellow", "Green", "Teal", "Blue", "Purple", "Pink"}
 
 --Expansion
 abilitiesPile_zone_guid = 'eea120'
 effectsPile_zone_guid = '374a16'
 
 --Other
-trusted_players = {'76561197992512677'}
+trusted_players = {'76561197992512677'} -- Lol, what a nub
 boardColor_rgb = {14/255, 45/255, 18/255}
 lastVote_guids = {'88c953', 'ba4919', 'b7dcde', '4598da'}
 -- @{100, 100, 100+} hidden zones
@@ -141,6 +144,7 @@ playerStatus = { --[1 Board, 2 Not Hitler, 3 Vote Only, 4 Silenced, 5 Dead, 6 De
 }
 roles = {}
 roleButtons = {}
+preStarted = false
 started = nil
 text = {
 	hitler = 'Hitler',
@@ -209,6 +213,129 @@ function onLoad(saveString)
 		noteTakerNotes = {}
 		noteTakerCurrLine = 0
 		addNewLine()
+	end
+	if(started == false) then
+		--startLuaCoroutine(Global, "onLoadCoroutine")
+	end
+end
+
+function onLoadCoroutine()
+	sleep(2)
+
+	if(options.gameType == 0) then -- Normal
+
+	elseif(options.gameType == 1) then -- Extended
+
+	end
+end
+
+function setPlayerZone(type, player)
+	if options.zoneType == 1 or options.zoneType == 2 then
+		tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+		tmpObj.setScale({15.3268776, 5.1, 6.35014629})
+		forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
+	elseif options.zoneType == 3 then
+		local pos = {Orange = {-50.2, 3.51, -14.5}, Yellow = {-50.2, 3.51, 14.5}, Purple = {50.2, 3.51, 14.5}, Pink = {50.2, 3.51, -14.5}}
+		tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+		tmpObj.setScale({29.3, 5.1, 11.8})
+		forceObjectToPlayer(tmpObj, player, {forward = 2, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
+		if(pos[player]) then
+			tmpObj.setPosition(pos[player])
+		end
+	elseif options.zoneType == 4 then
+		local pos = {White = {29.65, 3.51, -32.75}, Brown = {0, 3.51, -32.75}, Red = {-29.65, 3.51, -32.75}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 32.75}, Teal = {0, 3.51, 32.75}, Blue = {29.65, 3.51, 32.75}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
+		local scale = {White = {28.4, 5.1, 10.1}, Brown = {28.4, 5.1, 10.1}, Red = {28.4, 5.1, 10.1}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 10.1}, Teal = {28.4, 5.1, 10.1}, Blue = {28.4, 5.1, 10.1}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
+
+		tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+		tmpObj.setPosition(pos[player])
+		tmpObj.setScale(scale[player])
+		tmpObj.setRotation(no_rotation)
+	elseif options.zoneType == 5 then
+		local pos = {White = {29.65, 3.51, -31.9}, Brown = {0, 3.51, -31.9}, Red = {-29.65, 3.51, -31.9}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 31.9}, Teal = {0, 3.51, 31.9}, Blue = {29.65, 3.51, 31.9}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
+		local scale = {White = {28.4, 5.1, 11.8}, Brown = {28.4, 5.1, 11.8}, Red = {28.4, 5.1, 11.8}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 11.8}, Teal = {28.4, 5.1, 11.8}, Blue = {28.4, 5.1, 11.8}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
+
+		tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+		tmpObj.setPosition(pos[player])
+		tmpObj.setScale(scale[player])
+	end
+end
+
+function refreshBoardCards()
+	if(started) then
+		return
+	end
+
+	local tmpObj
+	local takenObj
+	local params = {}
+
+	for k, v in pairs(placedCards) do
+		local card = k
+		local container = v
+
+		if(card and container) then
+			card.setPositionSmooth(container.getPosition(), false, false)
+		end
+	end
+	placedCards = {}
+
+	params.rotation = flip_y --foi2
+	if options.gameType < 2 then
+		if #getSeatedPlayers() > 8 then
+			if options.gameType == 1 then
+				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
+				params.position = getPositionByGUID(fascist_zone_guids[1])
+				takenObj = tmpObj.takeObject(params)
+				placedCards[takenObj] = tmpObj
+			end
+
+			tmpObj = getObjectFromGUID(inspectOrange_deck_guid)
+			params.position = getPositionByGUID(fascist_zone_guids[2])
+			takenObj = tmpObj.takeObject(params)
+			placedCards[takenObj] = tmpObj
+			tmpObj = getObjectFromGUID(inspectOrange_deck_guid)
+			params.position = getPositionByGUID(fascist_zone_guids[3])
+			takenObj = tmpObj.takeObject(params)
+			placedCards[takenObj] = tmpObj
+			tmpObj = getObjectFromGUID(nextPresidentOrange_deck_guid)
+			params.position = getPositionByGUID(fascist_zone_guids[4])
+			takenObj = tmpObj.takeObject(params)
+			placedCards[takenObj] = tmpObj
+		elseif #getSeatedPlayers() > 6 then
+			if options.gameType == 1 then
+				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
+				params.position = getPositionByGUID(fascist_zone_guids[2])
+				takenObj = tmpObj.takeObject(params)
+				placedCards[takenObj] = tmpObj
+			end
+			tmpObj = getObjectFromGUID(inspectOrange_deck_guid)
+			params.position = getPositionByGUID(fascist_zone_guids[3])
+			takenObj = tmpObj.takeObject(params)
+			placedCards[takenObj] = tmpObj
+			tmpObj = getObjectFromGUID(nextPresidentOrange_deck_guid)
+			params.position = getPositionByGUID(fascist_zone_guids[4])
+			takenObj = tmpObj.takeObject(params)
+			placedCards[takenObj] = tmpObj
+		else
+			if options.gameType == 1 then
+				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
+				params.position = getPositionByGUID(fascist_zone_guids[3])
+				takenObj = tmpObj.takeObject(params)
+				placedCards[takenObj] = tmpObj
+			end
+			tmpObj = getObjectFromGUID(topThreeOrange_deck_guid)
+			params.position = getPositionByGUID(fascist_zone_guids[4])
+			takenObj = tmpObj.takeObject(params)
+			placedCards[takenObj] = tmpObj
+		end
+		tmpObj = getObjectFromGUID(bulletRed_deck_guid)
+		params.position = getPositionByGUID(fascist_zone_guids[5])
+		takenObj = tmpObj.takeObject(params)
+		placedCards[takenObj] = tmpObj
+		tmpObj = getObjectFromGUID(bulletVetoRed_deck_guid)
+		params.position = getPositionByGUID(fascist_zone_guids[6])
+		takenObj = tmpObj.takeObject(params)
+		placedCards[takenObj] = tmpObj
 	end
 end
 
@@ -823,6 +950,7 @@ end
 function gameTypeZero(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.gameType = 0
+		refreshBoardCards()
 		settingsPannelMakeButtons()
 	end
 end
@@ -830,6 +958,7 @@ end
 function gameTypeOne(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.gameType = 1
+		refreshBoardCards()
 		settingsPannelMakeButtons()
 	end
 end
@@ -837,6 +966,7 @@ end
 function gameTypeTwo(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.gameType = 2
+		refreshBoardCards()
 		settingsPannelMakeButtons()
 	end
 end
@@ -844,6 +974,7 @@ end
 function gameTypeThree(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.gameType = 3
+		refreshBoardCards()
 		settingsPannelMakeButtons()
 	end
 end
@@ -868,8 +999,11 @@ end
 
 function decZoneType(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		if options.zoneType > 1 then
+		if options.zoneType > 2 then
 			options.zoneType = options.zoneType - 1
+		end
+		for k, v in pairs(all_playable_colors) do
+			setPlayerZone(options.zoneType, v)
 		end
 		settingsPannelMakeButtons()
 	end
@@ -880,6 +1014,10 @@ function incZoneType(clickedObject, playerColor)
 		if options.zoneType < 5 then
 			options.zoneType = options.zoneType + 1
 		end
+		for k, v in pairs(all_playable_colors) do
+			setPlayerZone(options.zoneType, v)
+		end
+
 		settingsPannelMakeButtons()
 	end
 end
@@ -2014,6 +2152,10 @@ function onPlayerChangedColor(color)
 			Player[color]:print(chatHelp())
 		end
 	end
+
+	if(not preStarted) then
+		refreshBoardCards();
+	end
 end
 
 function foundBoardCards()
@@ -2043,7 +2185,7 @@ function foundBoardCards()
 	return false
 end
 
-function setupStart(clickedObject, playerColor)
+function setupStart(clickedObject, playerColor) --foi1
 	if Player[playerColor].admin then
 		startLuaCoroutine(Global, 'setupCoroutine')
 	else
@@ -2080,11 +2222,7 @@ function setupCoroutine()
 		return true
 	end
 
-	if foundBoardCards() and (options.gameType == 0 or options.gameType == 1) then
-		broadcastToAll('ERROR: You must use custom when placing board cards!', {1,0,0})
-		return true
-	end
-
+	preStarted = true
 	if options.shufflePlayers then
 		printToAll('Shuffling Players...', {1,1,1})
 		shufflePlayers()
@@ -2096,39 +2234,6 @@ function setupCoroutine()
 		if not inTable(players, player) then
 			destroyObjectByGUID(hidden_zone_guids[player])
 		else
-			if options.zoneType == 1 then
-				local params = {
-					type = 'BlockRectangle',
-					scale = {15, 0.25, 0.5},
-					position = {-100, 100, -100}
-				}
-				local block = spawnObject(params)
-				block.setColorTint(stringColorToRGB(player))
-				block.setLock(true)
-				forceObjectToPlayer(block, player, {forward = 7, right = 0, up = 0, forceHeight = 1.09}, flip_y)
-				--Hide the hidden zone so we can still use the color for the screen
-				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
-				tmpObj.setScale({0.01, 0.01, 0.01})
-				tmpObj.setPosition({100, 100, 100 + i * 2})
-			elseif options.zoneType == 2 then
-				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
-				tmpObj.setScale({15.3268776, 5.1, 6.35014629})
-				forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
-			elseif options.zoneType == 4 then
-				local pos = {White = {29.65, 3.51, -32.75}, Brown = {0, 3.51, -32.75}, Red = {-29.65, 3.51, -32.75}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 32.75}, Teal = {0, 3.51, 32.75}, Blue = {29.65, 3.51, 32.75}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
-				local scale = {White = {28.4, 5.1, 10.1}, Brown = {28.4, 5.1, 10.1}, Red = {28.4, 5.1, 10.1}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 10.1}, Teal = {28.4, 5.1, 10.1}, Blue = {28.4, 5.1, 10.1}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
-
-				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
-				tmpObj.setPosition(pos[player])
-				tmpObj.setScale(scale[player])
-			elseif options.zoneType == 5 then
-				local pos = {White = {29.65, 3.51, -31.9}, Brown = {0, 3.51, -31.9}, Red = {-29.65, 3.51, -31.9}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 31.9}, Teal = {0, 3.51, 31.9}, Blue = {29.65, 3.51, 31.9}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
-				local scale = {White = {28.4, 5.1, 11.8}, Brown = {28.4, 5.1, 11.8}, Red = {28.4, 5.1, 11.8}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 11.8}, Teal = {28.4, 5.1, 11.8}, Blue = {28.4, 5.1, 11.8}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
-
-				tmpObj = getObjectFromGUID(hidden_zone_guids[player])
-				tmpObj.setPosition(pos[player])
-				tmpObj.setScale(scale[player])
-			end
 			-- Player Status Buttons
 			local paramsStatus = {
 				type = 'backgammon_piece_white',
@@ -2467,54 +2572,8 @@ function setupCoroutine()
 		destroyObjectByGUID(policyNotUsedLib_card_guid)
 	end
 
-	--Place board cards
-	params.rotation = flip_y
-	if options.gameType < 2 then
-		if #players > 8 then
-			if options.gameType == 1 then
-				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
-				params.position = getPositionByGUID(fascist_zone_guids[1])
-				tmpObj.takeObject(params)
-			end
-			tmpObj = getObjectFromGUID(inspectOrange_deck_guid)
-			params.position = getPositionByGUID(fascist_zone_guids[2])
-			tmpObj.takeObject(params)
-			params.position = getPositionByGUID(fascist_zone_guids[3])
-			tmpObj.takeObject(params) -- 2nd use of inspect_orange_deck
-			tmpObj = getObjectFromGUID(nextPresidentOrange_deck_guid)
-			params.position = getPositionByGUID(fascist_zone_guids[4])
-			tmpObj.takeObject(params)
-		elseif #players > 6 then
-			if options.gameType == 1 then
-				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
-				params.position = getPositionByGUID(fascist_zone_guids[2])
-				tmpObj.takeObject(params)
-			end
-			tmpObj = getObjectFromGUID(inspectOrange_deck_guid)
-			params.position = getPositionByGUID(fascist_zone_guids[3])
-			tmpObj.takeObject(params)
-			tmpObj = getObjectFromGUID(nextPresidentOrange_deck_guid)
-			params.position = getPositionByGUID(fascist_zone_guids[4])
-			tmpObj.takeObject(params)
-		else
-			if options.gameType == 1 then
-				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
-				params.position = getPositionByGUID(fascist_zone_guids[3])
-				tmpObj.takeObject(params)
-			end
-			tmpObj = getObjectFromGUID(topThreeOrange_deck_guid)
-			params.position = getPositionByGUID(fascist_zone_guids[4])
-			tmpObj.takeObject(params)
-		end
-		tmpObj = getObjectFromGUID(bulletRed_deck_guid)
-		params.position = getPositionByGUID(fascist_zone_guids[5])
-		tmpObj.takeObject(params)
-		tmpObj = getObjectFromGUID(bulletVetoRed_deck_guid)
-		params.position = getPositionByGUID(fascist_zone_guids[6])
-		tmpObj.takeObject(params)
-	end
-
-	sleep(1)
+	refreshBoardCards()
+	sleep(2)
 
 	-- Tell everyone their role
 	printToAll('--------------------------------------', {1,1,1})
@@ -2536,8 +2595,8 @@ function setupCoroutine()
 	-- Cleanup custom pieces
 	local tmpZone = getObjectFromGUID(boardCards_zone_guid)
 	local inZone = tmpZone.getObjects()
-	for _, j in ipairs(inZone) do
-		if j.getGUID() ~= tcid_table_guid and j.getGUID() ~= round_table_guid then destroyObject(j) end
+	for k, v in pairs(board_card_guids) do
+		destroyObject(getObjectFromGUID(v));
 	end
 	destroyObject(tmpZone)
 
