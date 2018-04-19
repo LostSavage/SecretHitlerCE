@@ -4164,7 +4164,7 @@ function initCommon(selfIn)
 	-- Policy final
 	buttonParam.click_function = 'vetoButton'
 	buttonParam.label = 'Veto'
-	buttonParam.position = {positionXscale * 1.5, positionY, (5.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * 1.9, positionY, (5.75 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'F'
@@ -4231,19 +4231,19 @@ function initCommon(selfIn)
 	-- Bottom
 	buttonParam.click_function = 'exDiscardButton'
 	buttonParam.label = 'Ex Discard'
-	buttonParam.width = 1200 * buttonScale
-	buttonParam.position = {positionXscale * -3.5, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.width = 1300 * buttonScale
+	buttonParam.position = {positionXscale * -3.4, positionY, (7.25 * positionZscale) + positionZoffset2}
 	buttonParam.font_size = 250
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'discardsButton'
 	buttonParam.label = 'Discards'
-	buttonParam.position = {positionXscale * -0.75, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * -0.65, positionY, (7.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'addsButton'
 	buttonParam.label = 'Adds to\nDeck'
-	buttonParam.position = {positionXscale * 2, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {positionXscale * 2.1, positionY, (7.25 * positionZscale) + positionZoffset2}
 	selfIn.createButton(buttonParam)
 
 end
