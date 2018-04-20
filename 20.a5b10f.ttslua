@@ -1,4 +1,5 @@
--- Based on Card Counter created by Rodney
+zone_name = 'draw_zone_guid'
+timer_name = 'drawCountTimer'
 loadDone = false
 
 function onLoad()
@@ -6,29 +7,53 @@ function onLoad()
 end
 
 function onCollisionEnter(info)
-	if info and loadDone then
-		local target = getObjectFromGUID(info.collision_object.guid)
-		local count = -1
-
-		if target then
-			if target.tag == "Card" then
-				count = 1
-			elseif target.tag == "Deck" then
-				count = #target.getObjects()
-			end
-
-			-- card/deck only
-			if count > -1 then
-				self.setName(count)
-				Global.call('createPolicyCardTimer')
-			end
-		end
+	if loadDone then
+		createTimers()
 	end
 end
 
 function onCollisionExit(info)
-	if info and loadDone then
-		self.setName("0")
-		Global.call('createPolicyCardTimer')
+	if loadDone then
+		createTimers()
+	end
+end
+
+function createTimers()
+	Timer.destroy(timer_name)
+	local parameters = {}
+	parameters.identifier = timer_name
+	parameters.function_name = 'startCount'
+	parameters.function_owner = self
+	parameters.delay = 1
+	Timer.create(parameters)
+	Global.call('createPolicyCardTimer')
+end
+
+function startCount()
+	local deck = nil
+	local deck_ct = 0
+	local card_ct = 0
+	local zone = getObjectFromGUID(Global.getVar(zone_name))
+	local object
+
+	if zone then
+		local inZone = zone.getObjects()
+		for _, object in ipairs(inZone) do
+			if object.tag == 'Card' then
+				card_ct = card_ct + 1
+			elseif object.tag == 'Deck' then
+				deck = object
+				deck_ct = deck_ct + 1
+			end
+		end
+	end
+	if deck_ct == 0 and card_ct == 0 then
+		self.setName(0)
+	elseif deck_ct == 0 and card_ct == 1 then
+		self.setName(1)
+	elseif deck_ct == 1 and card_ct == 0 then
+		self.setName(#deck.getObjects())
+	else
+		broadcastToAll('WARNING: ' .. self.getDescription() .. ' is not a single deck.', {1, 0, 0})
 	end
 end
