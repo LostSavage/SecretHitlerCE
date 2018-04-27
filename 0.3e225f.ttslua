@@ -1,5 +1,6 @@
 zone_name = 'discard_zone_guid'
 timer_name = 'discardCountTimer'
+print_name = 'Discard Pile'
 loadDone = false
 
 function onLoad()
@@ -8,28 +9,23 @@ end
 
 function onCollisionEnter(info)
 	if loadDone then
-		createTimers()
+		Global.call('createPolicyCardTimer')
+		countCards(false)
 	end
 end
 
 function onCollisionExit(info)
 	if loadDone then
-		createTimers()
+		Global.call('createPolicyCardTimer')
+		countCards(false)
 	end
 end
 
-function createTimers()
-	Timer.destroy(timer_name)
-	local parameters = {}
-	parameters.identifier = timer_name
-	parameters.function_name = 'startCount'
-	parameters.function_owner = self
-	parameters.delay = 1
-	Timer.create(parameters)
-	Global.call('createPolicyCardTimer')
+function secondCheck()
+	countCards(true)
 end
 
-function startCount()
+function countCards(secondCheck)
 	local deck = nil
 	local deck_ct = 0
 	local card_ct = 0
@@ -54,6 +50,17 @@ function startCount()
 	elseif deck_ct == 1 and card_ct == 0 then
 		self.setName(#deck.getObjects())
 	else
-		broadcastToAll('WARNING: ' .. self.getDescription() .. ' is not a single deck.', {1, 0, 0})
+		self.setName('Unknown')
+		if secondCheck then
+			broadcastToAll('WARNING: ' .. print_name .. ' is not a single deck.', {1, 0, 0})
+		else
+			Timer.destroy(timer_name)
+			local parameters = {}
+			parameters.identifier = timer_name
+			parameters.function_name = 'secondCheck'
+			parameters.function_owner = self
+			parameters.delay = 3
+			Timer.create(parameters)
+		end
 	end
 end
