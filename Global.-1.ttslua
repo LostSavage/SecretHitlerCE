@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 96
+update_version = 97
 add_on_version = 5
 
 --Boards and Buttons
@@ -22,20 +22,17 @@ topOneOrange_deck_guid = '6b94d6'
 topThreeOrange_deck_guid = '021287'
 nextPresidentOrange_deck_guid = '0cce08'
 bulletRed_deck_guid = '747b8f'
-bulletVetoRed_deck_guid = 'eb57e4'
+vetoRed_deck_guid = 'd8f06c'
 liberalNotUsed_deck_guid = '54ae94'
 fascistNotUsed_deck_guid = '7cec50'
 all_deck_guids = {
 	'87ca7e', '6b94d6', 'c3149f',
-	'b2f6cf', '6eee7a', '17875f',
 	'4a8ebc', '021287', '7ccdc0',
-	'9fa8b0', 'c476c3', '6394c2',
 	'74db80', '87e770', '3fb57a',
-	'146a2b', '50c43a', 'af97b5',
 	'2dfce5', '0cce08', 'd22a6b',
-	'fabda2', '9a6347', 'a85bb3',
 	'b1c672', '8354ae', '747b8f',
-	'33edb6', '2b1a81', 'eb57e4', '54ae94', '7cec50'
+	'34d88b', '9487d7', 'd8f06c',
+	'54ae94', '7cec50'
 }
 
 --Decks/Cards
@@ -399,11 +396,18 @@ function refreshBoardCards()
 			params.position = getPositionByGUID(fascist_zone_guids[5])
 			tmpObj.takeObject(params)
 		end
-		tmpObj = getObjectFromGUID(bulletVetoRed_deck_guid)
+		tmpObj = getObjectFromGUID(bulletRed_deck_guid)
 		if tmpObj then
 			params.position = getPositionByGUID(fascist_zone_guids[6])
 			tmpObj.takeObject(params)
 		end
+		tmpObj = getObjectFromGUID(vetoRed_deck_guid)
+		if tmpObj then
+			local pos = getPositionByGUID(fascist_zone_guids[6])
+			params.position = {pos['x'], pos['y'], pos['z'] - 2}
+			tmpObj.takeObject(params)
+		end
+
 	end
 
 	lastPlayerCt = #getSeatedPlayers()
@@ -1232,7 +1236,7 @@ function displayBannerCardsCoroutine()
 	for _, j in ipairs(inZone) do
 		if isPolicyCard(j) then
 			policyCard = j
-		elseif isBoardCard(j) then
+		elseif isBoardCard(j) and not isBoardCardVeto(j) then
 			boardCard = j
 		end
 	end
@@ -1395,60 +1399,53 @@ end
 function isBoardCard(objIn)
 	if objIn.tag == 'Card' and
 	   (objIn.getDescription() == 'The president examines\nthe top card.' or
-	    objIn.getDescription() == 'The president examines\nthe top card.\nVeto power is\nunlocked.' or
 	    objIn.getDescription() == 'The president examines\nthe top three cards.' or
-	    objIn.getDescription() == 'The president examines\nthe top three cards.\nVeto power is\nunlocked.' or
 	    objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.' or
-	    objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.\nVeto power is\nunlocked.' or
 	    objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.' or
-	    objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.\nVeto power is\nunlocked.' or
 	    objIn.getDescription() == 'The president must\nkill a player.' or
-	    objIn.getDescription() == 'The president must\nkill a player.\nVeto power is\nunlocked.') then
+		 objIn.getDescription() == 'Veto power is\nunlocked.') then
 		return true
 	end
 	return false
 end
 
 function isBoardCardBullet(objIn)
-	if objIn.tag == 'Card' and
-	   (objIn.getDescription() == 'The president must\nkill a player.' or
-	    objIn.getDescription() == 'The president must\nkill a player.\nVeto power is\nunlocked.') then
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president must\nkill a player.' then
 		return true
 	end
 	return false
 end
 
 function isBoardCardInspect(objIn)
-	if objIn.tag == 'Card' and
-	   (objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.' or
-		 objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.\nVeto power is\nunlocked.') then
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.' then
 		return true
 	end
 	return false
 end
 
 function isBoardCardTopCard(objIn)
-	if objIn.tag == 'Card' and
-		(objIn.getDescription() == 'The president examines\nthe top card.' or
-		 objIn.getDescription() == 'The president examines\nthe top card.\nVeto power is\nunlocked.') then
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president examines\nthe top card.' then
 		return true
 	end
 	return false
 end
 
 function isBoardCardTopThree(objIn)
-	if objIn.tag == 'Card' and
-		(objIn.getDescription() == 'The president examines\nthe top three cards.' or
-		 objIn.getDescription() == 'The president examines\nthe top three cards.\nVeto power is\nunlocked.') then
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president examines\nthe top three cards.' then
 		return true
 	end
 	return false
 end
 
 function isBoardCardPickPres(objIn)
-	if objIn.tag == 'Card' and
-		(objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.' or
-		 objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.\nVeto power is\nunlocked.') then
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.' then
+		return true
+	end
+	return false
+end
+
+function isBoardCardVeto(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'Veto power is\nunlocked.' then
 		return true
 	end
 	return false
@@ -2643,7 +2640,10 @@ function setupCoroutine()
 				if options.dealRoleCards then
 					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
 				else
-					local tmpGUID = string.format('%06x', tonumber(card.getGUID(), 16) + 1)
+					local tmpGUID = player_decks[i].getVar('displayGuid')
+					if not tmpGUID then
+						tmpGUID = string.format('%06x', tonumber(card.getGUID(), 16) + 1)
+					end
 					playerRoleCardGuids[player] = tmpGUID
 					destroyObject(card)
 				end
@@ -3044,18 +3044,18 @@ function removeInspect()
 end
 
 function giveRoleCards()
-	local params = {}
-	params.index = nb_vote_history_idx
-	params.body = voteNotebook
-	editNotebookTab(params)
 	if not options.dealRoleCards then
 		for _, player in ipairs(all_playable_colors) do
 			if playerRoleCardGuids[player] then
 				local card = getObjectFromGUID(playerRoleCardGuids[player])
 				if card then
-					card.interactable = true
-					card.setLock(false)
-					forceObjectToPlayer(card, player, {forward = 0, right = -2, up = 0}, flip_y_z)
+					local pos = card.getPosition()
+					local params = {}
+					params.position = {pos['x'], pos['y'] + 1, pos['z']}
+					local newCard = card.clone(params)
+					newCard.interactable = true
+					newCard.setLock(false)
+					forceObjectToPlayer(newCard, player, {forward = 0, right = -2, up = 0}, flip_y_z)
 				end
 			end
 		end

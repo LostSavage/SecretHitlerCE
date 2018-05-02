@@ -8,17 +8,7 @@ function onLoad()
 end
 
 function onCollisionEnter(info)
-	if info and loadDone then
-		local target = getObjectFromGUID(info.collision_object.guid)
-		if target then
-			if target.tag == "Deck" then
-				target.setScale({1.51, 1, 1.51})
-				local tmpObj = getObjectFromGUID(Global.getVar('settingsPannel_guid'))
-				if tmpObj then
-					Global.call('settingsPannelMakeButtons')
-				end
-			end
-		end
+	if loadDone then
 		countCards(false)
 	end
 end

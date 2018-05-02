@@ -10,7 +10,10 @@ function onCollisionEnter(info)
 
 		if target then
 			if target.tag == "Deck" then
-				target.setScale({1.51, 1, 1.51})
+				local tmpObj = getObjectFromGUID(Global.getVar('settingsPannel_guid'))
+				if tmpObj then
+					Global.call('settingsPannelMakeButtons')
+				end
 			end
 		end
 	end
