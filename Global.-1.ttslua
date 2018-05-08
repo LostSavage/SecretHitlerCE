@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 97
+update_version = 98
 add_on_version = 5
 
 --Boards and Buttons
@@ -132,7 +132,7 @@ options = {
 	shufflePlayers = false,
 	shuffleHost = true,
 	voteHistory = false,
-	zoneType = 4 -- [1 None, 2 Small, 3 Gap (version 1), 4 Gap (version 2), 5 Large]
+	zoneType = 4 -- [1 None, 2 Small, 3 Gap (version 1), 4 Gap (version 2), 5 Large, 6 16 Player]
 }
 players = {}
 playerRoleCardGuids = {}
@@ -257,6 +257,52 @@ function onSave()
 	return saveString
 end
 
+function refreshUI()
+	UI.setAttribute('claimZero',  'visibility',  'grey')
+	UI.setAttribute('claimOne',  'visibility',  'grey')
+	UI.setAttribute('claimTwo',  'visibility',  'grey')
+	UI.setAttribute('claimThree',  'visibility',  'grey')
+	UI.setAttribute('discardL',  'visibility',  'grey')
+	UI.setAttribute('discardF',  'visibility',  'grey')
+	UI.setAttribute('claimzero',  'visibility',  'grey')
+	UI.setAttribute('voteJa',  'visibility',  'grey')
+	UI.setAttribute('voteNein',  'visibility',  'grey')
+	UI.setAttribute('voteRemove',  'visibility',  'grey')
+	local hitlerList = ''
+	local fascistList = ''
+	local liberalList = ''
+
+	if started then
+		for _, player in pairs(all_playable_colors) do
+			if roles[player] == 'hitler' then
+				if hitlerList == '' then
+					hitlerList = player
+				else
+					hitlerList = hitlerList .. '|' .. player
+				end
+			elseif roles[player] == 'fascist' then
+				if fascistList == '' then
+					fascistList = player
+				else
+					fascistList = fascistList .. '|' .. player
+				end
+			elseif roles[player] == 'liberal' then
+				if liberalList == '' then
+					liberalList = player
+				else
+					liberalList = liberalList .. '|' .. player
+				end
+			end
+		end
+		UI.setAttribute('libRole', 'Text', 'You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!')
+		UI.setAttribute('fasRole', 'Text', 'You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
+		UI.setAttribute('hitlerRole', 'Text', 'You are ' .. text.hitler .. '!')
+		UI.setAttribute('libRole',  'visibility',  liberalList)
+		UI.setAttribute('fasRole',  'visibility',  fascistList)
+		UI.setAttribute('hitlerRole',  'visibility',  hitlerList)
+	end
+end
+
 function refreshHiddenZones()
 	for _, player in pairs(all_playable_colors) do
 		if options.zoneType == 1 then
@@ -293,7 +339,64 @@ function refreshHiddenZones()
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
 			tmpObj.setRotation(no_rotation)
+		elseif options.zoneType == 6 then
+			local pos = {White = {29.3, 3.51, -59.6}, Brown = {0, 3.51, -59.6}, Red = {-29.3, 3.51, -59.6}, Orange = {-49.4, 3.51, -19}, Yellow = {-49.4, 3.51, 19}, Green = {-29.3, 3.51, 59.6}, Teal = {0, 3.51, 59.6}, Blue = {29.3, 3.51, 59.6}, Purple = {49.4, 3.51, 19}, Pink = {49.4, 3.51, -19}}
+			local scale = {White = {29.3, 5.1, 11.8}, Brown = {29.3, 5.1, 11.8}, Red = {29.3, 5.1, 11.8}, Orange = {10.8, 5.1, 38.0}, Yellow = {10.8, 5.1, 38.0}, Green = {29.3, 5.1, 11.8}, Teal = {29.3, 5.1, 11.8}, Blue = {29.3, 5.1, 11.8}, Purple = {10.8, 5.1, 38.0}, Pink = {10.8, 5.1, 38.0}}
+
+			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj.setPosition(pos[player])
+			tmpObj.setScale(scale[player])
+			tmpObj.setRotation(no_rotation)
+
+			local handPos = {White = {29.3, 4.46, -62.2}, Brown = {0, 4.46, -62.2}, Red = {-29.3, 4.46, -62.2}, Orange = {-49.4, 3.51, -19}, Yellow = {-49.4, 3.51, 19}, Green = {-29.3, 4.46, 62.2}, Teal = {0, 4.46, 62.2}, Blue = {29.3, 4.46, 62.2}, Purple = {49.4, 3.51, 19}, Pink = {49.4, 3.51, -19}}
+			local handRot = {White = {0, 0, 0}, Brown = {0, 0, 0}, Red = {0, 0, 0}, Orange = {0, 90, 0}, Yellow = {0, 90, 0}, Green = {0, 180, 0}, Teal = {0, 180, 0}, Blue = {0, 180, 0}, Purple = {0, 270, 0}, Pink = {0, 270, 0}}
+			local handParams = {
+				scale = {11.66, 5.4, 4.87}
+			}
+
+			handParams.position = handPos[player]
+			handParams.rotation = handRot[player]
+			Player[player].setHandTransform(handParams)
 		end
+	end
+
+	if options.zoneType == 6 then
+		local params = {}
+		local board = {}
+		params.type = 'Custom_Model'
+		board[1] = spawnObject(params)
+		board[2] = spawnObject(params)
+		board[3] = spawnObject(params)
+		board[4] = spawnObject(params)
+		custom = {
+			mesh = 'http://pastebin.com/raw/7Fey0hJg',
+			diffuse = 'https://i.imgbox.com/oXIpAvxI.png',
+			type = 4,
+			material = 1,
+			specular_color = {223/255, 207/255, 190/255},
+			specular_intensity = 0.05,
+			specular_sharpness = 6.3
+		}
+		for i = 1, 2 do
+			board[i].setCustomObject(custom)
+			board[i].setLock(true)
+			board[i].interactable = false
+			board[i].setRotation({0, 270, 0})
+			board[i].setScale({1.2, 1, 1.21})
+		end
+		board[1].setPosition({0, 0.1, -51.6})
+		board[2].setPosition({0, 0.1, 51.6})
+		custom.mesh = 'http://pastebin.com/raw/KmjEDvrc'
+		custom.diffuse = 'https://i.imgbox.com/JINePrHs.png'
+		for i = 3, 4 do
+			board[i].setCustomObject(custom)
+			board[i].setLock(true)
+			board[i].interactable = false
+			board[i].setRotation({0, 0, 0})
+			board[i].setScale({1, 1, 1})
+		end
+		board[3].setPosition({60.49, 0.11, 0})
+		board[4].setPosition({-60.49, 0.11, 0})
 	end
 end
 
@@ -846,8 +949,8 @@ function settingsPannelMakeButtons()
 		buttonParam.label = '[u]Hidden Zones[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
-		labels = {'None', 'Small', 'Gap (version 1)', 'Gap (version 2)', 'Large'}
-		offsets = {3.2, 3.3, 5.3, 5.35, 3.3}
+		labels = {'None', 'Small', 'Gap (version 1)', 'Gap (version 2)', 'Large', '16 Player'}
+		offsets = {3.2, 3.3, 5.3, 5.35, 3.3, 5}
 		makeDecIncButtonsLabel(settingsPannel, options.zoneType, '-', '+', labels, 'decZoneType', 'incZoneType', {startX, 0.2, startZ}, offsets, false, true)
 
 		startZ = -8.5
@@ -2191,6 +2294,7 @@ function getChan()
 end
 
 function onPlayerChangedColor(color)
+	refreshUI()
 	if started then
 		if not (color == 'Grey') and not (color == 'Black') then
 			printToColor('--------------------------------------',color, {1, 1, 1})
@@ -2814,6 +2918,7 @@ function setupCoroutine()
 
 	--Set the started variable to true
 	started = true
+	refreshUI()
 
 	return true
 end
@@ -2847,6 +2952,14 @@ function tellRoleButton(clickedObject, playerColor)
 	bigBroadcast(tellRole(playerColor), Player[playerColor])
 end
 
+function tellRoleButtonUI(player, id)
+	bigBroadcast(tellRole(player.color), player)
+end
+
+function maybeSomeDayUI(player, id)
+	player:broadcast("And there was a legend of a mighty grey player who played without sitting ...")
+end
+
 function tellRole(player)
 	local msg = ''
 	if player == 'Black' then
@@ -2871,6 +2984,11 @@ function tellRole(player)
 		elseif role == 'hitler' then
 			msg = msg .. '[' .. stringColorToHex(player) .. ']You are [FF0000]' .. text.hitler .. '[-]![-]\n'
 			if (#players < 7) then
+				for _, l in pairs(hitler) do
+					if not (l == player) then
+						msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is also ' .. text.hitler .. '!' .. '[-]\n'
+					end
+				end
 				for _, l in pairs(fascists) do
 					msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!' .. '[-]\n'
 				end
@@ -3045,13 +3163,13 @@ end
 
 function giveRoleCards()
 	if not options.dealRoleCards then
-		for _, player in ipairs(all_playable_colors) do
+		for i, player in ipairs(all_playable_colors) do
 			if playerRoleCardGuids[player] then
 				local card = getObjectFromGUID(playerRoleCardGuids[player])
 				if card then
 					local pos = card.getPosition()
 					local params = {}
-					params.position = {pos['x'], pos['y'] + 1, pos['z']}
+					params.position = {pos['x'], pos['y'] + 1 + i * 0.1, pos['z']}
 					local newCard = card.clone(params)
 					newCard.interactable = true
 					newCard.setLock(false)
