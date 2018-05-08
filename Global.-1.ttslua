@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 98
+update_version = 99
 add_on_version = 5
 
 --Boards and Buttons
@@ -201,7 +201,9 @@ function onLoad(saveString)
 		voteNotebook = save['vnb']
 	end
 	alwaysInit()
-	if not started then
+	if started then
+		refreshUI()
+	else
 		mainNotes = '[FFFF00]Secret Hitler: Consolidator Edition\n' ..
 						'Version ' ..  update_version .. ' (' .. string.len(Global.getLuaScript()) .. ')\n' ..
 						'\n[-]Based on the board game:\n\n[FF0000]Secret Hitler[-]\ndesigned by\n[0080F8]Max Temkin[-],\n[0080F8]Mike Boxleiter[-],\n[0080F8]Tommy Maranges[-]\nand Illustrated by\n[0080F8]Mackenzie Schubert.[-]\n\n' ..
@@ -258,49 +260,37 @@ function onSave()
 end
 
 function refreshUI()
-	UI.setAttribute('claimZero',  'visibility',  'grey')
-	UI.setAttribute('claimOne',  'visibility',  'grey')
-	UI.setAttribute('claimTwo',  'visibility',  'grey')
-	UI.setAttribute('claimThree',  'visibility',  'grey')
-	UI.setAttribute('discardL',  'visibility',  'grey')
-	UI.setAttribute('discardF',  'visibility',  'grey')
-	UI.setAttribute('claimzero',  'visibility',  'grey')
-	UI.setAttribute('voteJa',  'visibility',  'grey')
-	UI.setAttribute('voteNein',  'visibility',  'grey')
-	UI.setAttribute('voteRemove',  'visibility',  'grey')
 	local hitlerList = ''
 	local fascistList = ''
 	local liberalList = ''
 
-	if started then
-		for _, player in pairs(all_playable_colors) do
-			if roles[player] == 'hitler' then
-				if hitlerList == '' then
-					hitlerList = player
-				else
-					hitlerList = hitlerList .. '|' .. player
-				end
-			elseif roles[player] == 'fascist' then
-				if fascistList == '' then
-					fascistList = player
-				else
-					fascistList = fascistList .. '|' .. player
-				end
-			elseif roles[player] == 'liberal' then
-				if liberalList == '' then
-					liberalList = player
-				else
-					liberalList = liberalList .. '|' .. player
-				end
+	for _, player in pairs(all_playable_colors) do
+		if roles[player] == 'hitler' then
+			if hitlerList == '' then
+				hitlerList = player
+			else
+				hitlerList = hitlerList .. '|' .. player
+			end
+		elseif roles[player] == 'fascist' then
+			if fascistList == '' then
+				fascistList = player
+			else
+				fascistList = fascistList .. '|' .. player
+			end
+		elseif roles[player] == 'liberal' then
+			if liberalList == '' then
+				liberalList = player
+			else
+				liberalList = liberalList .. '|' .. player
 			end
 		end
-		UI.setAttribute('libRole', 'Text', 'You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!')
-		UI.setAttribute('fasRole', 'Text', 'You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
-		UI.setAttribute('hitlerRole', 'Text', 'You are ' .. text.hitler .. '!')
-		UI.setAttribute('libRole',  'visibility',  liberalList)
-		UI.setAttribute('fasRole',  'visibility',  fascistList)
-		UI.setAttribute('hitlerRole',  'visibility',  hitlerList)
 	end
+	UI.setAttribute('libRole', 'Text', 'You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!')
+	UI.setAttribute('fasRole', 'Text', 'You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
+	UI.setAttribute('hitlerRole', 'Text', 'You are ' .. text.hitler .. '!')
+	UI.setAttribute('libRole',  'visibility',  liberalList)
+	UI.setAttribute('fasRole',  'visibility',  fascistList)
+	UI.setAttribute('hitlerRole',  'visibility',  hitlerList)
 end
 
 function refreshHiddenZones()
@@ -2294,7 +2284,6 @@ function getChan()
 end
 
 function onPlayerChangedColor(color)
-	refreshUI()
 	if started then
 		if not (color == 'Grey') and not (color == 'Black') then
 			printToColor('--------------------------------------',color, {1, 1, 1})
@@ -2839,6 +2828,7 @@ function setupCoroutine()
 		bigBroadcast(tellRole(player), Player[player])
 	end
 	printToAll('--------------------------------------', {1,1,1})
+	refreshUI()
 
 	-- Move and tell first pres
 	giveObjectToPlayer(president, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 3}, no_rotation)
@@ -2918,7 +2908,6 @@ function setupCoroutine()
 
 	--Set the started variable to true
 	started = true
-	refreshUI()
 
 	return true
 end
