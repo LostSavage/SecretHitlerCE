@@ -5,7 +5,7 @@
 
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
-update_version = 100
+update_version = 101
 add_on_version = 5
 
 --Boards and Buttons
@@ -281,7 +281,7 @@ function refreshUI()
 		local fasPurple = ''
 		local fasPink = ''
 
-		for _, playerColor in pairs(all_playable_colors) do
+		for _, playerColor in pairs(main_playable_colors) do
 			UI.setAttribute('player' .. playerColor, 'visibility', playerColor)
 			if roles[playerColor] == 'hitler' then
 				UI.setAttribute('hit' .. playerColor, 'Text', playerColor .. ' is ' .. text.hitler .. '!')
@@ -403,7 +403,7 @@ function fasVisibility(colorIn)
 end
 
 function refreshHiddenZones()
-	for _, player in pairs(all_playable_colors) do
+	for _, player in pairs(main_playable_colors) do
 		if options.zoneType == 1 then
 			--Hide the hidden zone so we can still use it later
 			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
@@ -439,16 +439,16 @@ function refreshHiddenZones()
 			tmpObj.setScale(scale[player])
 			tmpObj.setRotation(no_rotation)
 		elseif options.zoneType == 6 then
-			local pos = {White = {29.3, 3.51, -59.6}, Brown = {0, 3.51, -59.6}, Red = {-29.3, 3.51, -59.6}, Orange = {-60.4, 3.51, -19}, Yellow = {-60.4, 3.51, 19}, Green = {-29.3, 3.51, 59.6}, Teal = {0, 3.51, 59.6}, Blue = {29.3, 3.51, 59.6}, Purple = {60.4, 3.51, 19}, Pink = {60.4, 3.51, -19}}
-			local scale = {White = {29.3, 5.1, 11.8}, Brown = {29.3, 5.1, 11.8}, Red = {29.3, 5.1, 11.8}, Orange = {11.8, 5.1, 29.3}, Yellow = {11.8, 5.1, 29.3}, Green = {29.3, 5.1, 11.8}, Teal = {29.3, 5.1, 11.8}, Blue = {29.3, 5.1, 11.8}, Purple = {11.8, 5.1, 29.3}, Pink = {11.8, 5.1, 29.3}}
+			local pos = {White = {-29.3, 3.51, -49.4}, Brown = {-49.4, 3.51, -29.3}, Red = {-49.4, 3.51, 0}, Orange = {-49.4, 3.51, 29.3}, Yellow = {-29.3, 3.51, 49.4}, Green = {0, 3.51, 49.4}, Teal = {29.3, 3.51, 49.4}, Blue = {49.4, 3.51, 29.3}, Purple = {49.4, 3.51, 0}, Pink = {49.4, 3.51, -29.3}}
+			local scale = {White = {28.4, 5.1, 10.8}, Brown = {10.8, 5.1, 28.4}, Red = {10.8, 5.1, 28.4}, Orange = {10.8, 5.1, 28.4}, Yellow = {28.4, 5.1, 10.8}, Green = {28.4, 5.1, 10.8}, Teal = {28.4, 5.1, 10.8}, Blue = {10.8, 5.1, 28.4}, Purple = {10.8, 5.1, 28.4}, Pink = {10.8, 5.1, 28.4}}
 
 			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
 			tmpObj.setRotation(no_rotation)
 
-			local handPos = {White = {29.3, 4.46, -62.2}, Brown = {0, 4.46, -62.2}, Red = {-29.3, 4.46, -62.2}, Orange = {-63.2, 4.46, -11.73}, Yellow = {-63.2, 4.46, 11.73}, Green = {-29.3, 4.46, 62.2}, Teal = {0, 4.46, 62.2}, Blue = {29.3, 4.46, 62.2}, Purple = {63.2, 4.46, 11.73}, Pink = {63.2, 4.46, -11.73}}
-			local handRot = {White = {0, 0, 0}, Brown = {0, 0, 0}, Red = {0, 0, 0}, Orange = {0, 90, 0}, Yellow = {0, 90, 0}, Green = {0, 180, 0}, Teal = {0, 180, 0}, Blue = {0, 180, 0}, Purple = {0, 270, 0}, Pink = {0, 270, 0}}
+			local handPos = {White = {-29.3, 4.46, -51.66}, Brown = {-51.66, 4.46, -29.3}, Red = {-51.66, 4.46, 0}, Orange = {-51.66, 4.46, 29.3}, Yellow = {-29.3, 4.46, 51.66}, Green = {0, 4.46, 51.66}, Teal = {29.3, 4.46, 51.66}, Blue = {51.66, 4.46, 29.3}, Purple = {51.66, 4.46, 0}, Pink = {51.66, 4.46, -29.3}}
+			local handRot = {White = {0, 0, 0}, Brown = {0, 90, 0}, Red = {0, 90, 0}, Orange = {0, 90, 0}, Yellow = {0, 180, 0}, Green = {0, 180, 0}, Teal = {0, 180, 0}, Blue = {0, 270, 0}, Purple = {0, 270, 0}, Pink = {0, 270, 0}}
 			local handParams = {
 				scale = {11.66, 5.4, 4.87}
 			}
@@ -461,18 +461,15 @@ function refreshHiddenZones()
 			forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
 		end
 	end
-
 	if options.zoneType == 6 then
-		local params = {}
+		broadcastToAll('Not even close to finished... reload the table to go back.', {1,1,1})
+		local params = {type = 'Custom_Model'}
 		local board = {}
-		params.type = 'Custom_Model'
 		board[1] = spawnObject(params)
 		board[2] = spawnObject(params)
-		board[3] = spawnObject(params)
-		board[4] = spawnObject(params)
 		custom = {
-			mesh = 'http://pastebin.com/raw/7Fey0hJg',
-			diffuse = 'https://i.imgbox.com/oXIpAvxI.png',
+			mesh = 'http://cloud-3.steamusercontent.com/ugc/933812827275737908/4A39E65F99D7809D6055BED44C2B2AF420776850/',
+			diffuse = 'http://cloud-3.steamusercontent.com/ugc/933812827275738471/DBC87C418A1CBD45F4EB56EB0F63B65E7F042F1F/',
 			type = 4,
 			material = 1,
 			specular_color = {223/255, 207/255, 190/255},
@@ -482,23 +479,28 @@ function refreshHiddenZones()
 		for i = 1, 2 do
 			board[i].setCustomObject(custom)
 			board[i].setLock(true)
-			board[i].interactable = false
 			board[i].setRotation({0, 270, 0})
-			board[i].setScale({1.2, 1, 1.21})
+			board[i].setScale({0.74, 1, 1})
+			board[i].setLuaScript(
+				'function onLoad()\r\n' ..
+				'	self.interactable = false\r\n' ..
+				'end\r\n')
 		end
-		board[1].setPosition({0, 0.1, -51.6})
-		board[2].setPosition({0, 0.1, 51.6})
-		custom.mesh = 'http://pastebin.com/raw/KmjEDvrc'
-		custom.diffuse = 'https://i.imgbox.com/JINePrHs.png'
-		for i = 3, 4 do
-			board[i].setCustomObject(custom)
-			board[i].setLock(true)
-			board[i].interactable = false
-			board[i].setRotation({0, 0, 0})
-			board[i].setScale({1, 1, 1})
+		board[1].setPosition({0, 0.1, -46.2})
+		board[2].setPosition({0, 0.1, 46.2})
+		params = {
+			type = 'BlockRectangle',
+			scale = {28.4, 0.25, 5.4},
+			position = {29.3, 1.09, -49.4}
+		}
+		local block = {}
+		block[1] = spawnObject(params)
+		params.position = {0, 1.09, -49.4}
+		block[2] = spawnObject(params)
+		for i, color in ipairs(extra_playable_colors) do
+			block[i].setColorTint(extra_playable_colors_rgb[color])
+			block[i].setLock(true)
 		end
-		board[3].setPosition({60.49, 0.11, 0})
-		board[4].setPosition({-60.49, 0.11, 0})
 	end
 end
 
@@ -648,6 +650,10 @@ function alwaysInit()
 	-- Initialize the pseudo random number generator
 	math.randomseed(os.time())
 
+	refreshUI()
+	refreshStatusButtons()
+	refreshExpansionButtons()
+
 	local drawPileBoard = getObjectFromGUID(drawPileBoard_guid)
 	if drawPileBoard then
 		local button = {
@@ -662,10 +668,6 @@ function alwaysInit()
 		}
 		drawPileBoard.createButton(button)
 	end
-
-	refreshUI()
-	refreshStatusButtons()
-	refreshExpansionButtons()
 
 	for _, cardGUID in ipairs(extraRole_card_guids) do
 		local card = getObjectFromGUID(cardGUID)
@@ -809,7 +811,7 @@ function init()
 	if tmpObj == nil then error('Election Tracker') end
 	tmpObj.setLock(true)
 
-	for i, player in ipairs(all_playable_colors) do
+	for i, player in ipairs(main_playable_colors) do
 		tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 		if tmpObj == nil then error(player .. ' Hidden Zone') end
 	end
@@ -864,9 +866,14 @@ function onChat(messageIn, player)
 		return false
 	elseif messageTable[1] == 'black' and (player.admin or inTable(trusted_players, player.steam_id)) then
 		if messageTable[2] then
-			for _, p in pairs(Player.getPlayers()) do
-				if p.steam_id == messageTable[2] then
-					p:changeColor('Black')
+			local playerFound = getPlayerByName(messageTable[2])
+			if playerFound then
+				playerFound:changeColor('Black')
+			else
+				for _, p in pairs(Player.getPlayers()) do
+					if p.steam_id == messageTable[2] then
+						p:changeColor('Black')
+					end
 				end
 			end
 		else
@@ -875,9 +882,14 @@ function onChat(messageIn, player)
 		return false
 	elseif messageTable[1] == 'grey' and (player.admin or inTable(trusted_players, player.steam_id)) then
 		if messageTable[2] then
-			for _, p in pairs(Player.getPlayers()) do
-				if p.steam_id == messageTable[2] then
-					p:changeColor('Grey')
+			local playerFound = getPlayerByName(messageTable[2])
+			if playerFound then
+				playerFound:changeColor('Grey')
+			else
+				for _, p in pairs(Player.getPlayers()) do
+					if p.steam_id == messageTable[2] then
+						p:changeColor('Grey')
+					end
 				end
 			end
 		else
@@ -886,9 +898,14 @@ function onChat(messageIn, player)
 		return false
 	elseif messageTable[1] == 'promote' and (player.admin or inTable(trusted_players, player.steam_id)) then
 		if messageTable[2] then
-			for _, p in pairs(Player.getPlayers()) do
-				if p.steam_id == messageTable[2] then
-					p.promote()
+			local playerFound = getPlayerByName(messageTable[2])
+			if playerFound then
+				playerFound.promote()
+			else
+				for _, p in pairs(Player.getPlayers()) do
+					if p.steam_id == messageTable[2] then
+						p.promote()
+					end
 				end
 			end
 		else
@@ -897,9 +914,14 @@ function onChat(messageIn, player)
 		return false
 	elseif messageTable[1] == 'kick' and (player.admin or inTable(trusted_players, player.steam_id)) then
 		if messageTable[2] then
-			for _, p in pairs(Player.getPlayers()) do
-				if p.steam_id == messageTable[2] then
-					p.kick()
+			local playerFound = getPlayerByName(messageTable[2])
+			if playerFound then
+				playerFound.kick()
+			else
+				for _, p in pairs(Player.getPlayers()) do
+					if p.steam_id == messageTable[2] then
+						p.kick()
+					end
 				end
 			end
 		end
@@ -913,6 +935,25 @@ function onChat(messageIn, player)
 		player:print(chatHelp(player))
 		return false
 	end
+end
+
+function getPlayerByName(playerName)
+   local thePlayers = Player.getPlayers()
+   local amountOfPlayersFound = 0
+   local playerToReturn = nil
+
+   for index, name in pairs(thePlayers) do
+   	if string.match(string.lower(thePlayers[index].steam_name), string.lower(playerName)) then
+         playerToReturn = thePlayers[index]
+			amountOfPlayersFound = amountOfPlayersFound + 1
+		end
+	end
+
+   if amountOfPlayersFound == 1 then
+		return playerToReturn
+	end
+
+	return nil
 end
 
 function string:tokenize(sep)
@@ -952,11 +993,12 @@ function chatHelp(player)
 					'   help - This message'
 	if player.admin then
 		msg = msg .. '\nadmin chat commands:\n' ..
-					'   black [steam id] - sets player to black\n' ..
-					'   grey [steam id] - sets player to grey\n' ..
-					'   promote [steam id] - promotes/demotes player\n' ..
-					'   kick steam_id - kicks the player\n' ..
-					'   list - lists steam ids'
+					'   black [name* or steam id] - sets player to black\n' ..
+					'   grey [name* or steam id] - sets player to grey\n' ..
+					'   promote [name* or steam id] - promotes/demotes player\n' ..
+					'   kick name* or steam id - kicks the player\n' ..
+					'   list - lists steam ids\n' ..
+					'   * partial name allowed but must be distinct'
 	end
 
 	return msg
@@ -990,8 +1032,8 @@ function settingsPannelMakeButtons()
 		buttonParam.label = '[u]Game Type[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
-		makeSquareButtonLabel(settingsPannel, options.gameType == 0, radio_string, '', 'Original', 'gameTypeZero', {startX, 0.2, startZ}, 2.45, (not customOnly))
-		makeSquareButtonLabel(settingsPannel, options.gameType == 1, radio_string, '', 'Extended', 'gameTypeOne', {startX, 0.2, startZ + offsetZ}, 2.7, (not customOnly))
+		makeSquareButtonLabel(settingsPannel, options.gameType == 0, radio_string, '', 'Original', 'gameTypeZero', {startX, 0.2, startZ}, 2.45, not customOnly)
+		makeSquareButtonLabel(settingsPannel, options.gameType == 1, radio_string, '', 'Extended', 'gameTypeOne', {startX, 0.2, startZ + offsetZ}, 2.7, not customOnly)
 		makeSquareButtonLabel(settingsPannel, options.gameType == 2, radio_string, '', 'Custom', 'gameTypeTwo', {startX, 0.2, startZ + offsetZ * 2}, 2.3, true)
 		makeDecIncButtonsLabel(settingsPannel, options.liberalCards, '-', '+', 'Liberal Cards', 'decLiberalCards', 'incLiberalCards', {startX + 1.3, 0.2, startZ + offsetZ * 3}, 6.1, false, options.gameType == 2)
 		makeDecIncButtonsLabel(settingsPannel, options.fascistCards, '-', '+', 'Fascist Cards', 'decFascistCards', 'incFascistCards', {startX + 1.3, 0.2, startZ + offsetZ * 4}, 6.1, false, options.gameType == 2)
@@ -1009,8 +1051,8 @@ function settingsPannelMakeButtons()
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
 		labels = {'None', 'Small', 'Gap (version 1)', 'Gap (version 2)', 'Large', '12 Player'}
-		offsets = {3.2, 3.3, 5.3, 5.35, 3.3, 5}
-		makeDecIncButtonsLabel(settingsPannel, options.zoneType, '-', '+', labels, 'decZoneType', 'incZoneType', {startX, 0.2, startZ}, offsets, false, true)
+		offsets = {3.2, 3.3, 5.3, 5.35, 3.3, 4.1}
+		makeDecIncButtonsLabel(settingsPannel, options.zoneType, '-', '+', labels, 'decZoneType', 'incZoneType', {startX, 0.2, startZ}, offsets, false, options.zoneType ~= 6)
 
 		startZ = -8.5
 		buttonParam.label = '[u]Other Options[/u]'
@@ -1203,7 +1245,7 @@ end
 
 function incZoneType(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		if options.zoneType < 5 then
+		if options.zoneType < 6 then
 			options.zoneType = options.zoneType + 1
 		end
 		refreshHiddenZones()
@@ -2044,7 +2086,7 @@ function allPolicyCardsKnown()
 	local cardLists = {}
 
 	cardLists = getPolicyCardStatus(false)
-	if started and #cardLists.fascistList == options.fascistCards and #cardLists.liberalList == options.liberalCards then
+	if started and #cardLists.fascistList == options.fascistCards and #cardLists.liberalList == options.liberalCards and #cardLists.drawDeckList == 1 and (#cardLists.discardDeckList == 0 or #cardLists.discardDeckList == 1) then
 		return true
 	end
 
@@ -2188,7 +2230,7 @@ function getFinalVoteString()
 	local jaCount = 0
 	local neinCount = 0
 	local out = '[i]Ja votes[/i]: '
-	for i, playerColor in pairs(all_playable_colors) do -- used for the order
+	for i, playerColor in pairs(main_playable_colors) do -- used for the order
 		if votes[playerColor] == 1 and inTable(players, playerColor) then
 			if string.sub(out, -1) == ']' then out = out .. ', ' end
 			out = out .. '[' .. stringColorToHex(playerColor) .. ']' .. playerColor .. '[-]'
@@ -2197,7 +2239,7 @@ function getFinalVoteString()
 	end
 	if jaCount == 0 then out = out .. 'None' end
 	out = out .. '[/i]\n[i]Nein votes[/i]:[i] '
-	for i, playerColor in pairs(all_playable_colors) do -- used for the order
+	for i, playerColor in pairs(main_playable_colors) do -- used for the order
 		if votes[playerColor] == -1 and inTable(players, playerColor) then
 			if string.sub(out, -1) == ']' then out = out .. ', ' end
 			out = out .. '[' .. stringColorToHex(playerColor) .. ']' .. playerColor .. '[-]'
@@ -2239,14 +2281,14 @@ end
 
 function getPrelimVoteString()
 	local out = '[u]Voted[/u]:[i] '
-	for i, playerColor in pairs(all_playable_colors) do
+	for i, playerColor in pairs(main_playable_colors) do
 		if votes[playerColor] ~= 0 and inTable(players, playerColor) and not (_G.playerStatus[playerColor] > 3) then
 			if string.sub(out, -1) == ']' then out = out .. ', ' end
 			out = out .. '[' .. stringColorToHex(playerColor) .. ']' .. playerColor .. '[-]'
 		end
 	end
 	out = out .. '[/i]\n[u]Waiting on[/u]:[i] '
-	for i, playerColor in pairs(all_playable_colors) do
+	for i, playerColor in pairs(main_playable_colors) do
 		if votes[playerColor] == 0 and inTable(players, playerColor) and not (_G.playerStatus[playerColor] > 3) then
 			if string.sub(out, -1) == ']' then out = out .. ', ' end
 			out = out .. '[' .. stringColorToHex(playerColor) .. ']' .. playerColor .. '[-]'
@@ -2379,7 +2421,6 @@ function getChan()
 end
 
 function onPlayerChangedColor(color)
-	refreshUI()
 	if started then
 		if not (color == 'Grey') and not (color == 'Black') then
 			printToColor('--------------------------------------',color, {1, 1, 1})
@@ -2546,7 +2587,7 @@ function setupCoroutine()
 	end
 
 	--Hidden zones and status buttons
-	for i, player in pairs(all_playable_colors) do
+	for i, player in pairs(main_playable_colors) do
 		if not inTable(players, player) then
 			destroyObjectByGUID(hidden_zone_guids[player])
 		else
@@ -3207,7 +3248,7 @@ end
 
 function giveRoleCards()
 	if not options.dealRoleCards then
-		for i, player in ipairs(all_playable_colors) do
+		for i, player in ipairs(main_playable_colors) do
 			if playerRoleCardGuids[player] then
 				local card = getObjectFromGUID(playerRoleCardGuids[player])
 				if card then
@@ -3311,12 +3352,16 @@ end
 
 function notateColor2ByObject(tableIn)
 	if type(tableIn) == 'table' then
-		local playerColor = closestPlayer(tableIn[1], players, 18)
-		if playerColor and noteTakerNotes[notate.line].color1 ~= playerColor then
-			noteTakerNotes[notate.line].color2 = playerColor
-			refreshNotes(nil)
-			notate.line = nil
-			notate.action = ''
+		if tableIn[1] then
+			local playerColor = closestPlayer(tableIn[1], players, 18)
+			if playerColor and notate.line then
+				if noteTakerNotes[notate.line].color1 ~= playerColor then
+					noteTakerNotes[notate.line].color2 = playerColor
+					refreshNotes(nil)
+					notate.line = nil
+					notate.action = ''
+				end
+			end
 		end
 	end
 end
@@ -4131,82 +4176,82 @@ function initHorizontal(selfIn, offset)
 	-- Players
 	local color = offset + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 4, positionY, (-2.25 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 0, positionY, (-2.25 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * -4, positionY, (-2.25 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-3.75 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-5.25 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * -4, positionY, (-6.75 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 0, positionY, (-6.75 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 4, positionY, (-6.75 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-5.25 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-3.75 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	initCommon(selfIn)
@@ -4224,82 +4269,82 @@ function initVertical(selfIn, offset)
 	-- Players
 	local color = offset + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-6.0 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-4.5 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 6, positionY, (-3.0 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 2, positionY, (-2.25 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * -2, positionY, (-2.25 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-3.0 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-4.5 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * -6, positionY, (-6.0 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * -2, positionY, (-6.75 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	color = color + 1
 	if color > 10 then color = color - 10 end
-	buttonParam.click_function = all_playable_colors[color]
-	buttonParam.label = all_playable_colors[color]
+	buttonParam.click_function = main_playable_colors[color]
+	buttonParam.label = main_playable_colors[color]
 	buttonParam.position = {positionXscale * 2, positionY, (-6.75 * positionZscale) + positionZoffset1}
-	buttonParam.color = stringColorToRGB(all_playable_colors[color])
+	buttonParam.color = stringColorToRGB(main_playable_colors[color])
 	selfIn.createButton(buttonParam)
 
 	initCommon(selfIn)
@@ -4780,9 +4825,9 @@ end
 function autoButton(clickedObject, playerColor)
 	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		local tempObj = getObjectFromGUID(president_guid)
-		local pres = closestPlayer(tempObj, all_playable_colors, 1000)
+		local pres = closestPlayer(tempObj, main_playable_colors, 1000)
 		tempObj = getObjectFromGUID(chancelor_guid)
-		local chan = closestPlayer(tempObj, all_playable_colors, 1000)
+		local chan = closestPlayer(tempObj, main_playable_colors, 1000)
 
 		if pres then
 			noteTakerNotes[noteTakerCurrLine].color1 = pres
@@ -5484,7 +5529,9 @@ function easyQuotes(stringIn)
 end
 
 -- Common Globals and Functions
-all_playable_colors = {'White', 'Brown', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue', 'Purple', 'Pink'}
+main_playable_colors = {'White', 'Brown', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue', 'Purple', 'Pink'}
+extra_playable_colors = {'Tan', 'Olive'}
+extra_playable_colors_rgb = {Tan = {210/255, 180/255, 140/255}, Olive = {128/255, 128/255, 0/255}}
 hidden_zone_guids = {White = 'f13d0b', Brown = '90049b', Red = '134297', Orange = '344002', Yellow = '9b5558', Green = '7a8301', Teal = '568a75', Blue = 'dbd95e', Purple = 'cc1b94', Pink = 'd954ee'}
 president_guid = '4d3d8f'
 prev_president_guid = '780217'

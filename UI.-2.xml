@@ -1,9 +1,9 @@
 <Defaults>
-   <Button color="White" textColor="Black" fontSize="18" fontStyle="Bold" />
-   <Text color="White" outline="Black" fontSize="26" />
+   <Button color="White" textColor="Black" fontSize="22" />
+   <Text color="White" outline="Black" fontSize="28"/>
 </Defaults>
 
-<VerticalLayout width="23%" rectAlignment="UpperLeft" childAlignment="UpperCenter" childForceExpandHeight="false">
+<VerticalLayout padding="0 0 100 0" width="30%" rectAlignment="UpperLeft" childAlignment="UpperCenter" childForceExpandHeight="false">
    <Text id="playerWhite" color="#FFFFFF" visibility="">Player White:</Text>
    <Text id="playerBrown" color="#703A16" visibility="">Player Brown:</Text>
    <Text id="playerRed" color="#DA1917" visibility="">Player Red:</Text>
@@ -40,20 +40,16 @@
    <Text id="fasPink" color="#F36FCD" visibility="">ERROR: fasPink</Text>
 </VerticalLayout>
 
-<!--
-<Panel padding="0 80 0 9">
-   <GridLayout cellSize="64 58" startAxis="Horizontal" childAlignment="LowerRight">
-      <Button onClick="maybeSomeDayUI" visibility="grey" id="voteJa" >Vote ja!</Button>
-      <Button onClick="maybeSomeDayUI" visibility="grey" id="voteNein">Vote nein</Button>
-      <Button onClick="maybeSomeDayUI" visibility="grey" id="voteRemove" fontSize="13">Remove vote</Button>
+<!-- <HorizontalLayout padding="0 135 0 9" height="8%" width="70%" rectAlignment="LowerRight">
+      <Button id="voteJa">Vote ja!</Button>
+      <Button id="voteNein">Vote nein</Button>
+      <Button id="voteRemove">Remove vote</Button>
       <Text></Text>
-      <Button onClick="maybeSomeDayUI" visibility="grey" id="discardL" fontSize="15">Discard L</Button>
-      <Button onClick="maybeSomeDayUI" visibility="grey" id="discardF" fontSize="15">Discard F</Button>
+      <Button id="discardL">Discard L</Button>
+      <Button id="discardF">Discard F</Button>
       <Text></Text>
-      <Button onClick="maybeSomeDayUI" visibility="grey" id="claimZero">Claim 0L</Button>
-      <Button onClick="maybeSomeDayUI" visibility="grey" id="claimOne">Claim 1L</Button>
-      <Button onClick="maybeSomeDayUI" visibility="grey" id="claimTwo">Claim 2L</Button>
-      <Button onClick="maybeSomeDayUI" visibility="grey" id="claimThree">Claim 3L</Button>
-   </GridLayout>
-</Panel>
--->
+      <Button id="claimZero">Claim 0L</Button>
+      <Button id="claimOne">Claim 1L</Button>
+      <Button id="claimTwo">Claim 2L</Button>
+      <Button id="claimThree">Claim 3L</Button>
+</HorizontalLayout> -->
