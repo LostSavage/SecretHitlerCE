@@ -2182,10 +2182,11 @@ function startVoteCheck()
 		neinVote = 0
 		jaCard = getObjectFromGUID(jaCardGuids[playerColor])
 		neinCard = getObjectFromGUID(neinCardGuids[playerColor])
-		if inTable(extra_playable_colors, playerColor) then
+		if extraPlayer(playerColor) then
 			ph = getObjectFromGUID(extraPlayerHandGuids[playerColor])
 			if ph then
 				pos = ph.getPosition()
+				pos = {x = pos['x'] + 9, y = pos['y'], z = pos['z'] - 2.26}
 			end
 		else
 			local ph = Player[playerColor].getPlayerHand()
@@ -2275,11 +2276,11 @@ function flipVotes()
 	for i, playerColor in pairs(players) do
 		jaCard = getObjectFromGUID(jaCardGuids[playerColor])
 		neinCard = getObjectFromGUID(neinCardGuids[playerColor])
-		if inTable(extra_playable_colors, playerColor) then
+		if extraPlayer(playerColor) then
 			ph = getObjectFromGUID(extraPlayerHandGuids[playerColor])
 			if ph then
 				pos = ph.getPosition()
-				pos = {x = pos[1], y = pos[2], z = pos[3]}
+				pos = {x = pos['x'] + 9, y = pos['y'], z = pos['z'] - 2.26}
 			end
 		else
 			local ph = Player[playerColor].getPlayerHand()
@@ -2539,6 +2540,20 @@ function onPlayerChangedColor(color)
 			refreshBoardCards()
 		end
 	end
+
+	local oliveText = getObjectFromGUID(OLIVE_TEXT_GUID)
+    local tanText = getObjectFromGUID(TAN_TEXT_GUID)
+	if color ~= 'Grey' then
+		if olivePlayer ~= nil and Player[color].steam_id == olivePlayer.steam_id then
+			olivePlayer = nil
+			destroyObject(oliveAvatar)
+			oliveText.TextTool.setValue(' ')
+		elseif tanPlayer ~= nil and Player[color].steam_id == tanPlayer.steam_id then
+			tanPlayer = nil
+			destroyObject(tanAvatar)
+			tanText.TextTool.setValue(' ')
+		end
+	end
 end
 
 function foundBoardCards()
@@ -2716,6 +2731,14 @@ function setupCoroutine()
 		end
 		buttonStatusBase[1].setPosition({20.8, 1.09, -40.66})
 		buttonStatusBase[2].setPosition({-8.5, 1.09, -40.66})
+		for _, color in ipairs(extra_playable_colors) do
+			table.insert(players, 1, color)
+		end
+		table.insert(fascist_deck_guids, 1, fascist_deck_extra_guid)
+		table.insert(liberal_deck_guids, 1, liberal_deck_extra_guid)
+	else
+		destroyObjectByGUID(fascist_deck_extra_guid)
+		destroyObjectByGUID(liberal_deck_extra_guid)
 	end
 
 	--Expansion
@@ -2723,6 +2746,7 @@ function setupCoroutine()
 	if abilitiesDeck then
 		abilitiesDeck.randomize()
 		abilitiesDeck.deal(options.expansionAmount)
+		--fixme deal cards to tan and olive
 	else
 		local tmpZone = getObjectFromGUID(abilitiesPile_zone_guid)
 		if tmpZone then
@@ -2768,26 +2792,28 @@ function setupCoroutine()
 		params.scale = {1.79999948, 1.79999948, 1.79999948}
 	end
 	for _, player in pairs(players) do
-		if Player[player].admin or options.noteType > 6 then
-			local notetaker = spawnObject(params)
-			if options.noteType < 7 then
-				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'true', 'false', 'false', 'false', 'false', 'true'))
-			elseif options.noteType == 7 then
-				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'false', 'false', 'false', 'false', 'false'))
-			elseif options.noteType == 8 then
-				notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'true', 'false', 'false', 'false', 'false'))
-			end
-			if options.noteType == 5 then
-				local custom = {}
-				custom.image = 'http://cloud-3.steamusercontent.com/ugc/486766424829587499//FDF54ECD5D1706DE0A590239E84D62CDE757FE46/'
-				notetaker.setCustomObject(custom)
-			elseif options.noteType == 6 then
+		if not inTable(extra_playable_colors, player) then
+			if Player[player].admin or options.noteType > 6 then
+				local notetaker = spawnObject(params)
+				if options.noteType < 7 then
+					notetaker.setLuaScript(newNoteTakerLuaScript(player, 'true', 'false', 'false', 'false', 'false', 'true'))
+				elseif options.noteType == 7 then
+					notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'false', 'false', 'false', 'false', 'false'))
+				elseif options.noteType == 8 then
+					notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'true', 'false', 'false', 'false', 'false'))
+				end
+				if options.noteType == 5 then
 					local custom = {}
-					custom.diffuse = 'http://cloud-3.steamusercontent.com/ugc/478894184492866532/6639B6E1AB511AB10D53DB91B2A47A0A63410DDF/'
-					custom.mesh = 'http://cloud-3.steamusercontent.com/ugc/478894184492865468/51C18F993BBDD5D1B55FE5261A625B2CE0B2FD9F/'
-					custom.type = 4
-					custom.material = 3
+					custom.image = 'http://cloud-3.steamusercontent.com/ugc/486766424829587499//FDF54ECD5D1706DE0A590239E84D62CDE757FE46/'
 					notetaker.setCustomObject(custom)
+				elseif options.noteType == 6 then
+						local custom = {}
+						custom.diffuse = 'http://cloud-3.steamusercontent.com/ugc/478894184492866532/6639B6E1AB511AB10D53DB91B2A47A0A63410DDF/'
+						custom.mesh = 'http://cloud-3.steamusercontent.com/ugc/478894184492865468/51C18F993BBDD5D1B55FE5261A625B2CE0B2FD9F/'
+						custom.type = 4
+						custom.material = 3
+						notetaker.setCustomObject(custom)
+				end
 			end
 		end
 	end
@@ -2796,18 +2822,6 @@ function setupCoroutine()
 	destroyObjectByGUID(settingsPannel_guid)
 
 	local numFascists = 0
-
-	--fixme might need more work here
-	if options.zoneType == 6 then
-		for _, color in ipairs(extra_playable_colors) do
-			table.insert(players, 1, color)
-		end
-		table.insert(fascist_deck_guids, 1, fascist_deck_extra_guid)
-		table.insert(liberal_deck_guids, 1, liberal_deck_extra_guid)
-	else
-		destroyObjectByGUID(fascist_deck_extra_guid)
-		destroyObjectByGUID(liberal_deck_extra_guid)
-	end
 
 	--figure out number of fascists
 	if #players > 10 then
@@ -2852,10 +2866,10 @@ function setupCoroutine()
 	end
 
 	--Cleanup Extra Cards
-	for i = numFascists+1, #fascist_deck_guids do
+	for i = numFascists + 1, #fascist_deck_guids do
 		destroyObject(fascistDecks[i])
 	end
-	for i = #players-numFascists, #liberal_deck_guids do
+	for i = #players - numFascists, #liberal_deck_guids do
 		destroyObject(liberalDecks[i])
 	end
 
@@ -2868,7 +2882,7 @@ function setupCoroutine()
 
 	--Deal the Cards
 	for i, player in ipairs(players) do
-		for j=1, #player_decks[i].getObjects() do
+		for j = 1, #player_decks[i].getObjects() do
 			local params = {}
 			local card = player_decks[i].takeObject(params)
 
@@ -2890,7 +2904,11 @@ function setupCoroutine()
 				description == 'Liberal Party Card' then
 				offset = -1
 				if options.dealPartyCards then
-					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+					if extraPlayer(player) then
+						giveObjectToPlayer(card, player, {forward = 2.26, right = -9, up = 0.6}, flip_y_z, false, true)
+					else
+						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+					end
 				else
 					destroyObject(card)
 				end
@@ -2919,7 +2937,11 @@ function setupCoroutine()
 					'end\r\n')
 				card.setScale({1.51, 1, 1.51})
 				offset = 1
-				giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+				if extraPlayer(player) then
+					giveObjectToPlayer(card, player, {forward = 2.26, right = -9, up = 0.6}, flip_y_z, false, true)
+				else
+					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+				end
 			elseif description == 'Nein Card' then
 				card.setDescription(player .. '\'s Nein Card')
 				card.setLuaScript(
@@ -2945,11 +2967,19 @@ function setupCoroutine()
 					'end\r\n')
 				card.setScale({1.51, 1, 1.51})
 				offset = 2
-				giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y, false, true)
+				if extraPlayer(player) then
+					giveObjectToPlayer(card, player, {forward = 2.26, right = -9, up = 0.6}, flip_y_z, false, true)
+				else
+					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y, false, true)
+				end
 			end
 			if offset == -2 then
 				if options.dealRoleCards then
-					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+					if extraPlayer(player) then
+						giveObjectToPlayer(card, player, {forward = 2.26, right = -9, up = 0.6}, flip_y_z, false, true)
+					else
+						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+					end
 				else
 					local tmpGUID = player_decks[i].getVar('displayGuid')
 					if not tmpGUID then
@@ -3255,11 +3285,16 @@ function createInspectButtons(pres)
 				card.setLuaScript(
 					'playerColor = \'' .. playerColor .. '\'\r\n\r\n' ..
 					'function onCollisionEnter(collision_info)\r\n' ..
-					'	local ph = Player[playerColor].getPlayerHand()\r\n' ..
-					'	if ph then\r\n' ..
-					'		self.setRotation({0, ph[\'rot_y\']+180, 180})\r\n' ..
-					'		self.setLock(true)\r\n' ..
+					'	if Global.call(\'extraPlayer\', {playerColor}) then\r\n' ..
+					'		--just fake it\r\n' ..
+					'		self.setRotation({0, 180, 180})\r\n' ..
+					'	else\r\n' ..
+					'		local ph = Player[playerColor].getPlayerHand()\r\n' ..
+					'		if ph then\r\n' ..
+					'			self.setRotation({0, ph[\'rot_y\']+180, 180})\r\n' ..
+					'		end\r\n' ..
 					'	end\r\n' ..
+					'	self.setLock(true)\r\n' ..
 					'end\r\n\r\n' ..
 					'function onLoad(saveString)\r\n' ..
 					'	local button = {}\r\n' ..
@@ -3299,6 +3334,7 @@ function playerInspected(clickedObject, inspectorColor, checkedColor)
 		end
 		printToAll(inspectorColor .. ' inspected ' .. checkedColor, playerColor)
 		broadcastToColor(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
+		--fixme message grey player
 		table.insert(inspected, 1, checkedColor)
 		removeInspect()
 		if options.autoNotate and notate.line and notate.action == 'inspects' then
@@ -3348,6 +3384,14 @@ end
 
 function PinkInspected(clickedObject, inspectorColor)
 	playerInspected(clickedObject, inspectorColor, 'Pink')
+end
+
+function TanInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Tan')
+end
+
+function OliveInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Olive')
 end
 
 function removeInspect()
@@ -3553,6 +3597,18 @@ function moveObjectToPlayerByGUID(tableIn)
 		end
 	end
 end
+
+function extraPlayer(color)
+	if type(color) == 'table' then
+		color = color[1]
+	end
+	if inTable(extra_playable_colors, color) then
+		return true
+	else
+		return false
+	end
+end
+
 
 function inTable(tableIn, valueIn)
 	local value
@@ -5465,10 +5521,16 @@ function noteTakerNotesLine(lineIn, useColorIn)
 		stringOut = stringOut .. noteTakerNotes[lineIn].conflict .. ' '
 	end
 	if noteTakerNotes[lineIn].color1 ~= '' then
-		local player = Player[noteTakerNotes[lineIn].color1]
+		local haveName = nil
+		if extraPlayer(noteTakerNotes[lineIn].color1) then
+			--fixme get grey name here
+		else
+			local player = Player[noteTakerNotes[lineIn].color1]
+			haveName = player.steam_name
+		end
 		local text = noteTakerNotes[lineIn].color1
-		if player.steam_name and useNames then
-			text = string.sub(player.steam_name, 1, 7)
+		if haveName and useNames then
+			text = string.sub(haveName, 1, 7)
 		end
 		if useColorIn then
 			text = '[' .. stringColorToHex(noteTakerNotes[lineIn].color1) .. ']' .. text .. '[-]'
@@ -5479,10 +5541,16 @@ function noteTakerNotesLine(lineIn, useColorIn)
 		stringOut = stringOut .. noteTakerNotes[lineIn].action .. ' '
 	end
 	if noteTakerNotes[lineIn].color2 ~= '' then
-		local player = Player[noteTakerNotes[lineIn].color2]
+		local haveName = nil
+		if extraPlayer(noteTakerNotes[lineIn].color2) then
+			--fixme get grey name here
+		else
+			local player = Player[noteTakerNotes[lineIn].color2]
+			haveName = player.steam_name
+		end
 		local text = noteTakerNotes[lineIn].color2
-		if player.steam_name and useNames then
-			text = string.sub(player.steam_name, 1, 7)
+		if haveName and useNames then
+			text = string.sub(haveName, 1, 7)
 		end
 		if useColorIn then
 			text = '[' .. stringColorToHex(noteTakerNotes[lineIn].color2) .. ']' .. text .. '[-]'
@@ -5663,8 +5731,37 @@ flip_y = {x = 0, y = 180, z = 0}
 flip_y_z = {x = 0, y = 180, z = 180}
 
 function giveObjectToPlayer(object, playerColor, posAdd, rotAdd, ...)
-	if inTable(extra_playable_colors, playerColor) then
-		--fixme
+	if extraPlayer(playerColor) then
+		local ph = getObjectFromGUID(extraPlayerHandGuids[playerColor])
+		local pos
+		local rot
+		local vForward
+		local vRight
+		local vUp
+
+		if ph then
+			pos = ph.getPosition()
+			pos = {x = pos['x'] + 9, y = pos['y'], z = pos['z'] - 2.26}
+			-- fake this info as the hand boards are rotated/flipped
+			rot = {x = 0, y = 0, z = 0}
+			vForward = {x = 0, y = 0, z = 1}
+			vRight = {x = 1, y = 0, z = 0}
+			vUp = {x = 0, y = 1, z = 0}
+		end
+		if rotAdd['exactRot'] then
+			object.setRotationSmooth({rotAdd['x'], rotAdd['y'], rotAdd['z']}, ...)
+		else
+			object.setRotationSmooth({rot['x'] + rotAdd['x'], rot['y'] + rotAdd['y'], rot['z'] + rotAdd['z']}, ...)
+		end
+		if posAdd['forceHeight'] then
+			object.setPositionSmooth({pos['x'] + vForward['x'] * posAdd['forward'] + vRight['x'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+											  posAdd['forceHeight'],
+											  pos['z'] + vForward['z'] * posAdd['forward'] + vRight['z'] * posAdd['right'] + vUp['z'] * posAdd['up']}, ...)
+		else
+			object.setPositionSmooth({pos['x'] + vForward['x'] * posAdd['forward'] + vRight['x'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+											  pos['y'] + vForward['y'] * posAdd['forward'] + vRight['y'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+											  pos['z'] + vForward['z'] * posAdd['forward'] + vRight['z'] * posAdd['right'] + vUp['x'] * posAdd['up']}, ...)
+		end
 	else
 		local ph = Player[playerColor].getPlayerHand()
 
@@ -5688,8 +5785,37 @@ function giveObjectToPlayer(object, playerColor, posAdd, rotAdd, ...)
 end
 
 function forceObjectToPlayer(object, playerColor, posAdd, rotAdd)
-	if inTable(extra_playable_colors, playerColor) then
-		--fixme
+	if extraPlayer(playerColor) then
+		local ph = getObjectFromGUID(extraPlayerHandGuids[playerColor])
+		local pos
+		local rot
+		local vForward
+		local vRight
+		local vUp
+
+		if ph then
+			pos = ph.getPosition()
+			pos = {x = pos['x'] + 9, y = pos['y'], z = pos['z'] - 2.26}
+			-- fake this info as the hand boards are rotated/flipped
+			rot = {x = 0, y = 0, z = 0}
+			vForward = {x = 0, y = 0, z = 1}
+			vRight = {x = 1, y = 0, z = 0}
+			vUp = {x = 0, y = 1, z = 0}
+		end
+		if rotAdd['exactRot'] then
+			object.setRotation({rotAdd['x'], rotAdd['y'], rotAdd['z']})
+		else
+			object.setRotation({rot['x'] + rotAdd['x'], rot['y'] + rotAdd['y'], rot['z'] + rotAdd['z']})
+		end
+		if posAdd['forceHeight'] then
+			object.setPosition({pos['x'] + vForward['x'] * posAdd['forward'] + vRight['x'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+									  posAdd['forceHeight'],
+									  pos['z'] + vForward['z'] * posAdd['forward'] + vRight['z'] * posAdd['right'] + vUp['z'] * posAdd['up']})
+		else
+			object.setPosition({pos['x'] + vForward['x'] * posAdd['forward'] + vRight['x'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+									  pos['y'] + vForward['y'] * posAdd['forward'] + vRight['y'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+									  pos['z'] + vForward['z'] * posAdd['forward'] + vRight['z'] * posAdd['right'] + vUp['x'] * posAdd['up']})
+		end
 	else
 		local ph = Player[playerColor].getPlayerHand();
 
@@ -5726,11 +5852,11 @@ function closestPlayer(objectIn, playerListIn, maxIn)
 	if objectIn then
 		local tempPos = objectIn.getPosition()
 		for i, playerColor in ipairs(playerListIn) do
-			if inTable(extra_playable_colors, playerColor) then
+			if extraPlayer(playerColor) then
 				ph = getObjectFromGUID(extraPlayerHandGuids[playerColor])
 				if ph then
 					pos = ph.getPosition()
-					pos = {x = pos[1], y = pos[2] + 9, z = pos[3]}
+					pos = {x = pos['x'] + 9, y = pos['y'], z = pos['z'] - 2.26}
 				end
 			else
 				local ph = Player[playerColor].getPlayerHand()
@@ -5774,7 +5900,7 @@ function stringColorToHex(color)
 end
 
 function stringColorToRGBExtra(color)
-	if inTable(extra_playable_colors, color) then
+	if extraPlayer(color) then
 		return extra_playable_colors_rgb[color]
 	else
 		return stringColorToRGB(color)
