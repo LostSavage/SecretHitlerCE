@@ -1,0 +1,111 @@
+OLIVE_COLOR = {128/256, 128/256, 0}
+TAN_COLOR = {210/256, 180/256, 140/256}
+OLIVE_TEXT_GUID = '13f08c'
+TAN_TEXT_GUID = '37d7b5'
+OLIVE_AVATAR_POS = {0, 7.40, -54}
+TAN_AVATAR_POS = {29.30, 7.40, -54}
+
+olivePlayer = nil
+tanPlayer = nil
+oliveAvatar = nil
+tanAvatar = nil
+
+print('hi')
+
+function sitOlive(player, value, id)
+    local oliveText = getObjectFromGUID(OLIVE_TEXT_GUID)
+
+    if olivePlayer~= nil and olivePlayer.steam_id == player.steam_id then
+        player.print('You are already sitting in Olive.')
+        return
+    elseif tanPlayer~= nil and tanPlayer.steam_id == player.steam_id then
+        player.print('You are already sitting in Tan.')
+        return
+    end
+    if olivePlayer == nil then
+        printToAll(player.steam_name .. ' is color Olive.', OLIVE_COLOR)
+        oliveText.TextTool.setValue(player.steam_name)
+        olivePlayer = player
+        local objParam =
+        {
+            type = "Custom_Tile",
+            position = OLIVE_AVATAR_POS,
+            rotation = {90, 0, 0},
+            scale = {2.5, 1, 2.5},
+            sound = false
+        }
+        oliveAvatar = spawnObject(objParam)
+        oliveAvatar.setLock(true)
+        oliveAvatar.interactable = false
+        local customParam =
+        {
+            image = generateAvatarImageUrl(player.steam_id),
+            type = 0,
+            image_bottom = generateAvatarImageUrl(player.steam_id),
+            thickness = 0.2
+        }
+        oliveAvatar.setCustomObject(customParam)
+    else
+        player.print('Olive seat is currently occupied.')
+    end
+end
+
+function sitTan(player, value, id)
+    local tanText = getObjectFromGUID(TAN_TEXT_GUID)
+    if olivePlayer~= nil and olivePlayer.steam_id == player.steam_id then
+        player.print('You are already sitting in Olive.')
+        return
+    elseif tanPlayer~= nil and tanPlayer.steam_id == player.steam_id then
+        player.print('You are already sitting in Tan.')
+        return
+    end
+    if tanPlayer == nil then
+        printToAll(player.steam_name .. ' is color Tan.', TAN_COLOR)
+        tanText.TextTool.setValue(player.steam_name)
+        tanPlayer = player
+        local objParam =
+        {
+            type = "Custom_Tile",
+            position = TAN_AVATAR_POS,
+            rotation = {90, 0, 0},
+            scale = {2.5, 1, 2.5},
+            sound = false
+        }
+        tanAvatar = spawnObject(objParam)
+        tanAvatar.setLock(true)
+        tanAvatar.interactable = false
+        local customParam =
+        {
+            image = generateAvatarImageUrl(player.steam_id),
+            type = 0,
+            image_bottom = generateAvatarImageUrl(player.steam_id),
+            thickness = 0.2
+        }
+        tanAvatar.setCustomObject(customParam)
+    else
+        player.print('Tan seat is currently occupied.')
+    end
+end
+
+function leaveSeat(player, value, id)
+    local oliveText = getObjectFromGUID(OLIVE_TEXT_GUID)
+    local tanText = getObjectFromGUID(TAN_TEXT_GUID)
+
+    if olivePlayer~= nil and player.steam_id == olivePlayer.steam_id then
+        olivePlayer = nil
+        destroyObject(oliveAvatar)
+        oliveText.TextTool.setValue(' ')
+    elseif tanPlayer~= nil and player.steam_id == tanPlayer.steam_id then
+        tanPlayer = nil
+        destroyObject(tanAvatar)
+        tanText.TextTool.setValue(' ')
+    else
+        player.print('You are not sitting in Olive or Tan.')
+    end
+end
+
+
+
+function generateAvatarImageUrl(steamId)
+   return string.format("http://steam-tts.bclass.info/avatar/?i=%s&s=l", steamId)
+end

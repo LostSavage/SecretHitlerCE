@@ -44,7 +44,7 @@
    <Text id="fasOlive" color="#808000" visibility="">ERROR: fasOlive</Text>
 </VerticalLayout>
 
-<!-- <HorizontalLayout padding="0 135 0 9" height="8%" width="70%" rectAlignment="LowerRight">
+<HorizontalLayout padding="0 135 0 9" height="8%" width="70%" rectAlignment="LowerRight" visibility="grey">
       <Button id="voteJa">Vote ja!</Button>
       <Button id="voteNein">Vote nein</Button>
       <Button id="voteRemove">Remove vote</Button>
@@ -52,8 +52,7 @@
       <Button id="discardL">Discard L</Button>
       <Button id="discardF">Discard F</Button>
       <Text></Text>
-      <Button id="claimZero">Claim 0L</Button>
-      <Button id="claimOne">Claim 1L</Button>
-      <Button id="claimTwo">Claim 2L</Button>
-      <Button id="claimThree">Claim 3L</Button>
-</HorizontalLayout> -->
+      <Button id="sitOlive" onClick="sitOlive">Sit in Olive</Button>
+      <Button id="sitTan" onClick="sitTan">Sit in Tan</Button>
+      <Button id="leaveSeat" onClick="leaveSeat">Leave Seat</Button>
+</HorizontalLayout>
