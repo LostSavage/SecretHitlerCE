@@ -28,6 +28,8 @@
    <Text id="hitBlue" color="#1E87FF" visibility="">ERROR: hitBlue</Text>
    <Text id="hitPurple" color="#9F1FEF" visibility="">ERROR: hitPurple</Text>
    <Text id="hitPink" color="#F36FCD" visibility="">ERROR: hitPink</Text>
+   <Text id="hitTan" color="#D2B48C" visibility="">ERROR: hitTan</Text>
+   <Text id="hitOlive" color="#808000" visibility="">ERROR: hitOlive</Text>
    <Text id="fasWhite" color="#FFFFFF" visibility="">ERROR: fasWhite</Text>
    <Text id="fasBrown" color="#703A16" visibility="">ERROR: fasBrown</Text>
    <Text id="fasRed" color="#DA1917" visibility="">ERROR: fasRed</Text>
@@ -38,6 +40,8 @@
    <Text id="fasBlue" color="#1E87FF" visibility="">ERROR: fasBlue</Text>
    <Text id="fasPurple" color="#9F1FEF" visibility="">ERROR: fasPurple</Text>
    <Text id="fasPink" color="#F36FCD" visibility="">ERROR: fasPink</Text>
+   <Text id="fasTan" color="#D2B48C" visibility="">ERROR: fasTan</Text>
+   <Text id="fasOlive" color="#808000" visibility="">ERROR: fasOlive</Text>
 </VerticalLayout>
 
 <!-- <HorizontalLayout padding="0 135 0 9" height="8%" width="70%" rectAlignment="LowerRight">
