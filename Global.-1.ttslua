@@ -3674,10 +3674,10 @@ function sitColorGrey(player, color)
 	textObj.TextTool.setValue(player.steam_name)
 	greyPlayerSteamIds[color] = player.steam_id
 	local objParam = {
-		type = "Custom_Tile",
+		type = "Custom_Model",
 		position = GREY_AVATAR_POS[color],
-		rotation = {90, 0, 0},
-		scale = {2.5, 1, 2.5},
+		rotation = {0, 0, 0},
+		scale = {2.5, 2.5, 1},
 		callback = 'greyAvatarCallback',
 		sound = false
 	}
@@ -3686,10 +3686,11 @@ function sitColorGrey(player, color)
 	avatar.setDescription(color .. ' Avatar')
 	avatar.interactable = false
 	local customParam = {
-		image = generateAvatarImageUrl(player.steam_id),
+		diffuse = generateAvatarImageUrl(player.steam_id),
+		mesh = 'http://cloud-3.steamusercontent.com/ugc/933813375177509684/900B7683E01C43C394C408BC38E034B305F1B3AA/',
+		collider = 'http://cloud-3.steamusercontent.com/ugc/487893695356616224/E3E39A827C062914E4185D8757A81D4D14892B8B/',
 		type = 0,
-		image_bottom = generateAvatarImageUrl(player.steam_id),
-		thickness = 0.01
+		material = 3
 	}
 	avatar.setCustomObject(customParam)
 end
@@ -6015,3 +6016,195 @@ function greyPlayer(color)
 	end
 end
 -- end Common Globals and Functions
+
+-- This code isn't fully integrated yet
+
+OLIVE_VOTE_POS = {0, 1.05, -37.50}
+OLIVE_ZONE_POS = {0, 1.3, -51.66}
+TAN_VOTE_POS = {29.30, 1.05, -37.50}
+TAN_ZONE_POS = {29.30, 1.3, -51.66}
+
+function UIvoteJa(player, value, id)
+	if not started then
+		player.print('Game has not started.')
+		return
+	end
+	local colorFound = nil
+	for testColor, steamId in pairs(greyPlayerSteamIds) do
+		if steamId == player.steam_id then
+			colorFound = testColor
+			break
+		end
+	end
+	if colorFound == 'Olive' then
+		player.print('You are voting Ja.')
+		startLuaCoroutine(Global, 'oliveVoteJaCoroutine')
+	elseif colorFound == 'Tan' then
+		player.print('You are voting Ja.')
+		startLuaCoroutine(Global, 'tanVoteJaCoroutine')
+	else
+		player.print('You are not in a seat.')
+	end
+end
+
+function UIvoteNein(player, value, id)
+	if not started then
+		player.print('Game has not started.')
+		return
+	end
+	local colorFound = nil
+	for testColor, steamId in pairs(greyPlayerSteamIds) do
+		if steamId == player.steam_id then
+			colorFound = testColor
+			break
+		end
+	end
+	if colorFound == 'Olive' then
+		player.print('You are voting Nein.')
+		startLuaCoroutine(Global, 'oliveVoteNeinCoroutine')
+	elseif colorFound == 'Tan' then
+		player.print('You are voting Nein.')
+		startLuaCoroutine(Global, 'tanVoteNeinCoroutine')
+	else
+		player.print('You are not in a seat.')
+	end
+end
+
+function UIvoteRemove(player, value, id)
+    local vcTable = getVoteCardGUIDs()
+    local oliveJa = getObjectFromGUID(vcTable.oliveJa)
+    local oliveNein = getObjectFromGUID(vcTable.oliveNein)
+    local tanJa = getObjectFromGUID(vcTable.tanJa)
+    local tanNein = getObjectFromGUID(vcTable.tanNein)
+
+    if not started then
+        player.print('Game has not started.')
+        return
+    end
+	 local colorFound = nil
+ 	for testColor, steamId in pairs(greyPlayerSteamIds) do
+ 		if steamId == player.steam_id then
+ 			colorFound = testColor
+ 			break
+ 		end
+ 	end
+ 	if colorFound == 'Olive' then
+        player.print('You are not voting.')
+        if oliveJa ~= nil and oliveNein ~= nil then
+            oliveJa.setPositionSmooth(OLIVE_ZONE_POS)
+            oliveNein.setPositionSmooth(OLIVE_ZONE_POS)
+        end
+	elseif colorFound == 'Tan' then
+        player.print('You are not voting.')
+        if tanJa ~= nil and tanNein ~= nil then
+            tanJa.setPositionSmooth(TAN_ZONE_POS)
+            tanNein.setPositionSmooth(TAN_ZONE_POS)
+        end
+   else
+        player.print('You are not in a seat.')
+    end
+end
+
+function getVoteCardGUIDs()
+    local allObjects = getAllObjects()
+    local GUIDTable = {}
+    for k,v in pairs(allObjects) do
+        if v.getDescription() == 'Olive\'s Ja Card' then
+            GUIDTable.oliveJa = v.getGUID()
+        elseif v.getDescription() == 'Olive\'s Nein Card' then
+            GUIDTable.oliveNein = v.getGUID()
+        elseif v.getDescription() == 'Tan\'s Ja Card' then
+            GUIDTable.tanJa = v.getGUID()
+        elseif v.getDescription() == 'Tan\'s Nein Card' then
+            GUIDTable.tanNein = v.getGUID()
+        end
+    end
+    return GUIDTable
+end
+
+function takeCardFromDeck(descrip, pos)
+    local allObjects = getAllObjects()
+    local deckTable = {}
+    local foundDeck = nil
+    local foundDeckGUID = nil
+    local foundIndex = nil
+
+    for k,v in pairs(allObjects) do
+        if v.tag == 'Deck' then
+            deckTable = v.getObjects()
+            for k1, v1 in pairs(deckTable) do
+                if v1.description == descrip then
+                    foundDeckGUID = v.getGUID()
+                    foundIndex = v1.index
+                    break
+                end
+            end
+        end
+        if foundDeckGUID ~= nil then
+            break
+        end
+    end
+    foundDeck = getObjectFromGUID(foundDeckGUID)
+    takeParam =
+    {
+        position = pos,
+        index = foundIndex
+    }
+    foundDeck.takeObject(takeParam)
+end
+
+function oliveVoteJaCoroutine()
+    local vcTable = getVoteCardGUIDs()
+    local oliveJa = getObjectFromGUID(vcTable.oliveJa)
+    local oliveNein = getObjectFromGUID(vcTable.oliveNein)
+
+    if oliveJa ~= nil and oliveNein ~= nil then
+        oliveJa.setPosition(OLIVE_ZONE_POS)
+        oliveNein.setPosition(OLIVE_ZONE_POS)
+    end
+    sleep(0.1)
+    takeCardFromDeck('Olive\'s Ja Card', OLIVE_VOTE_POS)
+    return 1
+end
+
+function oliveVoteNeinCoroutine()
+    local vcTable = getVoteCardGUIDs()
+    local oliveJa = getObjectFromGUID(vcTable.oliveJa)
+    local oliveNein = getObjectFromGUID(vcTable.oliveNein)
+
+    if oliveJa ~= nil and oliveNein ~= nil then
+        oliveJa.setPosition(OLIVE_ZONE_POS)
+        oliveNein.setPosition(OLIVE_ZONE_POS)
+    end
+    sleep(0.1)
+    takeCardFromDeck('Olive\'s Nein Card', OLIVE_VOTE_POS)
+    return 1
+end
+
+function tanVoteJaCoroutine()
+    local vcTable = getVoteCardGUIDs()
+    local tanJa = getObjectFromGUID(vcTable.tanJa)
+    local tanNein = getObjectFromGUID(vcTable.tanNein)
+
+    if tanJa ~= nil and tanNein ~= nil then
+        tanJa.setPosition(TAN_ZONE_POS)
+        tanNein.setPosition(TAN_ZONE_POS)
+    end
+    sleep(0.1)
+    takeCardFromDeck('Tan\'s Ja Card', TAN_VOTE_POS)
+    return 1
+end
+
+function tanVoteNeinCoroutine()
+    local vcTable = getVoteCardGUIDs()
+    local tanJa = getObjectFromGUID(vcTable.tanJa)
+    local tanNein = getObjectFromGUID(vcTable.tanNein)
+
+    if tanJa ~= nil and tanNein ~= nil then
+        tanJa.setPosition(TAN_ZONE_POS)
+        tanNein.setPosition(TAN_ZONE_POS)
+    end
+    sleep(0.1)
+    takeCardFromDeck('Tan\'s Nein Card', TAN_VOTE_POS)
+    return 1
+end

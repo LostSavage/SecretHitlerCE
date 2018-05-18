@@ -51,17 +51,18 @@
 </HorizontalLayout>
 
 <HorizontalLayout padding="0 135 0 9" height="8%" width="70%" rectAlignment="LowerRight" visibility="grey">
-      <Button id="voteJa">Vote ja!</Button>
-      <Button id="voteNein">Vote nein</Button>
-      <Button id="voteRemove">Remove vote</Button>
-      <Text></Text>
-      <Button id="discardL">Discard L</Button>
-      <Button id="discardF">Discard F</Button>
-      <Text></Text>
-      <Button id="claimZero">Claim 0L</Button>
-      <Button id="claimOne">Claim 1L</Button>
-      <Button id="claimTwo">Claim 2L</Button>
-      <Button id="claimThree">Claim 3L</Button>
-      <Text></Text>
-      <Button onClick="tellRoleButtonUI">Role?</Button>
+   <Button id="voteJa" onClick="UIvoteJa">Vote ja!</Button>
+   <Button id="voteNein" onClick="UIvoteNein">Vote nein</Button>
+   <Button id="voteRemove" onClick="UIvoteRemove">Remove vote</Button>
+   <Text></Text>
+   <Button id="UIDrawCards">Draw Cards</Button>
+   <Button id="UIDiscardL">Discard L</Button>
+   <Button id="UIDiscardF">Discard F</Button>
+   <!-- <Text></Text>
+   <Button id="claimZero">Claim 0L</Button>
+   <Button id="claimOne">Claim 1L</Button>
+   <Button id="claimTwo">Claim 2L</Button>
+   <Button id="claimThree">Claim 3L</Button> -->
+   <Text></Text>
+   <Button onClick="tellRoleButtonUI">Role?</Button>
 </HorizontalLayout>
