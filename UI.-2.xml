@@ -58,6 +58,7 @@
    <Button id="DrawCards" onClick="UIDrawCards">Draw Cards</Button>
    <Button id="DiscardL" onClick="UIDiscardL">Discard L</Button>
    <Button id="DiscardF" onClick="UIDiscardF">Discard F</Button>
+   <Button id="CheckCards" onClick="UICheckCards">Check Cards</Button>
    <!-- <Text></Text>
    <Button id="claimZero">Claim 0L</Button>
    <Button id="claimOne">Claim 1L</Button>
