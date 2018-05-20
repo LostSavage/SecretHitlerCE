@@ -155,7 +155,7 @@ playerStatus = { --[1 Board, 2 Not Hitler, 3 Vote Only, 4 Silenced, 5 Dead, 6 De
 	Purple = 1,
 	Pink = 1,
 	Tan = 1,
-	Olive = 1
+	Maroon = 1
 }
 roles = {}
 started = nil
@@ -330,9 +330,7 @@ function refreshHiddenZones()
 	if options.zoneType == 6 then
 		broadcastToAll('Not even close to finished... reload the table to go back.', {1,1,1})
 		local params = {type = 'Custom_Model', sound = false}
-		local board = {}
-		board[1] = spawnObject(params)
-		board[2] = spawnObject(params)
+		local tableExt = {}
 		local custom = {
 			mesh = 'http://cloud-3.steamusercontent.com/ugc/933812827275737908/4A39E65F99D7809D6055BED44C2B2AF420776850/',
 			diffuse = 'http://cloud-3.steamusercontent.com/ugc/933812827275738471/DBC87C418A1CBD45F4EB56EB0F63B65E7F042F1F/',
@@ -343,32 +341,37 @@ function refreshHiddenZones()
 			specular_sharpness = 6.3
 		}
 		for i = 1, 2 do
-			board[i].setCustomObject(custom)
-			board[i].setLock(true)
-			board[i].setRotation({0, 270, 0})
-			board[i].setScale({0.74, 1, 1})
-			board[i].setLuaScript(
+			tableExt[i] = spawnObject(params)
+			tableExt[i].setCustomObject(custom)
+			tableExt[i].setLock(true)
+			tableExt[i].setRotation({0, 270, 0})
+			tableExt[i].setScale({0.74, 1, 1})
+			tableExt[i].setLuaScript(
 				'function onLoad()\r\n' ..
 				'	self.interactable = false\r\n' ..
 				'end\r\n')
 		end
-		board[1].setPosition({0, 0.1, -46.2})
-		board[2].setPosition({0, 0.1, 46.2})
+		tableExt[1].setPosition({0, 0.1, -46.2})
+		tableExt[2].setPosition({0, 0.1, 46.2})
 		params = {
-			type = 'BlockRectangle',
-			scale = {28.4, 0.25, 5.4},
+			type = 'Custom_Assetbundle',
+			scale = {14.2, 2.55, 5.4},
 			callback = 'greyPlayerHandCallback',
 			sound = false
+		}
+		custom = {
+			assetbundle = 'http://cloud-3.steamusercontent.com/ugc/933813375181578705/3961A9B3B73895140CA5055A8745BEE4A3E39299/'
 		}
 		local playerHands = {}
 		for i, color in ipairs(GREY_PLAYABLE_COLORS) do
 			playerHands[i] = spawnObject(params)
+			playerHands[i].setCustomObject(custom)
 			playerHands[i].setColorTint(GREY_PLAYABLE_COLORS_RGB[color])
 			playerHands[i].setDescription(color .. ' Hand')
 			playerHands[i].setLock(true)
 		end
-		playerHands[1].setPosition({29.3, 1.09, -49.4}) -- Tan
-		playerHands[2].setPosition({0, 1.09, -49.4}) -- Olive
+		playerHands[1].setPosition({29.3, 3.5, -49.4}) -- Tan
+		playerHands[2].setPosition({0, 3.5, -49.4}) -- Maroon
 	end
 end
 
@@ -1543,9 +1546,9 @@ end
 function nextPres(playerIn)
 	local nextList
 	if bit32.band(options.expansionOptionStatus, 2) == 2 then
-		nextList = {White = 'Olive', Brown = 'White', Red = 'Brown', Orange = 'Red', Yellow = 'Orange', Green = 'Yellow', Teal = 'Green', Blue = 'Teal', Purple = 'Blue', Pink = 'Purple', Tan = 'Pink', Olive = 'Tan'}
+		nextList = {White = 'Maroon', Brown = 'White', Red = 'Brown', Orange = 'Red', Yellow = 'Orange', Green = 'Yellow', Teal = 'Green', Blue = 'Teal', Purple = 'Blue', Pink = 'Purple', Tan = 'Pink', Maroon = 'Tan'}
 	else
-		nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'Tan', Tan = 'Olive', Olive = 'White'}
+		nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'Tan', Tan = 'Maroon', Maroon = 'White'}
 	end
 	local checkPres = playerIn
 	local returnVal = nextList[checkPres]
@@ -2261,36 +2264,64 @@ function drawThree(clickedObject, playerColor)
 		if bit32.band(options.expansionOptionStatus, 1) == 1 then
 			if playerColor == getChan() then
 				if blockDraw then
-					broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
+					if greyPlayer(playerColor) then
+						clickedObject.broadcast('ERROR: You can only draw once (move the Chancellor placard to reset).', {1, 0, 0})
+					else
+						broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
+					end
 				else
 					if not options.scriptedVoting or votePassed then
 						blockDraw = true
 						drawCards(3, playerColor)
 					else
-						broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+						if greyPlayer(playerColor) then
+							clickedObject.broadcast('ERROR: Vote did not pass.', {1, 0, 0})
+						else
+							broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+						end
 					end
 				end
 			else
-				broadcastToColor('ERROR: You are not the chancellor.', playerColor, {1, 0, 0})
+				if greyPlayer(playerColor) then
+					clickedObject.broadcast('ERROR: You are not the chancellor.', {1, 0, 0})
+				else
+					broadcastToColor('ERROR: You are not the chancellor.', playerColor, {1, 0, 0})
+				end
 			end
 		else
 			if playerColor == getPres() then
 				if blockDraw then
-					broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
+					if greyPlayer(playerColor) then
+						clickedObject.broadcast('ERROR: You can only draw once (move the Chancellor placard to reset).', {1, 0, 0})
+					else
+						broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
+					end
 				else
 					if not options.scriptedVoting or votePassed then
 						blockDraw = true
 						drawCards(3, playerColor)
 					else
-						broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+						if greyPlayer(playerColor) then
+							clickedObject.broadcast('ERROR: Vote did not pass.', {1, 0, 0})
+						else
+							broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+						end
 					end
 				end
 			else
-				broadcastToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
+				if greyPlayer(playerColor) then
+					clickedObject.broadcast('ERROR: You are not the president.', {1, 0, 0})
+				else
+					broadcastToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
+				end
 			end
 		end
 	else
-		broadcastToColor('ERROR: Game not started.', playerColor, {1, 0, 0})
+		if greyPlayer(playerColor) then
+			clickedObject.broadcast('ERROR: Game not started.', {1, 0, 0})
+		else
+			broadcastToColor('ERROR: Game not started.', playerColor, {1, 0, 0})
+		end
 	end
 end
 
@@ -2309,7 +2340,11 @@ function drawCards(amount, playerColor)
 				lastPres = getPres()
 				lastChan = getChan()
 			end
-			drawDeck.dealToColor(amount, playerColor)
+			if greyPlayer(playerColor) then
+				dealToColor12P(amount, playerColor)
+			else
+				drawDeck.dealToColor(amount, playerColor)
+			end
 			if amount == 1 then
 				broadcastToAll('Dealing 1 card to ' .. playerColor .. '.', stringColorToRGBExtra(playerColor))
 			else
@@ -2551,7 +2586,7 @@ function setupCoroutine()
 		end
 	end
 	if options.zoneType == 6 then
-		-- Tan Olive Status Buttons
+		-- Tan Maroon Status Buttons
 		local paramsStatus = {
 			type = 'backgammon_piece_white',
 			callback = 'statusButtonCallback',
@@ -2582,7 +2617,7 @@ function setupCoroutine()
 	if abilitiesDeck then
 		abilitiesDeck.randomize()
 		abilitiesDeck.deal(options.expansionAmount)
-		--fixme deal cards to tan and olive
+		--fixme deal cards to tan and maroon
 	else
 		local tmpZone = getObjectFromGUID(abilitiesPile_zone_guid)
 		if tmpZone then
@@ -3000,6 +3035,7 @@ end
 function greyPlayerHandCallback(objIn, paramsIn)
 	local color = string.gsub(objIn.getDescription(), ' Hand', '')
 	greyPlayerHandGuids[color] = objIn.getGUID()
+	objIn.AssetBundle.playLoopingEffect(1)
 end
 
 function greyAvatarCallback(objIn, paramsIn)
@@ -3229,8 +3265,8 @@ function TanInspected(clickedObject, inspectorColor)
 	playerInspected(clickedObject, inspectorColor, 'Tan')
 end
 
-function OliveInspected(clickedObject, inspectorColor)
-	playerInspected(clickedObject, inspectorColor, 'Olive')
+function MaroonInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Maroon')
 end
 
 function removeInspect()
@@ -3498,7 +3534,7 @@ function refreshUI()
 		local hitPurple = ''
 		local hitPink = ''
 		local hitTan = ''
-		local hitOlive = ''
+		local hitMaroon = ''
 		local fasWhite = ''
 		local fasBrown = ''
 		local fasRed = ''
@@ -3510,7 +3546,7 @@ function refreshUI()
 		local fasPurple = ''
 		local fasPink = ''
 		local fasTan = ''
-		local fasOlive = ''
+		local fasMaroon = ''
 
 		if options.zoneType == 6 then
 			youNotPlaying = ''
@@ -3564,7 +3600,7 @@ function refreshUI()
 		hitPurple = hitVisibility('Purple')
 		hitPink = hitVisibility('Pink')
 		hitTan = hitVisibility('Tan')
-		hitOlive = hitVisibility('Olive')
+		hitMaroon = hitVisibility('Maroon')
 		fasWhite = fasVisibility('White')
 		fasBrown = fasVisibility('Brown')
 		fasRed = fasVisibility('Red')
@@ -3576,7 +3612,7 @@ function refreshUI()
 		fasPurple = fasVisibility('Purple')
 		fasPink = fasVisibility('Pink')
 		fasTan = fasVisibility('Tan')
-		fasOlive = fasVisibility('Olive')
+		fasMaroon = fasVisibility('Maroon')
 
 		UI.setAttribute('youLib', 'Text', 'You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!')
 		UI.setAttribute('youFas', 'Text', 'You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
@@ -3596,7 +3632,7 @@ function refreshUI()
 		UI.setAttribute('hitPurple', 'visibility', hitPurple)
 		UI.setAttribute('hitPink', 'visibility', hitPink)
 		UI.setAttribute('hitTan', 'visibility', hitTan)
-		UI.setAttribute('hitOlive', 'visibility', hitOlive)
+		UI.setAttribute('hitMaroon', 'visibility', hitMaroon)
 		UI.setAttribute('fasWhite', 'visibility', fasWhite)
 		UI.setAttribute('fasBrown', 'visibility', fasBrown)
 		UI.setAttribute('fasRed', 'visibility', fasRed)
@@ -3608,7 +3644,7 @@ function refreshUI()
 		UI.setAttribute('fasPurple', 'visibility', fasPurple)
 		UI.setAttribute('fasPink', 'visibility', fasPink)
 		UI.setAttribute('fasTan', 'visibility', fasTan)
-		UI.setAttribute('fasOlive', 'visibility', fasOlive)
+		UI.setAttribute('fasMaroon', 'visibility', fasMaroon)
 	end
 end
 
@@ -3656,8 +3692,8 @@ function fasVisibility(colorIn)
 	return visList
 end
 
-function sitOlive(player, value, id)
-	sitColorGrey(player, 'Olive')
+function sitMaroon(player, value, id)
+	sitColorGrey(player, 'Maroon')
 end
 
 function sitTan(player, value, id)
@@ -5781,12 +5817,12 @@ function easyQuotes(stringIn)
 end
 
 -- Common Globals and Functions
-ALL_PLAYABLE_COLORS = {'White', 'Brown', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue', 'Purple', 'Pink', 'Tan', 'Olive'}
+ALL_PLAYABLE_COLORS = {'White', 'Brown', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue', 'Purple', 'Pink', 'Tan', 'Maroon'}
 MAIN_PLAYABLE_COLORS = {'White', 'Brown', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue', 'Purple', 'Pink'}
-GREY_PLAYABLE_COLORS = {'Tan', 'Olive'}
-GREY_PLAYABLE_COLORS_RGB = {Tan = {r = 210/255, g = 180/255, b = 140/255}, Olive = {r = 128/255, g = 128/255, b = 0/255}}
-GREY_TEXT_GUIDS = {Tan = '37d7b5', Olive = '13f08c'}
-GREY_AVATAR_POS = {Tan = {29.30, 9.4, -54}, Olive = {0, 9.4, -54}}
+GREY_PLAYABLE_COLORS = {'Tan', 'Maroon'}
+GREY_PLAYABLE_COLORS_RGB = {Tan = {r = 210/255, g = 180/255, b = 140/255}, Maroon = {r = 128/255, g = 0/255, b = 0/255}}
+GREY_TEXT_GUIDS = {Tan = '37d7b5', Maroon = '13f08c'}
+GREY_AVATAR_POS = {Tan = {29.30, 9.4, -54}, Maroon = {0, 9.4, -54}}
 GREY_CARD_FORWARD = 0
 GREY_CARD_RIGHT = 0
 GREY_CARD_UP = 0.3
@@ -6015,33 +6051,54 @@ function greyPlayer(color)
 		return false
 	end
 end
+
+function getPlayerObj(color)
+	if greyPlayer(color) then
+		local playerFound = nil
+		steamId = greyPlayerSteamIds[color]
+		for _, player in ipairs(Player.getSpectators()) do
+			if steamId == player.steam_id then
+				playerFound = player
+				break
+			end
+		end
+		return playerFound
+	else
+		return Player[color]
+	end
+end
+
+function getGreyColor(steamId)
+	local colorFound = nil
+ 	for testColor, testSteamId in pairs(greyPlayerSteamIds) do
+		if steamId == testSteamId then
+			colorFound = testColor
+			break
+		end
+	end
+	return colorFound
+end
 -- end Common Globals and Functions
 
--- This code isn't fully integrated yet
-
-OLIVE_VOTE_POS = {0, 1.05, -37.50}
-OLIVE_ZONE_POS = {0, 1.3, -51.66}
+MAROON_VOTE_POS = {0, 1.05, -37.50}
+MAROON_ZONE_POS = {0, 1.3, -51.66}
 TAN_VOTE_POS = {29.30, 1.05, -37.50}
 TAN_ZONE_POS = {29.30, 1.3, -51.66}
+
+MAROON_HAND_ZONE_GUID = 'b9a8d0'
+TAN_HAND_ZONE_GUID = '409da9'
+MAROON_DRAW_POS = {-9, 1.5, -49}
+TAN_DRAW_POS = {20.30, 1.5, -49}
+DISCARD_POS = {20,1.5,-5.68}
 
 function UIvoteJa(player, value, id)
 	if not started then
 		player.print('Game has not started.')
 		return
 	end
-	local colorFound = nil
-	for testColor, steamId in pairs(greyPlayerSteamIds) do
-		if steamId == player.steam_id then
-			colorFound = testColor
-			break
-		end
-	end
-	if colorFound == 'Olive' then
-		player.print('You are voting Ja.')
-		startLuaCoroutine(Global, 'oliveVoteJaCoroutine')
-	elseif colorFound == 'Tan' then
-		player.print('You are voting Ja.')
-		startLuaCoroutine(Global, 'tanVoteJaCoroutine')
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+		vote12P(colorFound, 'Ja')
 	else
 		player.print('You are not in a seat.')
 	end
@@ -6052,28 +6109,55 @@ function UIvoteNein(player, value, id)
 		player.print('Game has not started.')
 		return
 	end
-	local colorFound = nil
-	for testColor, steamId in pairs(greyPlayerSteamIds) do
-		if steamId == player.steam_id then
-			colorFound = testColor
-			break
-		end
-	end
-	if colorFound == 'Olive' then
-		player.print('You are voting Nein.')
-		startLuaCoroutine(Global, 'oliveVoteNeinCoroutine')
-	elseif colorFound == 'Tan' then
-		player.print('You are voting Nein.')
-		startLuaCoroutine(Global, 'tanVoteNeinCoroutine')
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+		vote12P(colorFound, 'Nein')
 	else
 		player.print('You are not in a seat.')
 	end
 end
 
+function vote12P(playerColor, vote)
+    function vote12PCoroutine()
+        local vcTable = getVoteCardGUIDs()
+        local maroonJa = getObjectFromGUID(vcTable.maroonJa)
+        local maroonNein = getObjectFromGUID(vcTable.maroonNein)
+        local tanJa = getObjectFromGUID(vcTable.tanJa)
+        local tanNein = getObjectFromGUID(vcTable.tanNein)
+        local ja, nein, zone
+        if playerColor == 'Maroon' then
+            ja = maroonJa
+            nein = maroonNein
+            zonePos = MAROON_ZONE_POS
+            votePos = MAROON_VOTE_POS
+        else
+            ja = tanJa
+            nein = tanNein
+            zonePos = TAN_ZONE_POS
+            votePos = TAN_VOTE_POS
+        end
+        if ja ~= nil and nein ~= nil then
+            ja.setPosition(zonePos)
+            ja.setRotation({0,180,180})
+            nein.setPosition(zonePos)
+            nein.setRotation({0,180,180})
+        end
+        sleep(0.1)
+        if vote == 'Ja' then
+            takeCardFromDeck(playerColor .. '\'s Ja Card', votePos)
+        else
+            takeCardFromDeck(playerColor .. '\'s Nein Card', votePos)
+        end
+
+        return 1
+    end
+    startLuaCoroutine(Global, 'vote12PCoroutine')
+end
+
 function UIvoteRemove(player, value, id)
     local vcTable = getVoteCardGUIDs()
-    local oliveJa = getObjectFromGUID(vcTable.oliveJa)
-    local oliveNein = getObjectFromGUID(vcTable.oliveNein)
+    local maroonJa = getObjectFromGUID(vcTable.maroonJa)
+    local maroonNein = getObjectFromGUID(vcTable.maroonNein)
     local tanJa = getObjectFromGUID(vcTable.tanJa)
     local tanNein = getObjectFromGUID(vcTable.tanNein)
 
@@ -6081,23 +6165,21 @@ function UIvoteRemove(player, value, id)
         player.print('Game has not started.')
         return
     end
-	 local colorFound = nil
- 	for testColor, steamId in pairs(greyPlayerSteamIds) do
- 		if steamId == player.steam_id then
- 			colorFound = testColor
- 			break
- 		end
- 	end
- 	if colorFound == 'Olive' then
+	 local colorFound = getGreyColor(player.steam_id)
+ 	if colorFound == 'Maroon' then
         player.print('You are not voting.')
-        if oliveJa ~= nil and oliveNein ~= nil then
-            oliveJa.setPositionSmooth(OLIVE_ZONE_POS)
-            oliveNein.setPositionSmooth(OLIVE_ZONE_POS)
+        if maroonJa ~= nil and maroonNein ~= nil then
+			  	maroonJa.setRotationSmooth({0,180,180})
+            maroonJa.setPositionSmooth(MAROON_ZONE_POS)
+				maroonNein.setRotationSmooth({0,180,180})
+            maroonNein.setPositionSmooth(MAROON_ZONE_POS)
         end
 	elseif colorFound == 'Tan' then
         player.print('You are not voting.')
         if tanJa ~= nil and tanNein ~= nil then
+			  	tanJa.setRotationSmooth({0,180,180})
             tanJa.setPositionSmooth(TAN_ZONE_POS)
+				tanNein.setRotationSmooth({0,180,180})
             tanNein.setPositionSmooth(TAN_ZONE_POS)
         end
    else
@@ -6109,10 +6191,10 @@ function getVoteCardGUIDs()
     local allObjects = getAllObjects()
     local GUIDTable = {}
     for k,v in pairs(allObjects) do
-        if v.getDescription() == 'Olive\'s Ja Card' then
-            GUIDTable.oliveJa = v.getGUID()
-        elseif v.getDescription() == 'Olive\'s Nein Card' then
-            GUIDTable.oliveNein = v.getGUID()
+        if v.getDescription() == 'Maroon\'s Ja Card' then
+            GUIDTable.maroonJa = v.getGUID()
+        elseif v.getDescription() == 'Maroon\'s Nein Card' then
+            GUIDTable.maroonNein = v.getGUID()
         elseif v.getDescription() == 'Tan\'s Ja Card' then
             GUIDTable.tanJa = v.getGUID()
         elseif v.getDescription() == 'Tan\'s Nein Card' then
@@ -6153,58 +6235,128 @@ function takeCardFromDeck(descrip, pos)
     foundDeck.takeObject(takeParam)
 end
 
-function oliveVoteJaCoroutine()
-    local vcTable = getVoteCardGUIDs()
-    local oliveJa = getObjectFromGUID(vcTable.oliveJa)
-    local oliveNein = getObjectFromGUID(vcTable.oliveNein)
-
-    if oliveJa ~= nil and oliveNein ~= nil then
-        oliveJa.setPosition(OLIVE_ZONE_POS)
-        oliveNein.setPosition(OLIVE_ZONE_POS)
-    end
-    sleep(0.1)
-    takeCardFromDeck('Olive\'s Ja Card', OLIVE_VOTE_POS)
-    return 1
+function UIDrawCards(player, value, id)
+	if not started then
+   	player.print('Game has not started.')
+		return
+	end
+	local colorFound = getGreyColor(player.steam_id)
+   if colorFound then
+		drawThree(player, colorFound)
+   else
+		player.print('You are not in a seat.')
+   end
 end
 
-function oliveVoteNeinCoroutine()
-    local vcTable = getVoteCardGUIDs()
-    local oliveJa = getObjectFromGUID(vcTable.oliveJa)
-    local oliveNein = getObjectFromGUID(vcTable.oliveNein)
+function dealToColor12P(amount, playerColor)
+    function deal12PCoroutine()
+        local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+        local handDeck
+        local takeParam = {}
+        local drawString = 'You drew: '
+		  local player = getPlayerObj(playerColor)
 
-    if oliveJa ~= nil and oliveNein ~= nil then
-        oliveJa.setPosition(OLIVE_ZONE_POS)
-        oliveNein.setPosition(OLIVE_ZONE_POS)
+        if playerColor == 'Maroon' then
+            takeParam.position = MAROON_DRAW_POS
+            handZone = getObjectFromGUID(MAROON_HAND_ZONE_GUID)
+        elseif playerColor == 'Tan' then
+            takeParam.position = TAN_DRAW_POS
+            handZone = getObjectFromGUID(TAN_HAND_ZONE_GUID)
+        end
+
+        for i = 1, amount do
+            drawDeck.takeObject(takeParam)
+            takeParam.position[2] = takeParam.position[2] + 0.01
+            sleep(0.1)
+        end
+        sleep(2)
+        if amount == 1 then
+            local card = handZone.getObjects()
+            if card[1].description == 'Liberal Policy' then
+                drawString = drawString .. '[0000FF]L[-]'
+            else
+                drawString = drawString .. '[FF0000]F[-]'
+            end
+        else
+            if playerColor == 'Maroon' then
+					 --fixme does not work with more than one deck
+                handDeck = getDeckFromZoneByGUID(MAROON_HAND_ZONE_GUID)
+            else
+                handDeck = getDeckFromZoneByGUID(TAN_HAND_ZONE_GUID)
+            end
+            local handTable = handDeck.getObjects()
+            for i = 1, #handTable do
+                if handTable[i].description == 'Liberal Policy' then
+                    drawString = drawString .. '[0000FF]L[-]'
+                else
+                    drawString = drawString .. '[FF0000]F[-]'
+                end
+            end
+        end
+        player.broadcast(drawString, {1,1,1})
+
+        return 1
     end
-    sleep(0.1)
-    takeCardFromDeck('Olive\'s Nein Card', OLIVE_VOTE_POS)
-    return 1
+    startLuaCoroutine(Global, 'deal12PCoroutine')
 end
 
-function tanVoteJaCoroutine()
-    local vcTable = getVoteCardGUIDs()
-    local tanJa = getObjectFromGUID(vcTable.tanJa)
-    local tanNein = getObjectFromGUID(vcTable.tanNein)
-
-    if tanJa ~= nil and tanNein ~= nil then
-        tanJa.setPosition(TAN_ZONE_POS)
-        tanNein.setPosition(TAN_ZONE_POS)
-    end
-    sleep(0.1)
-    takeCardFromDeck('Tan\'s Ja Card', TAN_VOTE_POS)
-    return 1
+function UIDiscardF(player, value, id)
+	if not started then
+   	player.print('Game has not started.')
+		return
+	end
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+   	discard12P('Fascist Policy', colorFound)
+   else
+   	player.print('You are not in a seat.')
+	end
 end
 
-function tanVoteNeinCoroutine()
-    local vcTable = getVoteCardGUIDs()
-    local tanJa = getObjectFromGUID(vcTable.tanJa)
-    local tanNein = getObjectFromGUID(vcTable.tanNein)
+function UIDiscardL(player, value, id)
+	if not started then
+   	player.print('Game has not started.')
+		return
+   end
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+   	discard12P('Liberal Policy', colorFound)
+	else
+   	player.print('You are not in a seat.')
+	end
+end
 
-    if tanJa ~= nil and tanNein ~= nil then
-        tanJa.setPosition(TAN_ZONE_POS)
-        tanNein.setPosition(TAN_ZONE_POS)
+function discard12P(policy, playerColor)
+    local handDeck
+    local foundIndex = nil
+	 local player = getPlayerObj(playerColor)
+
+    if playerColor == 'Maroon' then
+        handDeck = getDeckFromZoneByGUID(MAROON_HAND_ZONE_GUID)
+    else
+        handDeck = getDeckFromZoneByGUID(TAN_HAND_ZONE_GUID)
     end
-    sleep(0.1)
-    takeCardFromDeck('Tan\'s Nein Card', TAN_VOTE_POS)
-    return 1
+
+    if handDeck == nil then
+        player.broadcast('ERROR: No cards found in your hand.', {1,0,0})
+        return
+    end
+    local handTable = handDeck.getObjects()
+    for i = 1, #handTable do
+        if handTable[i].description == policy then
+            foundIndex = i
+            break
+        end
+    end
+    if foundIndex == nil then
+        player.broadcast('ERROR: Policy not found.', {1,0,0})
+        return
+    end
+    takeParam =
+    {
+        position = DISCARD_POS,
+        index = foundIndex - 1
+    }
+    handDeck.takeObject(takeParam)
+    player.broadcast('You discarded a ' .. policy .. ' card.', {1,1,1})
 end

@@ -29,7 +29,7 @@
    <Text id="hitPurple" color="#9F1FEF">ERROR: hitPurple</Text>
    <Text id="hitPink" color="#F36FCD">ERROR: hitPink</Text>
    <Text id="hitTan" color="#D2B48C">ERROR: hitTan</Text>
-   <Text id="hitOlive" color="#808000">ERROR: hitOlive</Text>
+   <Text id="hitMaroon" color="#808000">ERROR: hitMaroon</Text>
    <Text id="fasWhite" color="#FFFFFF">ERROR: fasWhite</Text>
    <Text id="fasBrown" color="#703A16">ERROR: fasBrown</Text>
    <Text id="fasRed" color="#DA1917">ERROR: fasRed</Text>
@@ -41,11 +41,11 @@
    <Text id="fasPurple" color="#9F1FEF">ERROR: fasPurple</Text>
    <Text id="fasPink" color="#F36FCD">ERROR: fasPink</Text>
    <Text id="fasTan" color="#D2B48C">ERROR: fasTan</Text>
-   <Text id="fasOlive" color="#808000">ERROR: fasOlive</Text>
+   <Text id="fasMaroon" color="#808000">ERROR: fasMaroon</Text>
 </VerticalLayout>
 
 <HorizontalLayout id="admin" padding="0 135 4 87" height="16%" width="50%" rectAlignment="LowerRight" visibility="grey">
-      <Button id="sitOlive" onClick="sitOlive">Sit in Olive</Button>
+      <Button id="sitMaroon" onClick="sitMaroon">Sit in Maroon</Button>
       <Button id="sitTan" onClick="sitTan">Sit in Tan</Button>
       <Button id="leaveSeat" onClick="leaveSeat">Leave Seat</Button>
 </HorizontalLayout>
@@ -55,9 +55,9 @@
    <Button id="voteNein" onClick="UIvoteNein">Vote nein</Button>
    <Button id="voteRemove" onClick="UIvoteRemove">Remove vote</Button>
    <Text></Text>
-   <Button id="UIDrawCards">Draw Cards</Button>
-   <Button id="UIDiscardL">Discard L</Button>
-   <Button id="UIDiscardF">Discard F</Button>
+   <Button id="DrawCards" onClick="UIDrawCards">Draw Cards</Button>
+   <Button id="DiscardL" onClick="UIDiscardL">Discard L</Button>
+   <Button id="DiscardF" onClick="UIDiscardF">Discard F</Button>
    <!-- <Text></Text>
    <Button id="claimZero">Claim 0L</Button>
    <Button id="claimOne">Claim 1L</Button>
