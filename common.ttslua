@@ -1,0 +1,263 @@
+-- Common Globals and Functions
+ALL_PLAYABLE_COLORS = {'White', 'Brown', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue', 'Purple', 'Pink', 'Tan', 'Maroon'}
+MAIN_PLAYABLE_COLORS = {'White', 'Brown', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue', 'Purple', 'Pink'}
+GREY_PLAYABLE_COLORS = {'Tan', 'Maroon'}
+GREY_PLAYABLE_COLORS_RGB = {Tan = {r = 210/255, g = 180/255, b = 140/255}, Maroon = {r = 128/255, g = 0/255, b = 0/255}}
+GREY_TEXT_GUIDS = {Tan = '37d7b5', Maroon = '13f08c'}
+GREY_AVATAR_POS = {Tan = {29.30, 9.4, -54}, Maroon = {0, 9.4, -54}}
+GREY_CARD_FORWARD = 0
+GREY_CARD_RIGHT = 0
+GREY_CARD_UP = 0.3
+hidden_zone_guids = {White = 'f13d0b', Brown = '90049b', Red = '134297', Orange = '344002', Yellow = '9b5558', Green = '7a8301', Teal = '568a75', Blue = 'dbd95e', Purple = 'cc1b94', Pink = 'd954ee'}
+president_guid = '4d3d8f'
+prev_president_guid = '780217'
+prev_president_pos = {x = -8.0, y = 1.06, z = 14.0}
+chancelor_guid = '7dba7e'
+prev_chancelor_guid = '448483'
+prev_chancelor_pos = {x = 8.0, y = 1.06, z = 14.0}
+election_tracker_guid = 'dd57c4'
+
+-- rotations
+no_rotation = {x = 0, y = 0, z = 0}
+flip_y = {x = 0, y = 180, z = 0}
+flip_y_z = {x = 0, y = 180, z = 180}
+
+function giveObjectToPlayer(object, playerColor, posAdd, rotAdd, ...)
+	local pos
+	local rot
+	local vForward
+	local vRight
+	local vUp
+
+	if greyPlayer(playerColor) then
+		local ph = getObjectFromGUID(greyPlayerHandGuids[playerColor])
+		if ph then
+			pos = ph.getPosition()
+			pos = {x = pos['x'], y = pos['y'], z = pos['z'] - 2.26}
+			rot = ph.getRotation()
+			vForward = ph.getTransformForward()
+			vRight = ph.getTransformRight()
+			vUp = ph.getTransformUp()
+		end
+	else
+		local ph = Player[playerColor].getPlayerHand();
+		if ph then
+			pos = {x = ph['pos_x'], y = ph['pos_y'], z = ph['pos_z']}
+			rot = {x = ph['rot_x'], y = ph['rot_y'], z = ph['rot_z']}
+			vForward = {x = ph['trigger_forward_x'], y = ph['trigger_forward_y'], z = ph['trigger_forward_z']}
+			vRight = {x = ph['trigger_right_x'], y = ph['trigger_right_y'], z = ph['trigger_right_z']}
+			vUp = {x = ph['trigger_up_x'], y = ph['trigger_up_y'], z = ph['trigger_up_z']}
+		end
+	end
+
+	if pos then
+		if rotAdd['exactRot'] then
+			object.setRotationSmooth({rotAdd['x'], rotAdd['y'], rotAdd['z']}, ...)
+		else
+			object.setRotationSmooth({rot['x'] + rotAdd['x'], rot['y'] + rotAdd['y'], rot['z'] + rotAdd['z']}, ...)
+		end
+		if posAdd['forceHeight'] then
+			object.setPositionSmooth({pos['x'] + vForward['x'] * posAdd['forward'] + vRight['x'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+											  posAdd['forceHeight'],
+											  pos['z'] + vForward['z'] * posAdd['forward'] + vRight['z'] * posAdd['right'] + vUp['z'] * posAdd['up']}, ...)
+		else
+			object.setPositionSmooth({pos['x'] + vForward['x'] * posAdd['forward'] + vRight['x'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+											  pos['y'] + vForward['y'] * posAdd['forward'] + vRight['y'] * posAdd['right'] + vUp['y'] * posAdd['up'],
+											  pos['z'] + vForward['z'] * posAdd['forward'] + vRight['z'] * posAdd['right'] + vUp['z'] * posAdd['up']}, ...)
+		end
+	end
+end
+
+function forceObjectToPlayer(object, playerColor, posAdd, rotAdd)
+	local pos
+	local rot
+	local vForward
+	local vRight
+	local vUp
+
+	if greyPlayer(playerColor) then
+		local ph = getObjectFromGUID(greyPlayerHandGuids[playerColor])
+		if ph then
+			pos = ph.getPosition()
+			pos = {x = pos['x'], y = pos['y'], z = pos['z'] - 2.26}
+			rot = ph.getRotation()
+			vForward = ph.getTransformForward()
+			vRight = ph.getTransformRight()
+			vUp = ph.getTransformUp()
+		end
+	else
+		local ph = Player[playerColor].getPlayerHand();
+		if ph then
+			pos = {x = ph['pos_x'], y = ph['pos_y'], z = ph['pos_z']}
+			rot = {x = ph['rot_x'], y = ph['rot_y'], z = ph['rot_z']}
+			vForward = {x = ph['trigger_forward_x'], y = ph['trigger_forward_y'], z = ph['trigger_forward_z']}
+			vRight = {x = ph['trigger_right_x'], y = ph['trigger_right_y'], z = ph['trigger_right_z']}
+			vUp = {x = ph['trigger_up_x'], y = ph['trigger_up_y'], z = ph['trigger_up_z']}
+		end
+	end
+
+	if pos then
+		if rotAdd['exactRot'] then
+			object.setRotation({rotAdd['x'], rotAdd['y'], rotAdd['z']})
+		else
+			object.setRotation({rot['x'] + rotAdd['x'], rot['y'] + rotAdd['y'], rot['z'] + rotAdd['z']})
+		end
+		if posAdd['forceHeight'] then
+			object.setPosition({pos['x'] + vForward['x'] * posAdd['forward'] + vRight['x'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+									  posAdd['forceHeight'],
+									  pos['z'] + vForward['z'] * posAdd['forward'] + vRight['z'] * posAdd['right'] + vUp['z'] * posAdd['up']})
+		else
+			object.setPosition({pos['x'] + vForward['x'] * posAdd['forward'] + vRight['x'] * posAdd['right'] + vUp['x'] * posAdd['up'],
+									  pos['y'] + vForward['y'] * posAdd['forward'] + vRight['y'] * posAdd['right'] + vUp['y'] * posAdd['up'],
+									  pos['z'] + vForward['z'] * posAdd['forward'] + vRight['z'] * posAdd['right'] + vUp['z'] * posAdd['up']})
+		end
+	end
+end
+
+function findDistance(posA, posB)
+	return math.sqrt((posA['x'] - posB['x'])^2 +
+						  (posA['y'] - posB['y'])^2 +
+						  (posA['z'] - posB['z'])^2)
+end
+
+function closestPlayer(objectIn, playerListIn, maxIn)
+	local playerColorOut = nil
+	local pos = nil
+
+	local lastDistance = maxIn
+	if objectIn then
+		local tempPos = objectIn.getPosition()
+		for i, playerColor in ipairs(playerListIn) do
+			if greyPlayer(playerColor) then
+				ph = getObjectFromGUID(greyPlayerHandGuids[playerColor])
+				if ph then
+					pos = ph.getPosition()
+					pos = {x = pos['x'], y = pos['y'], z = pos['z'] - 2.26}
+				end
+			else
+				local ph = Player[playerColor].getPlayerHand()
+				if ph then
+					pos = {x = ph['pos_x'], y = ph['pos_y'], z = ph['pos_z']}
+				end
+			end
+			if pos then
+				local distance = findDistance(tempPos, pos);
+				if distance < lastDistance then
+					lastDistance = distance
+					playerColorOut = playerColor
+				end
+			end
+		end
+	end
+
+	return playerColorOut
+end
+
+function sleep(numSeconds)
+	local t0 = os.clock()
+	while os.clock() - t0 <= numSeconds do coroutine.yield(0) end
+end
+
+function wait(numFrames)
+	for i=1,numFrames,1 do coroutine.yield(0) end
+end
+
+function destroyObjectByGUID(guidIn)
+	local dObject = getObjectFromGUID(guidIn)
+	if dObject then destroyObject(dObject) end
+end
+
+function rgbToHex(c)
+	return string.format('%02x%02x%02x', c['r'] * 255 , c['g'] * 255, c['b'] * 255)
+end
+
+function stringColorToHex(color)
+	return rgbToHex(stringColorToRGBExtra(color))
+end
+
+function stringColorToRGBExtra(color)
+	if greyPlayer(color) then
+		return GREY_PLAYABLE_COLORS_RGB[color]
+	else
+		return stringColorToRGB(color)
+	end
+end
+
+function removeBBCode(stringIn)
+	local out = ''
+	local formating = false
+
+	for i = 1, string.len(stringIn) do
+		local tmpChar = string.sub(stringIn, i, i)
+		if tmpChar == '[' then
+			formating = true
+		elseif tmpChar == ']' then
+			formating = false
+		else
+			if not formating then out = out .. tmpChar end
+		end
+	end
+
+	return out
+end
+
+function nullFunction()
+	--nothing here
+end
+
+function tableToString(tbl, indent)
+	if not indent then indent = 0 end
+	local out = ''
+
+	for k, v in pairs(tbl) do
+   	formatting = string.rep('  ', indent) .. k .. ': '
+   	if type(v) == 'table' then
+      	out = out .. formatting .. '\n' .. tableToString(v, indent + 1)
+   	elseif type(v) == 'boolean' then
+      	out = out .. formatting .. tostring(v) .. '\n'
+   	else
+			out = out .. formatting .. v .. '\n'
+    end
+  end
+
+  return out
+end
+
+function greyPlayer(color)
+	if type(color) == 'table' then
+		color = color[1]
+	end
+	if inTable(GREY_PLAYABLE_COLORS, color) then
+		return true
+	else
+		return false
+	end
+end
+
+function getPlayerObj(color)
+	if greyPlayer(color) then
+		local playerFound = nil
+		steamId = greyPlayerSteamIds[color]
+		for _, player in ipairs(Player.getSpectators()) do
+			if steamId == player.steam_id then
+				playerFound = player
+				break
+			end
+		end
+		return playerFound
+	else
+		return Player[color]
+	end
+end
+
+function getGreyColor(steamId)
+	local colorFound = nil
+ 	for testColor, testSteamId in pairs(greyPlayerSteamIds) do
+		if steamId == testSteamId then
+			colorFound = testColor
+			break
+		end
+	end
+	return colorFound
+end
+-- end Common Globals and Functions

@@ -1,0 +1,281 @@
+
+MAROON_VOTE_POS = {0, 1.05, -37.50}
+MAROON_ZONE_POS = {0, 1.3, -51.66}
+TAN_VOTE_POS = {29.30, 1.05, -37.50}
+TAN_ZONE_POS = {29.30, 1.3, -51.66}
+
+MAROON_HAND_ZONE_GUID = 'b9a8d0'
+TAN_HAND_ZONE_GUID = '409da9'
+MAROON_DRAW_POS = {-9, 1.5, -49}
+TAN_DRAW_POS = {20.30, 1.5, -49}
+DISCARD_POS = {20,1.5,-5.68}
+
+function UIvoteJa(player, value, id)
+	if not started then
+		player.print('Game has not started.')
+		return
+	end
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+		vote12P(colorFound, 'Ja')
+	else
+		player.print('You are not in a seat.')
+	end
+end
+
+function UIvoteNein(player, value, id)
+	if not started then
+		player.print('Game has not started.')
+		return
+	end
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+		vote12P(colorFound, 'Nein')
+	else
+		player.print('You are not in a seat.')
+	end
+end
+
+function vote12P(playerColor, vote)
+    function vote12PCoroutine()
+        local vcTable = getVoteCardGUIDs()
+        local maroonJa = getObjectFromGUID(vcTable.maroonJa)
+        local maroonNein = getObjectFromGUID(vcTable.maroonNein)
+        local tanJa = getObjectFromGUID(vcTable.tanJa)
+        local tanNein = getObjectFromGUID(vcTable.tanNein)
+        local ja, nein, zone
+        if playerColor == 'Maroon' then
+            ja = maroonJa
+            nein = maroonNein
+            zonePos = MAROON_ZONE_POS
+            votePos = MAROON_VOTE_POS
+        else
+            ja = tanJa
+            nein = tanNein
+            zonePos = TAN_ZONE_POS
+            votePos = TAN_VOTE_POS
+        end
+        if ja ~= nil and nein ~= nil then
+            ja.setPosition(zonePos)
+            ja.setRotation({0,180,180})
+            nein.setPosition(zonePos)
+            nein.setRotation({0,180,180})
+        end
+        sleep(0.1)
+        if vote == 'Ja' then
+            takeCardFromDeck(playerColor .. '\'s Ja Card', votePos)
+        else
+            takeCardFromDeck(playerColor .. '\'s Nein Card', votePos)
+        end
+
+        return 1
+    end
+    startLuaCoroutine(Global, 'vote12PCoroutine')
+end
+
+function UIvoteRemove(player, value, id)
+    local vcTable = getVoteCardGUIDs()
+    local maroonJa = getObjectFromGUID(vcTable.maroonJa)
+    local maroonNein = getObjectFromGUID(vcTable.maroonNein)
+    local tanJa = getObjectFromGUID(vcTable.tanJa)
+    local tanNein = getObjectFromGUID(vcTable.tanNein)
+
+    if not started then
+        player.print('Game has not started.')
+        return
+    end
+	 local colorFound = getGreyColor(player.steam_id)
+ 	if colorFound == 'Maroon' then
+        player.print('You are not voting.')
+        if maroonJa ~= nil and maroonNein ~= nil then
+			  	maroonJa.setRotationSmooth({0,180,180})
+            maroonJa.setPositionSmooth(MAROON_ZONE_POS)
+				maroonNein.setRotationSmooth({0,180,180})
+            maroonNein.setPositionSmooth(MAROON_ZONE_POS)
+        end
+	elseif colorFound == 'Tan' then
+        player.print('You are not voting.')
+        if tanJa ~= nil and tanNein ~= nil then
+			  	tanJa.setRotationSmooth({0,180,180})
+            tanJa.setPositionSmooth(TAN_ZONE_POS)
+				tanNein.setRotationSmooth({0,180,180})
+            tanNein.setPositionSmooth(TAN_ZONE_POS)
+        end
+   else
+        player.print('You are not in a seat.')
+    end
+end
+
+function getVoteCardGUIDs()
+    local allObjects = getAllObjects()
+    local GUIDTable = {}
+    for k,v in pairs(allObjects) do
+        if v.getDescription() == 'Maroon\'s Ja Card' then
+            GUIDTable.maroonJa = v.getGUID()
+        elseif v.getDescription() == 'Maroon\'s Nein Card' then
+            GUIDTable.maroonNein = v.getGUID()
+        elseif v.getDescription() == 'Tan\'s Ja Card' then
+            GUIDTable.tanJa = v.getGUID()
+        elseif v.getDescription() == 'Tan\'s Nein Card' then
+            GUIDTable.tanNein = v.getGUID()
+        end
+    end
+    return GUIDTable
+end
+
+function takeCardFromDeck(descrip, pos)
+    local allObjects = getAllObjects()
+    local deckTable = {}
+    local foundDeck = nil
+    local foundDeckGUID = nil
+    local foundIndex = nil
+
+    for k,v in pairs(allObjects) do
+        if v.tag == 'Deck' then
+            deckTable = v.getObjects()
+            for k1, v1 in pairs(deckTable) do
+                if v1.description == descrip then
+                    foundDeckGUID = v.getGUID()
+                    foundIndex = v1.index
+                    break
+                end
+            end
+        end
+        if foundDeckGUID ~= nil then
+            break
+        end
+    end
+    foundDeck = getObjectFromGUID(foundDeckGUID)
+    takeParam =
+    {
+        position = pos,
+        index = foundIndex
+    }
+    foundDeck.takeObject(takeParam)
+end
+
+function UIDrawCards(player, value, id)
+	if not started then
+   	player.print('Game has not started.')
+		return
+	end
+	local colorFound = getGreyColor(player.steam_id)
+   if colorFound then
+		drawThree(player, colorFound)
+   else
+		player.print('You are not in a seat.')
+   end
+end
+
+function dealToColor12P(amount, playerColor)
+    function deal12PCoroutine()
+        local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+        local handDeck
+        local takeParam = {}
+        local drawString = 'You drew: '
+		  local player = getPlayerObj(playerColor)
+
+        if playerColor == 'Maroon' then
+            takeParam.position = MAROON_DRAW_POS
+            handZone = getObjectFromGUID(MAROON_HAND_ZONE_GUID)
+        elseif playerColor == 'Tan' then
+            takeParam.position = TAN_DRAW_POS
+            handZone = getObjectFromGUID(TAN_HAND_ZONE_GUID)
+        end
+
+        for i = 1, amount do
+            drawDeck.takeObject(takeParam)
+            takeParam.position[2] = takeParam.position[2] + 0.01
+            sleep(0.1)
+        end
+        sleep(2)
+        if amount == 1 then
+            local card = handZone.getObjects()
+            if card[1].description == 'Liberal Policy' then
+                drawString = drawString .. '[0000FF]L[-]'
+            else
+                drawString = drawString .. '[FF0000]F[-]'
+            end
+        else
+            if playerColor == 'Maroon' then
+					 --fixme does not work with more than one deck
+                handDeck = getDeckFromZoneByGUID(MAROON_HAND_ZONE_GUID)
+            else
+                handDeck = getDeckFromZoneByGUID(TAN_HAND_ZONE_GUID)
+            end
+            local handTable = handDeck.getObjects()
+            for i = 1, #handTable do
+                if handTable[i].description == 'Liberal Policy' then
+                    drawString = drawString .. '[0000FF]L[-]'
+                else
+                    drawString = drawString .. '[FF0000]F[-]'
+                end
+            end
+        end
+        player.broadcast(drawString, {1,1,1})
+
+        return 1
+    end
+    startLuaCoroutine(Global, 'deal12PCoroutine')
+end
+
+function UIDiscardF(player, value, id)
+	if not started then
+   	player.print('Game has not started.')
+		return
+	end
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+   	discard12P('Fascist Policy', colorFound)
+   else
+   	player.print('You are not in a seat.')
+	end
+end
+
+function UIDiscardL(player, value, id)
+	if not started then
+   	player.print('Game has not started.')
+		return
+   end
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+   	discard12P('Liberal Policy', colorFound)
+	else
+   	player.print('You are not in a seat.')
+	end
+end
+
+function discard12P(policy, playerColor)
+    local handDeck
+    local foundIndex = nil
+	 local player = getPlayerObj(playerColor)
+
+    if playerColor == 'Maroon' then
+        handDeck = getDeckFromZoneByGUID(MAROON_HAND_ZONE_GUID)
+    else
+        handDeck = getDeckFromZoneByGUID(TAN_HAND_ZONE_GUID)
+    end
+
+    if handDeck == nil then
+        player.broadcast('ERROR: No cards found in your hand.', {1,0,0})
+        return
+    end
+    local handTable = handDeck.getObjects()
+    for i = 1, #handTable do
+        if handTable[i].description == policy then
+            foundIndex = i
+            break
+        end
+    end
+    if foundIndex == nil then
+        player.broadcast('ERROR: Policy not found.', {1,0,0})
+        return
+    end
+    takeParam =
+    {
+        position = DISCARD_POS,
+        index = foundIndex - 1
+    }
+    handDeck.takeObject(takeParam)
+    player.broadcast('You discarded a ' .. policy .. ' card.', {1,1,1})
+end

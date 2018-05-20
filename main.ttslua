@@ -1,0 +1,3760 @@
+
+-- Created by LostGod on 5/8/2016
+-- Heavily modified by Lost Savage
+-- Also used code from smiling Aktheon, SwiftPanda, Rodney,
+-- Markimus, Sionar, Morten G and Hmmmpf
+
+-- Static Global Variables
+mod_name = 'Secret Hitler: CE'
+update_version = 102
+add_on_version = 5
+
+--Boards and Buttons
+settingsPannel_guid = '39d283'
+fasPannel_guid = 'c09dbd'
+drawPileBoard_guid = 'a5b10f'
+discardPileBoard_guid = '3e225f'
+radio_string = '●'
+check_string = '✓'
+
+--Board cards
+inspectOrange_deck_guid = '87e770'
+topOneOrange_deck_guid = '6b94d6'
+topThreeOrange_deck_guid = '021287'
+nextPresidentOrange_deck_guid = '0cce08'
+bulletRed_deck_guid = '747b8f'
+vetoRed_deck_guid = 'd8f06c'
+liberalNotUsed_deck_guid = '54ae94'
+fascistNotUsed_deck_guid = '7cec50'
+all_deck_guids = {
+	'87ca7e', '6b94d6', 'c3149f',
+	'4a8ebc', '021287', '7ccdc0',
+	'74db80', '87e770', '3fb57a',
+	'2dfce5', '0cce08', 'd22a6b',
+	'b1c672', '8354ae', '747b8f',
+	'34d88b', '9487d7', 'd8f06c',
+	'54ae94', '7cec50'
+}
+
+--Decks/Cards
+hitler_deck_guid = '5997ea'
+fascist_deck_guids = {'5f2055','fb58cf', '4a3cf4'}
+fascist_deck_extra_guid = 'd60f75'
+liberal_deck_guids = {'b156f7', 'd1735a', 'c8ab2a', 'b2873d', '313939', '40d8f5'}
+liberal_deck_extra_guid = '304115'
+policy_deck_guid = '386233'
+extraRole_card_guids = {'675a6f', '16e480', '0a5960', '02b664', '328440', '05df40', '98f4dd', '7b4b46', 'ccb7ed', 'c2309a'}
+fakeMembership_card_guid = '55d1c3'
+fascistMembership_card_guid = 'e4d489'
+liberalMembership_card_guid = 'a73564'
+
+--Scripting Zones
+draw_zone_guid = '6463d3'
+discard_zone_guid = 'b9bd6e'
+fascist_zone_guids = {'1f0149', '390247', '6c3840', '13e460', '441bbf', '6a906e', '488053'}
+liberal_zone_guids = {'12b8ce', '3cabfa', '6f02b7', '939e6d', '3f80ba', 'a6b76f'}
+topdeck_zone_guid = 'c0b577'
+policySafety_zone_guids = {White = 'e99663', Brown = '13b335', Red = 'd7774a', Orange = 'f601b1', Yellow = '620e09', Green = 'b7c2d8', Teal = '162d55', Blue = '0aa61b', Purple = 'fdc17a', Pink = 'c4d8e8'}
+
+--Expansion
+abilitiesPile_zone_guid = 'eea120'
+effectsPile_zone_guid = '374a16'
+
+--Other
+trusted_players = {'76561197992512677'}
+boardGreen_rgb = {14/255, 45/255, 18/255}
+boardBrown_rgb = {53/255, 27/255, 17/255}
+lastVote_guids = {'88c953', 'ba4919', 'b7dcde', '4598da'}
+-- @{100, 100, 100+} hidden zones
+-- @{-100, 100, -100} is used to delete/spawn objects
+
+-- Global Variables (non-static)
+customOnly = nil
+bannerZoneGuid = nil
+topdeck = false
+lastDrawCt = nil
+lastPlayerCt = nil
+hold = false
+votes = {}
+disableVote = false
+votePassed = false
+blockDraw = false
+
+-- Saved data
+bannerGuids = {}
+bulletInfo = {
+	type = 'Custom_Model',
+	mesh = 'http://cloud-3.steamusercontent.com/ugc/487893695357489958/2749FC201350D558AC9DF373861E4323C8B354BB/',
+	diffuse = '',
+	assetbundle = nil,
+	assetbundle_secondary = nil,
+	convex = true,
+	image = nil,
+	material = 2,
+	specular_color = {1, 1, 0.5882353},
+	specular_intensity = 1.7,
+	specular_sharpness = 8.0,
+	fresnel_strength = 0,
+	use_grid = false,
+	colorTint = {0, 0, 0.0382530019},
+	scale = {0.75, 0.75, 0.75},
+	action = 'Shoots',
+	status = 'Dead'
+}
+fascists = {}
+forcePres = nil
+greyAvatarGuids = {}
+greyPlayerSteamIds = {}
+greyPlayerHandGuids = {}
+hitler = {}
+inspected = {}
+jaCardGuids = {}
+lastFascistPlayed = 0
+lastLiberalPlayed = 0
+lastChan = nil
+lastPres = nil
+lastVote = ''
+mainNotes = ''
+neinCardGuids = {}
+notate = {
+	line = nil,
+	action = ''
+}
+noteTakerNotes = {}
+noteTakerCurrLine = 0
+options = {
+	autoNotate = true,
+	dealPartyCards = false,
+	dealRoleCards = false,
+	expansionAmount = 2,
+	expansionOptionEnabled = 0, -- [1 SwapGov, 2 Reverse, 4 SwapPower, 8 Unused ...]
+	expansionOptionStatus = 0, -- [1 SwapGov, 2 Reverse, 4 Unused, 8 Unused ...]
+	expansionOptionText = {'Pres > Chan', 'Chan > Pres', 'Clockwise', 'Reversed'},
+	fascistCards = 11,
+	gameType = 0, -- [0 Original, 1 Extended, 2 Custom]
+	liberalCards = 6,
+	noteType = 1, -- [1 Dark wood, 2 Light wood, 3 Red wood, 4 Black plastic, 5 Board image, 6 Swiss cheese, 7 Private only, 8 Cooperative]
+	policySafety = true,
+	scriptedVoting = true,
+	shufflePlayers = false,
+	shuffleHost = true,
+	voteHistory = false,
+	zoneType = 4 -- [1 None, 2 Small, 3 Gap (version 1), 4 Gap (version 2), 5 Large, 6 12 Player]
+}
+players = {}
+playerRoleCardGuids = {}
+playerStatusButtonGuids = {}
+playerStatus = { --[1 Board, 2 Not Hitler, 3 Vote Only, 4 Silenced, 5 Dead, 6 Dead not Hitler]
+	White = 1,
+	Brown = 1,
+	Red = 1,
+	Orange = 1,
+	Yellow = 1,
+	Green = 1,
+	Teal = 1,
+	Blue = 1,
+	Purple = 1,
+	Pink = 1,
+	Tan = 1,
+	Maroon = 1
+}
+roles = {}
+started = nil
+text = {
+	hitler = 'Hitler',
+	liberal = 'Liberal',
+	liberalAbbr = 'Liberal',
+	liberalArticle = 'a',
+	liberalLetter = 'L',
+	fascist = 'Fascist',
+	fascistAbbr = 'Fascist',
+	fascistArticle = 'a',
+	fascistLetter = 'F',
+	policy = 'policy'
+}
+voteNotes = ''
+voteNotebook = ''
+
+-- Called when a game finishes loading
+function onLoad(saveString)
+	if not (saveString == '') then
+		local save = JSON.decode(saveString)
+		bannerGuids = save['b']
+		bulletInfo = save['bi']
+		fascists = save['f']
+		forcePres = save['fp']
+		greyAvatarGuids = save['gag']
+		greyPlayerSteamIds = save['gp']
+		greyPlayerHandGuids = save['gphg']
+		hitler = save['h']
+		inspected = save['i']
+		jaCardGuids = save['ja']
+		lastFascistPlayed = save['lfp']
+		lastLiberalPlayed = save['llp']
+		lastChan = save['lc']
+		lastPres = save['lp']
+		lastVote = save['lv']
+		mainNotes = save['mn']
+		neinCardGuids = save['nein']
+		notate = save['note']
+		noteTakerNotes = save['ntn']
+		noteTakerCurrLine = save['ntcl']
+		options = save['o']
+		players = save['p']
+		playerRoleCardGuids = save['prcg']
+		playerStatus = save['ps']
+		playerStatusButtonGuids = save['psbg']
+		roles = save['r']
+		started = save['s']
+		text = save['t']
+		voteNotes = save['vn']
+		voteNotebook = save['vnb']
+	end
+	alwaysInit()
+	if not started then
+		mainNotes = '[FFFF00]Secret Hitler: Consolidator Edition\n' ..
+						'Version ' ..  update_version .. ' (' .. string.len(Global.getLuaScript()) .. ')\n' ..
+						'\n[-]Based on the board game:\n\n[FF0000]Secret Hitler[-]\ndesigned by\n[0080F8]Max Temkin[-],\n[0080F8]Mike Boxleiter[-],\n[0080F8]Tommy Maranges[-]\nand Illustrated by\n[0080F8]Mackenzie Schubert.[-]\n\n' ..
+						'Check the notebook for additional\ninformation and subscribe on the\nworkshop to make sure you have the\nlatest version.\n\n' ..
+						'Only the president can draw cards.\n\nTo topdeck a card move the election tracker\nto the \34REVEAL & PASS TOP POLICY\34 circle.\n\n'
+		setNotes(mainNotes)
+		local status, err = pcall(init)
+		if not status then
+			printToAll('ERROR LOADING: ' .. err, {1,0,0})
+		end
+		settingsPannelMakeButtons()
+		refreshBoardCards()
+	end
+	if not noteTakerCurrLine or noteTakerCurrLine == 0 then
+		noteTakerNotes = {}
+		noteTakerCurrLine = 0
+		addNewLine()
+	end
+end
+
+function onSave()
+	local save = {}
+	save['b'] = bannerGuids
+	save['bi'] = bulletInfo
+	save['f'] = fascists
+	save['fp'] = forcePres
+	save['gag'] = greyAvatarGuids
+	save['gp'] = greyPlayerSteamIds
+	save['gphg'] = greyPlayerHandGuids
+	save['h'] = hitler
+	save['i'] = inspected
+	save['ja'] = jaCardGuids
+	save['lfp'] = lastFascistPlayed
+	save['llp'] = lastLiberalPlayed
+	save['lc'] = lastChan
+	save['lp'] = lastPres
+	save['lv'] = lastVote
+	save['mn'] = mainNotes
+	save['nein'] = neinCardGuids
+	save['note'] = notate
+	save['ntn'] = noteTakerNotes
+	save['ntcl'] = noteTakerCurrLine
+	save['o'] = options
+	save['p'] = players
+	save['prcg'] = playerRoleCardGuids
+	save['ps'] = playerStatus
+	save['psbg'] = playerStatusButtonGuids
+	save['r'] = roles
+	save['s'] = started
+	save['t'] = text
+	save['vn'] = voteNotes
+	save['vnb'] = voteNotebook
+	local saveString = JSON.encode(save)
+
+	return saveString
+end
+
+function refreshHiddenZones()
+	for _, player in pairs(MAIN_PLAYABLE_COLORS) do
+		if options.zoneType == 1 then
+			--Hide the hidden zone so we can still use it later
+			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj.setScale({0.01, 0.01, 0.01})
+			local colorToNumber = {White = 1, Brown = 2, Red = 3, Orange = 4, Yellow = 5, Green = 6, Teal = 7, Blue = 8, Purple = 9, Pink = 10}
+			tmpObj.setPosition({100, 100, 100 + colorToNumber[player] * 2})
+		elseif options.zoneType == 2 then
+			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj.setScale({15.3268776, 5.1, 6.35014629})
+			forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
+		elseif options.zoneType == 3 then
+			local pos = {White = {29.65, 3.51, -32.75}, Brown = {0, 3.51, -32.75}, Red = {-29.65, 3.51, -32.75}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 32.75}, Teal = {0, 3.51, 32.75}, Blue = {29.65, 3.51, 32.75}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
+			local scale = {White = {28.4, 5.1, 10.1}, Brown = {28.4, 5.1, 10.1}, Red = {28.4, 5.1, 10.1}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 10.1}, Teal = {28.4, 5.1, 10.1}, Blue = {28.4, 5.1, 10.1}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
+
+			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj.setPosition(pos[player])
+			tmpObj.setScale(scale[player])
+			tmpObj.setRotation(no_rotation)
+		elseif options.zoneType == 4 then
+			local pos = {White = {29.65, 3.51, -31.9}, Brown = {0, 3.51, -31.9}, Red = {-29.65, 3.51, -31.9}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 31.9}, Teal = {0, 3.51, 31.9}, Blue = {29.65, 3.51, 31.9}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
+			local scale = {White = {28.4, 5.1, 11.8}, Brown = {28.4, 5.1, 11.8}, Red = {28.4, 5.1, 11.8}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 11.8}, Teal = {28.4, 5.1, 11.8}, Blue = {28.4, 5.1, 11.8}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
+
+			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj.setPosition(pos[player])
+			tmpObj.setScale(scale[player])
+			tmpObj.setRotation(no_rotation)
+		elseif options.zoneType == 5 then
+			local pos = {White = {29.3, 3.51, -31.9}, Brown = {0, 3.51, -31.9}, Red = {-29.3, 3.51, -31.9}, Orange = {-49.4, 3.51, -19}, Yellow = {-49.4, 3.51, 19}, Green = {-29.3, 3.51, 31.9}, Teal = {0, 3.51, 31.9}, Blue = {29.3, 3.51, 31.9}, Purple = {49.4, 3.51, 19}, Pink = {49.4, 3.51, -19}}
+			local scale = {White = {29.3, 5.1, 11.8}, Brown = {29.3, 5.1, 11.8}, Red = {29.3, 5.1, 11.8}, Orange = {10.8, 5.1, 38.0}, Yellow = {10.8, 5.1, 38.0}, Green = {29.3, 5.1, 11.8}, Teal = {29.3, 5.1, 11.8}, Blue = {29.3, 5.1, 11.8}, Purple = {10.8, 5.1, 38.0}, Pink = {10.8, 5.1, 38.0}}
+
+			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj.setPosition(pos[player])
+			tmpObj.setScale(scale[player])
+			tmpObj.setRotation(no_rotation)
+		elseif options.zoneType == 6 then
+			local pos = {White = {-29.3, 3.51, -49.4}, Brown = {-49.4, 3.51, -29.3}, Red = {-49.4, 3.51, 0}, Orange = {-49.4, 3.51, 29.3}, Yellow = {-29.3, 3.51, 49.4}, Green = {0, 3.51, 49.4}, Teal = {29.3, 3.51, 49.4}, Blue = {49.4, 3.51, 29.3}, Purple = {49.4, 3.51, 0}, Pink = {49.4, 3.51, -29.3}}
+			local scale = {White = {28.4, 5.1, 10.8}, Brown = {10.8, 5.1, 28.4}, Red = {10.8, 5.1, 28.4}, Orange = {10.8, 5.1, 28.4}, Yellow = {28.4, 5.1, 10.8}, Green = {28.4, 5.1, 10.8}, Teal = {28.4, 5.1, 10.8}, Blue = {10.8, 5.1, 28.4}, Purple = {10.8, 5.1, 28.4}, Pink = {10.8, 5.1, 28.4}}
+
+			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj.setPosition(pos[player])
+			tmpObj.setScale(scale[player])
+			tmpObj.setRotation(no_rotation)
+
+			local handPos = {White = {-29.3, 4.46, -51.66}, Brown = {-51.66, 4.46, -29.3}, Red = {-51.66, 4.46, 0}, Orange = {-51.66, 4.46, 29.3}, Yellow = {-29.3, 4.46, 51.66}, Green = {0, 4.46, 51.66}, Teal = {29.3, 4.46, 51.66}, Blue = {51.66, 4.46, 29.3}, Purple = {51.66, 4.46, 0}, Pink = {51.66, 4.46, -29.3}}
+			local handRot = {White = {0, 0, 0}, Brown = {0, 90, 0}, Red = {0, 90, 0}, Orange = {0, 90, 0}, Yellow = {0, 180, 0}, Green = {0, 180, 0}, Teal = {0, 180, 0}, Blue = {0, 270, 0}, Purple = {0, 270, 0}, Pink = {0, 270, 0}}
+			local handParams = {
+				scale = {11.66, 5.4, 4.87}
+			}
+
+			handParams.position = handPos[player]
+			handParams.rotation = handRot[player]
+			Player[player].setHandTransform(handParams)
+
+			tmpObj = getObjectFromGUID(policySafety_zone_guids[player])
+			forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
+		end
+	end
+	if options.zoneType == 6 then
+		broadcastToAll('Not even close to finished... reload the table to go back.', {1,1,1})
+		local params = {type = 'Custom_Model', sound = false}
+		local tableExt = {}
+		local custom = {
+			mesh = 'http://cloud-3.steamusercontent.com/ugc/933812827275737908/4A39E65F99D7809D6055BED44C2B2AF420776850/',
+			diffuse = 'http://cloud-3.steamusercontent.com/ugc/933812827275738471/DBC87C418A1CBD45F4EB56EB0F63B65E7F042F1F/',
+			type = 4,
+			material = 1,
+			specular_color = {223/255, 207/255, 190/255},
+			specular_intensity = 0.05,
+			specular_sharpness = 6.3
+		}
+		for i = 1, 2 do
+			tableExt[i] = spawnObject(params)
+			tableExt[i].setCustomObject(custom)
+			tableExt[i].setLock(true)
+			tableExt[i].setRotation({0, 270, 0})
+			tableExt[i].setScale({0.74, 1, 1})
+			tableExt[i].setLuaScript(
+				'function onLoad()\r\n' ..
+				'	self.interactable = false\r\n' ..
+				'end\r\n')
+		end
+		tableExt[1].setPosition({0, 0.1, -46.2})
+		tableExt[2].setPosition({0, 0.1, 46.2})
+		params = {
+			type = 'Custom_Assetbundle',
+			scale = {14.2, 2.55, 5.4},
+			callback = 'greyPlayerHandCallback',
+			sound = false
+		}
+		custom = {
+			assetbundle = 'http://cloud-3.steamusercontent.com/ugc/933813375181578705/3961A9B3B73895140CA5055A8745BEE4A3E39299/'
+		}
+		local playerHands = {}
+		for i, color in ipairs(GREY_PLAYABLE_COLORS) do
+			playerHands[i] = spawnObject(params)
+			playerHands[i].setCustomObject(custom)
+			playerHands[i].setColorTint(GREY_PLAYABLE_COLORS_RGB[color])
+			playerHands[i].setDescription(color .. ' Hand')
+			playerHands[i].setLock(true)
+		end
+		playerHands[1].setPosition({29.3, 3.5, -49.4}) -- Tan
+		playerHands[2].setPosition({0, 3.5, -49.4}) -- Maroon
+	end
+end
+
+function resetDecks()
+	if options.gameType ~= 2 and foundBoardCards() then
+		deleteBoardCards()
+	end
+	for i = 1, #all_deck_guids do
+		tmpObj = getObjectFromGUID(all_deck_guids[i])
+		if tmpObj then
+			tmpObj.reset()
+			if #tmpObj.getObjects() > 5 then
+				deleteExtraItems(tmpObj, 5)
+			elseif #tmpObj.getObjects() < 5 then
+				addMissingItems(tmpObj, 5)
+			end
+		else
+			customOnly = true
+		end
+	end
+	if customOnly then
+		options.gameType = 2
+		settingsPannelMakeButtons()
+	end
+end
+
+function refreshBoardCards()
+	local tmpObj
+	local params = {}
+
+	params.rotation = flip_y
+	if options.gameType < 2 then
+		resetDecks()
+		if options.gameType == 0 then
+			tmpObj = getObjectFromGUID(fascistNotUsed_deck_guid)
+			if tmpObj then
+				params.position = getPositionByGUID(fascist_zone_guids[1])
+				tmpObj.takeObject(params)
+			end
+			tmpObj = getObjectFromGUID(liberalNotUsed_deck_guid)
+			if tmpObj then
+				params.position = getPositionByGUID(liberal_zone_guids[1])
+				tmpObj.takeObject(params)
+			end
+		end
+		if #getSeatedPlayers() > 8 then
+			if options.gameType == 1 then
+				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
+				if tmpObj then
+					params.position = getPositionByGUID(fascist_zone_guids[1])
+					tmpObj.takeObject(params)
+				end
+			end
+			tmpObj = getObjectFromGUID(inspectOrange_deck_guid)
+			if tmpObj then
+				params.position = getPositionByGUID(fascist_zone_guids[2])
+				tmpObj.takeObject(params)
+				params.position = getPositionByGUID(fascist_zone_guids[3])
+				tmpObj.takeObject(params)
+			end
+			tmpObj = getObjectFromGUID(nextPresidentOrange_deck_guid)
+			if tmpObj then
+				params.position = getPositionByGUID(fascist_zone_guids[4])
+				tmpObj.takeObject(params)
+			end
+		elseif #getSeatedPlayers() > 6 then
+			if options.gameType == 1 then
+				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
+				if tmpObj then
+					params.position = getPositionByGUID(fascist_zone_guids[2])
+					tmpObj.takeObject(params)
+				end
+			end
+			tmpObj = getObjectFromGUID(inspectOrange_deck_guid)
+			if tmpObj then
+				params.position = getPositionByGUID(fascist_zone_guids[3])
+				tmpObj.takeObject(params)
+			end
+			tmpObj = getObjectFromGUID(nextPresidentOrange_deck_guid)
+			if tmpObj then
+				params.position = getPositionByGUID(fascist_zone_guids[4])
+				tmpObj.takeObject(params)
+			end
+		else
+			if options.gameType == 1 then
+				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
+				if tmpObj then
+					params.position = getPositionByGUID(fascist_zone_guids[3])
+					tmpObj.takeObject(params)
+				end
+			end
+			tmpObj = getObjectFromGUID(topThreeOrange_deck_guid)
+			if tmpObj then
+				params.position = getPositionByGUID(fascist_zone_guids[4])
+				tmpObj.takeObject(params)
+			end
+		end
+		tmpObj = getObjectFromGUID(bulletRed_deck_guid)
+		if tmpObj then
+			params.position = getPositionByGUID(fascist_zone_guids[5])
+			tmpObj.takeObject(params)
+		end
+		tmpObj = getObjectFromGUID(bulletRed_deck_guid)
+		if tmpObj then
+			params.position = getPositionByGUID(fascist_zone_guids[6])
+			tmpObj.takeObject(params)
+		end
+		tmpObj = getObjectFromGUID(vetoRed_deck_guid)
+		if tmpObj then
+			local pos = getPositionByGUID(fascist_zone_guids[6])
+			params.position = {pos['x'], pos['y'], pos['z'] - 2}
+			tmpObj.takeObject(params)
+		end
+	end
+
+	lastPlayerCt = #getSeatedPlayers()
+end
+
+function onObjectEnterScriptingZone(zone, enterObject)
+	if enterObject then
+		if zone.guid == topdeck_zone_guid and enterObject.guid == election_tracker_guid then
+			editButtonByLabel(drawPileBoard_guid, 'Draw 3', 'Topdeck', 'topdeckCard')
+		end
+	end
+end
+
+function onObjectLeaveScriptingZone(zone, leaveObject)
+	if leaveObject then
+		if zone.guid == topdeck_zone_guid and leaveObject.guid == election_tracker_guid then
+			editButtonByLabel(drawPileBoard_guid, 'Topdeck', 'Draw 3', 'drawThree')
+		elseif options.policySafety then
+			if inTable(policySafety_zone_guids, zone.guid) and leaveObject.tag == 'Card' and
+				(leaveObject.getDescription() == 'Fascist Policy' or
+				 leaveObject.getDescription() == 'Liberal Policy') then
+				if isFaceUp(leaveObject) and leaveObject.held_by_color then
+					leaveObject.deal(1, leaveObject.held_by_color)
+					broadcastToColor('Keep your policy cards face down\nwhen removing them from your hand!', leaveObject.held_by_color, {1, 0, 0})
+				end
+			end
+		end
+	end
+end
+
+function alwaysInit()
+	local tmpObj
+
+	-- Initialize the pseudo random number generator
+	math.randomseed(os.time())
+
+	refreshUI()
+	refreshStatusButtons()
+	refreshExpansionButtons()
+
+	local drawPileBoard = getObjectFromGUID(drawPileBoard_guid)
+	if drawPileBoard then
+		local button = {
+			click_function = 'drawThree',
+			label = 'Draw 3',
+			function_owner = Global,
+			position = {0, 0.14, 3.7},
+			rotation = {0, 0, 0},
+			width = 2700,
+			height = 1300,
+			font_size = 650
+		}
+		drawPileBoard.createButton(button)
+	end
+
+	for _, cardGUID in ipairs(extraRole_card_guids) do
+		local card = getObjectFromGUID(cardGUID)
+		if card then card.interactable = false	end
+	end
+	tmpObj = getObjectFromGUID(fakeMembership_card_guid)
+	if tmpObj then	tmpObj.interactable = false end
+	tmpObj = getObjectFromGUID(fascistMembership_card_guid)
+	if tmpObj then	tmpObj.interactable = false end
+	tmpObj = getObjectFromGUID(liberalMembership_card_guid)
+	if tmpObj then	tmpObj.interactable = false end
+end
+
+function refreshStatusButtons()
+	local tmpObj
+	local buttonGUID
+
+	for _, buttonGUID in ipairs(playerStatusButtonGuids) do
+		tmpObj = getObjectFromGUID(buttonGUID)
+		if tmpObj then
+			tmpObj.clearButtons()
+			local ownerColor = tmpObj.getName()
+			local button = {
+				function_owner = self,
+				position = {0, 0.2, 0},
+				rotation = {0, 180, 0},
+				width = 2900,
+				height = 1500,
+				font_size = 600,
+				click_function = 'changePlayerStatus'
+			}
+			if _G.playerStatus[ownerColor] == 1 then
+				if options.zoneType == 6 then
+					local greenColors = {'Brown', 'Red', 'Blue', 'Purple'}
+					if inTable(greenColors, ownerColor) then
+						button.color = boardGreen_rgb
+					else
+						button.color = boardBrown_rgb
+					end
+				else
+					button.color = boardGreen_rgb
+				end
+				button.label = ''
+			elseif _G.playerStatus[ownerColor] == 2 then
+				button.color = stringColorToRGB('Green')
+				button.label = 'Not ' .. text.hitler
+			elseif _G.playerStatus[ownerColor] == 3 then
+				button.color = stringColorToRGB('Yellow')
+				button.label = 'Vote Only'
+			elseif _G.playerStatus[ownerColor] == 4 then
+				button.color = stringColorToRGB('Blue')
+				button.label = 'Silenced'
+			elseif _G.playerStatus[ownerColor] == 5 then
+				button.color = stringColorToRGB('Red')
+				button.label = bulletInfo.status
+			else
+				button.color = stringColorToRGB('Red')
+				button.label = bulletInfo.status .. '\nNot ' .. text.hitler
+			end
+			tmpObj.createButton(button)
+		end
+	end
+end
+
+function refreshExpansionButtons()
+	local fasBoard = getObjectFromGUID(fasPannel_guid)
+	if fasBoard then
+		fasBoard.clearButtons()
+		local button = {
+			click_function = 'expansionOptionStatusSwapGov',
+			function_owner = self,
+			position = {12, 0.2, 6},
+			rotation = {0, 0, 0},
+			width = 2600,
+			height = 800,
+			font_size = 360
+		}
+		if bit32.band(options.expansionOptionStatus, 1) == 1 then
+			button.font_color = {0, 0, 0}
+			button.color =  stringColorToRGB('Orange')
+			button.label = options.expansionOptionText[2]
+		else
+			button.font_color = stringColorToRGB('White')
+			button.color =  boardGreen_rgb
+			button.label = options.expansionOptionText[1]
+		end
+		if bit32.band(options.expansionOptionEnabled, 1) == 1 then
+			fasBoard.createButton(button)
+		end
+
+		button.click_function = 'expansionOptionStatusReverse'
+		button.position = {-12, 0.2, 6}
+		if bit32.band(options.expansionOptionStatus, 2) == 2 then
+			button.font_color = {0, 0, 0}
+			button.color =  stringColorToRGB('Orange')
+			button.label = options.expansionOptionText[4]
+		else
+			button.font_color = stringColorToRGB('White')
+			button.color =  boardGreen_rgb
+			button.label = options.expansionOptionText[3]
+		end
+		if bit32.band(options.expansionOptionEnabled, 2) == 2 then
+			fasBoard.createButton(button)
+		end
+	end
+end
+
+function init()
+	local tmpObj
+
+	tmpObj = getObjectFromGUID(hitler_deck_guid)
+	if tmpObj == nil then error('Hitler Deck') end
+	tmpObj.interactable = false
+	tmpObj.setLock(true)
+
+	for i = 1, #fascist_deck_guids do
+		tmpObj = getObjectFromGUID(fascist_deck_guids[i])
+		if tmpObj == nil then error('Fascist Deck ' .. fascist_deck_guids[i]) end
+		tmpObj.interactable = false
+		tmpObj.setLock(true)
+	end
+
+	for i = 1, #liberal_deck_guids do
+		tmpObj = getObjectFromGUID(liberal_deck_guids[i])
+		if tmpObj == nil then error('Liberal Deck ' .. liberal_deck_guids[i]) end
+		tmpObj.interactable = false
+		tmpObj.setLock(true)
+	end
+
+	tmpObj = getObjectFromGUID(policy_deck_guid)
+	if tmpObj == nil then error('Policy Deck') end
+	tmpObj.interactable = false
+
+	tmpObj = getObjectFromGUID(president_guid)
+	if tmpObj == nil then error('President') end
+	tmpObj.interactable = false
+	tmpObj.setLock(true)
+	tmpObj = getObjectFromGUID(chancelor_guid)
+	if tmpObj == nil then error('Chancellor') end
+	tmpObj.interactable = false
+	tmpObj.setLock(true)
+	tmpObj = getObjectFromGUID(prev_president_guid)
+	if tmpObj == nil then error('Prev President') end
+	tmpObj.setLock(true)
+	tmpObj = getObjectFromGUID(prev_chancelor_guid)
+	if tmpObj == nil then error('Prev Chancellor') end
+	tmpObj.setLock(true)
+
+	tmpObj = getObjectFromGUID(election_tracker_guid)
+	if tmpObj == nil then error('Election Tracker') end
+	tmpObj.setLock(true)
+
+	for i, player in ipairs(MAIN_PLAYABLE_COLORS) do
+		tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+		if tmpObj == nil then error(player .. ' Hidden Zone') end
+	end
+
+	--Expansion
+	tmpObj = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	if tmpObj then	tmpObj.interactable = false end
+	tmpObj = getDeckFromZoneByGUID(effectsPile_zone_guid)
+	if tmpObj then	tmpObj.interactable = false end
+
+	resetDecks()
+end
+
+function onChat(messageIn, player)
+	local message = string.lower(string.gsub(messageIn, '%s+', ' '))
+	local messageTable = string.tokenize(message, ' ')
+
+	if messageTable[1] == 'r' then
+		if started then
+			player:print(tellRole(player.color))
+		else
+			player:print('[FF0000]ERROR: Game not started.[-]')
+		end
+		return false
+	elseif messageTable[1] == 'l' then
+		player:print(lastVote)
+		return false
+	elseif messageTable[1] == 'h' then
+		if options.voteHistory then
+			local msg = voteNotebook
+			if messageTable[2] and tonumber(messageTable[2]) then
+				msg = topLines(msg, tonumber(messageTable[2]))
+			end
+			player:print(string.gsub(msg, '\n$', ''))
+
+		else
+			player:print('[FF0000]ERROR: Full vote history is not enabled.[-]')
+		end
+		return false
+	elseif messageTable[1] == 'n' then
+		local msg = noteTakerNotesString(100, false, true)
+		if messageTable[2] and tonumber(messageTable[2]) then
+			msg = topLines(msg, tonumber(messageTable[2]))
+		end
+		player:print(string.gsub(msg, '\n$', ''))
+		return false
+	elseif messageTable[1] == 'o' then
+		player:print(string.gsub(tableToString(options), '\n$', ''))
+		return false
+	elseif messageTable[1] == 'v' then
+		player:print(versionInfo())
+		return false
+	elseif messageTable[1] == 'black' and (player.admin or inTable(trusted_players, player.steam_id)) then
+		if messageTable[2] then
+			local playerFound = getPlayerByName(messageTable[2])
+			if playerFound then
+				playerFound:changeColor('Black')
+			else
+				for _, p in pairs(Player.getPlayers()) do
+					if p.steam_id == messageTable[2] then
+						p:changeColor('Black')
+					end
+				end
+			end
+		else
+			player:changeColor('Black')
+		end
+		return false
+	elseif messageTable[1] == 'grey' and (player.admin or inTable(trusted_players, player.steam_id)) then
+		if messageTable[2] then
+			local playerFound = getPlayerByName(messageTable[2])
+			if playerFound then
+				playerFound:changeColor('Grey')
+			else
+				for _, p in pairs(Player.getPlayers()) do
+					if p.steam_id == messageTable[2] then
+						p:changeColor('Grey')
+					end
+				end
+			end
+		else
+			player:changeColor('Grey')
+		end
+		return false
+	elseif messageTable[1] == 'promote' and (player.admin or inTable(trusted_players, player.steam_id)) then
+		if messageTable[2] then
+			local playerFound = getPlayerByName(messageTable[2])
+			if playerFound then
+				playerFound.promote()
+			else
+				for _, p in pairs(Player.getPlayers()) do
+					if p.steam_id == messageTable[2] then
+						p.promote()
+					end
+				end
+			end
+		else
+			player.promote()
+		end
+		return false
+	elseif messageTable[1] == 'kick' and (player.admin or inTable(trusted_players, player.steam_id)) then
+		if messageTable[2] then
+			local playerFound = getPlayerByName(messageTable[2])
+			if playerFound then
+				playerFound.kick()
+			else
+				for _, p in pairs(Player.getPlayers()) do
+					if p.steam_id == messageTable[2] then
+						p.kick()
+					end
+				end
+			end
+		end
+		return false
+	elseif messageTable[1] == 'list' and (player.admin or inTable(trusted_players, player.steam_id)) then
+		for _, p in pairs(Player.getPlayers()) do
+			player:print(p.steam_name .. ' ' .. p.steam_id)
+		end
+		return false
+	elseif messageTable[1] == 'help' then
+		player:print(chatHelp(player.admin))
+		return false
+	end
+end
+
+function getPlayerByName(playerName)
+   local thePlayers = Player.getPlayers()
+   local amountOfPlayersFound = 0
+   local playerToReturn = nil
+
+   for index, name in pairs(thePlayers) do
+   	if string.match(string.lower(thePlayers[index].steam_name), string.lower(playerName)) then
+         playerToReturn = thePlayers[index]
+			amountOfPlayersFound = amountOfPlayersFound + 1
+		end
+	end
+
+   if amountOfPlayersFound == 1 then
+		return playerToReturn
+	end
+
+	return nil
+end
+
+function string:tokenize(sep)
+    local sep, fields = sep or ':', {}
+    local pattern = string.format('([^%s]+)', sep)
+    self:gsub(pattern, function(c) fields[#fields+1] = c end)
+    return fields
+end
+
+function topLines(stringIn, maxLinesIn)
+	local linesFound = 0
+	local newLinePos = string.find(stringIn, '\n')
+	local oldLinePos = nil
+
+	while newLinePos do
+		linesFound = linesFound + 1
+		oldLinePos = newLinePos
+		if maxLinesIn == linesFound then break end
+		newLinePos = string.find(stringIn, '\n', newLinePos + 1)
+	end
+
+	if not newLinePos then
+		oldLinePos = string.len(stringIn)
+	end
+
+	return string.sub(stringIn, 1, oldLinePos)
+end
+
+function bigBroadcast(msgIn, playerObjIn)
+	local messageTable = string.tokenize(msgIn, '\n')
+
+	for i=#messageTable, 1, -1 do
+		playerObjIn:broadcast(messageTable[i])
+	end
+end
+
+function chatHelp(admin)
+	local msg = 'chat commands:\n' ..
+					'   r - All the role information you can know\n' ..
+					'   l - Shows the last vote\n' ..
+					'   h [lines] - Vote history\n' ..
+					'   n [lines] - All of the notes\n' ..
+					'   o - current options\n' ..
+					'   v - Version info\n' ..
+					'   help - This message'
+	if admin then
+		msg = msg .. '\nadmin chat commands:\n' ..
+					'   black [name* or steam id] - sets player to black\n' ..
+					'   grey [name* or steam id] - sets player to grey\n' ..
+					'   promote [name* or steam id] - promotes/demotes player\n' ..
+					'   kick name* or steam id - kicks the player\n' ..
+					'   list - lists steam ids\n' ..
+					'   * partial name allowed but must be distinct'
+	end
+
+	return msg
+end
+
+-- This allows outside objects to call any function from this code.
+--  Global.call('callFunction', { fcn = 'drawCards', params = {amountToDraw, color} })
+function callFunction(packet)
+    assert(type(_G[packet.fcn]) == 'function', 'No function named ' .. packet.fcn .. ' exists!')
+    return table.pack(_G[packet.fcn](unpack(packet.params or {})))
+end
+
+function settingsPannelMakeButtons()
+	local settingsPannel = getObjectFromGUID(settingsPannel_guid)
+	if settingsPannel then
+		settingsPannel.clearButtons()
+
+		local buttonParam = {
+			font_color = {0, 0, 0},
+			rotation = {0, 0, 0},
+			width = 0,
+			height = 0,
+			font_size = 480,
+			function_owner = self,
+			click_function = 'nullFunction'
+		}
+		local startX = -6.1
+		local offsetZ = 1.32
+
+		local startZ = -22.9
+		buttonParam.label = '[u]Game Type[/u]'
+		buttonParam.position = {0, 0.2, startZ - 1.4}
+		settingsPannel.createButton(buttonParam)
+		makeSquareButtonLabel(settingsPannel, options.gameType == 0, radio_string, '', 'Original', 'gameTypeZero', {startX, 0.2, startZ}, 2.45, not customOnly)
+		makeSquareButtonLabel(settingsPannel, options.gameType == 1, radio_string, '', 'Extended', 'gameTypeOne', {startX, 0.2, startZ + offsetZ}, 2.7, not customOnly)
+		makeSquareButtonLabel(settingsPannel, options.gameType == 2, radio_string, '', 'Custom', 'gameTypeTwo', {startX, 0.2, startZ + offsetZ * 2}, 2.3, true)
+		makeDecIncButtonsLabel(settingsPannel, options.liberalCards, '-', '+', 'Liberal Cards', 'decLiberalCards', 'incLiberalCards', {startX + 1.3, 0.2, startZ + offsetZ * 3}, 6.1, false, options.gameType == 2)
+		makeDecIncButtonsLabel(settingsPannel, options.fascistCards, '-', '+', 'Fascist Cards', 'decFascistCards', 'incFascistCards', {startX + 1.3, 0.2, startZ + offsetZ * 4}, 6.1, false, options.gameType == 2)
+
+		startZ = -14.7
+		buttonParam.label = '[u]Note Taker[/u]'
+		buttonParam.position = {0, 0.2, startZ - 1.4}
+		settingsPannel.createButton(buttonParam)
+		local labels = {'Dark wood', 'Light wood (tintable)', 'Red wood (tintable)', 'Black plastic', 'Board image', 'Swiss cheese', 'Private only', 'Cooperative'}
+		local offsets = {4.4, 6.6, 6.3, 4.7, 4.7, 4.7, 4.6, 4.6}
+		makeDecIncButtonsLabel(settingsPannel, options.noteType, '-', '+', labels, 'decNoteType', 'incNoteType', {startX, 0.2, startZ}, offsets, false, true)
+
+		startZ = -11.6
+		buttonParam.label = '[u]Hidden Zones[/u]'
+		buttonParam.position = {0, 0.2, startZ - 1.4}
+		settingsPannel.createButton(buttonParam)
+		labels = {'None', 'Small', 'Gap (version 1)', 'Gap (version 2)', 'Large', '12 Player'}
+		offsets = {3.2, 3.3, 5.3, 5.35, 3.3, 4.1}
+		makeDecIncButtonsLabel(settingsPannel, options.zoneType, '-', '+', labels, 'decZoneType', 'incZoneType', {startX, 0.2, startZ}, offsets, false, options.zoneType ~= 6)
+
+		startZ = -8.5
+		buttonParam.label = '[u]Other Options[/u]'
+		buttonParam.position = {0, 0.2, startZ - 1.4}
+		settingsPannel.createButton(buttonParam)
+		makeSquareButtonLabel(settingsPannel, options.dealRoleCards, check_string, '', 'Deal role', 'roleCardFlip', {startX, 0.2, startZ}, 2.7, true)
+		makeSquareButtonLabel(settingsPannel, options.dealPartyCards, check_string, '', 'Deal party membership', 'partyCardFlip', {startX, 0.2, startZ + offsetZ}, 5.8, true)
+		makeSquareButtonLabel(settingsPannel, options.scriptedVoting, check_string, '', 'Scripted voting', 'scriptedVotingFlip', {startX, 0.2, startZ + offsetZ * 2}, 4, true)
+		makeSquareButtonLabel(settingsPannel, options.autoNotate, check_string, '', 'Auto notate', 'autoNotateFlip', {startX, 0.2, startZ + offsetZ * 3}, 3.4, true)
+		makeSquareButtonLabel(settingsPannel, options.policySafety, check_string, '', 'Policy safety', 'policySafetyFlip', {startX, 0.2, startZ + offsetZ * 4}, 3.5, true)
+		makeSquareButtonLabel(settingsPannel, options.voteHistory, check_string, '', 'Vote history', 'voteHistoryFlip', {startX, 0.2, startZ + offsetZ * 5}, 3.4, true)
+		makeSquareButtonLabel(settingsPannel, options.shufflePlayers, check_string, '', 'Shuffle players', 'shufflePlayersFlip', {startX, 0.2, startZ + offsetZ * 6}, 4, true)
+		makeSquareButtonLabel(settingsPannel, options.shuffleHost, check_string, '', 'Shuffle host', 'shuffleHostFlip', {startX + 1.3, 0.2, startZ + offsetZ * 7}, 3.3, options.shufflePlayers)
+
+		--Expansion
+		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+		if abilitiesDeck then
+			startZ = 3.7
+			buttonParam.label = '[u]Expansion[/u]'
+			buttonParam.position = {0, 0.2, startZ - 1.4}
+			settingsPannel.createButton(buttonParam)
+			makeDecIncButtonsLabel(settingsPannel, options.expansionAmount, '-', '+', 'Cards', 'decExpansionAmount', 'incExpansionAmount', {startX, 0.2, startZ}, 4.7, false, true)
+			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 1) == 1, check_string, '', 'Swap Government', 'expansionOptionEnabledSwapGov', {startX, 0.2, startZ + offsetZ}, 4.7, true)
+			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 4) == 4, check_string, '', 'Swap Power', 'expansionOptionEnabledSwapPower', {startX + 1.3, 0.2, startZ + offsetZ * 2}, 3.3, bit32.band(options.expansionOptionEnabled, 1) == 1)
+			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 2) == 2, check_string, '', 'Reverse', 'expansionOptionEnabledReverse', {startX, 0.2, startZ + offsetZ * 3}, 2.4, true)
+		end
+
+		buttonParam = {
+			click_function = 'setupStart',
+			label = 'Start',
+			function_owner = self,
+			position = {0, 0.2, 23.5},
+			rotation = {0, 0, 0},
+			width = 3300,
+			height = 1700,
+			font_size = 750
+		}
+		settingsPannel.createButton(buttonParam)
+	else
+		printToAll('ERROR: Settings pannel not found.', {1,0,0})
+	end
+end
+
+function makeSquareButtonLabel(objectIn, valueIn, trueButtonTextIn, falseButtonTextIn, labelTextIn, clickFunctionIn, buttonPositionIn, textOffsetIn, enabledIn)
+	local buttonParam = {
+		rotation = {0, 0, 0},
+		width = 600,
+		height = 600,
+		font_size = 480,
+		function_owner = self,
+		click_function = clickFunctionIn,
+		position = buttonPositionIn
+	}
+	local textParam = {
+		label = labelTextIn,
+		font_color = {0, 0, 0},
+		rotation = {0, 0, 0},
+		width = 0,
+		height = 0,
+		font_size = 480,
+		function_owner = self,
+		click_function = 'nullFunction',
+		position = {buttonPositionIn[1] + textOffsetIn, buttonPositionIn[2], buttonPositionIn[3]}
+	}
+	if valueIn then
+		buttonParam.label = trueButtonTextIn
+	else
+		buttonParam.label = falseButtonTextIn
+	end
+	if not enabledIn then
+		buttonParam.click_function = 'nullFunction'
+		buttonParam.color = stringColorToRGB('Grey')
+		buttonParam.font_color = {0.3, 0.3, 0.3}
+		textParam.font_color = {0.3, 0.3, 0.3}
+	end
+	objectIn.createButton(buttonParam)
+	objectIn.createButton(textParam)
+end
+
+function makeDecIncButtonsLabel(objectIn, valueIn, decButtonTextIn, incButtonTextIn, labelTextIn, decFunctionIn, incFunctionIn, positionIn, textOffsetIn, showValueIn, enabledIn)
+	local buttonParam = {
+		font_color = {0, 0, 0},
+		rotation = {0, 0, 0},
+		width = 0,
+		height = 0,
+		font_size = 480,
+		function_owner = self,
+		click_function = 'nullFunction'
+	}
+
+	local valueOffset
+	if type(labelTextIn) == 'table' then
+		valueOffset = 0
+		buttonParam.label = labelTextIn[valueIn]
+		buttonParam.position = {positionIn[1] + textOffsetIn[valueIn], positionIn[2], positionIn[3]}
+	else
+		valueOffset = 1.3
+		buttonParam.label = labelTextIn
+		buttonParam.position = {positionIn[1] + textOffsetIn, positionIn[2], positionIn[3]}
+	end
+	if not enabledIn then
+		buttonParam.font_color = {0.3, 0.3, 0.3}
+	end
+	objectIn.createButton(buttonParam)
+
+	if not enabledIn then
+		buttonParam.color = stringColorToRGB('Grey')
+	end
+	buttonParam.label = decButtonTextIn
+	buttonParam.position = positionIn
+	buttonParam.width = 600
+	buttonParam.height = 600
+	if enabledIn then
+		buttonParam.click_function = decFunctionIn
+	end
+	objectIn.createButton(buttonParam)
+
+	buttonParam.label = incButtonTextIn
+	buttonParam.position = {positionIn[1] + 1.3 + valueOffset, positionIn[2], positionIn[3]}
+	if enabledIn then
+		buttonParam.click_function = incFunctionIn
+	end
+	objectIn.createButton(buttonParam)
+
+	if valueOffset > 0 then
+		buttonParam.label = valueIn
+		if enabledIn then
+			buttonParam.click_function = incFunctionIn
+		end
+		buttonParam.position = {positionIn[1] + valueOffset, positionIn[2], positionIn[3]}
+		objectIn.createButton(buttonParam)
+	end
+end
+
+function gameTypeZero(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.gameType = 0
+		options.fascistCards = 11
+		options.liberalCards = 6
+		refreshBoardCards()
+		settingsPannelMakeButtons()
+	end
+end
+
+function gameTypeOne(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.gameType = 1
+		options.fascistCards = 13
+		options.liberalCards = 7
+		refreshBoardCards()
+		settingsPannelMakeButtons()
+	end
+end
+
+function gameTypeTwo(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.gameType = 2
+		refreshBoardCards()
+		settingsPannelMakeButtons()
+	end
+end
+
+function decNoteType(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.noteType > 1 then
+			options.noteType = options.noteType - 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function incNoteType(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.noteType < 8 then
+			options.noteType = options.noteType + 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function decZoneType(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.zoneType > 1 then
+			options.zoneType = options.zoneType - 1
+		end
+		refreshHiddenZones()
+		settingsPannelMakeButtons()
+	end
+end
+
+function incZoneType(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.zoneType < 6 then
+			options.zoneType = options.zoneType + 1
+		end
+		refreshHiddenZones()
+		settingsPannelMakeButtons()
+	end
+end
+
+function roleCardFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.dealRoleCards = not options.dealRoleCards
+		settingsPannelMakeButtons()
+	end
+end
+
+function partyCardFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.dealPartyCards = not options.dealPartyCards
+		settingsPannelMakeButtons()
+	end
+end
+
+function scriptedVotingFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.scriptedVoting = not options.scriptedVoting
+		settingsPannelMakeButtons()
+	end
+end
+
+function autoNotateFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.autoNotate = not options.autoNotate
+		settingsPannelMakeButtons()
+	end
+end
+
+function policySafetyFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.policySafety = not options.policySafety
+		settingsPannelMakeButtons()
+	end
+end
+
+function voteHistoryFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.voteHistory = not options.voteHistory
+		settingsPannelMakeButtons()
+	end
+end
+
+function shufflePlayersFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.shufflePlayers = not options.shufflePlayers
+		settingsPannelMakeButtons()
+	end
+end
+
+function shuffleHostFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.shuffleHost = not options.shuffleHost
+		settingsPannelMakeButtons()
+	end
+end
+
+function expansionOptionEnabledSwapGov(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionOptionEnabled, 1) == 1 then
+			options.expansionOptionEnabled = options.expansionOptionEnabled - 1
+		else
+			options.expansionOptionEnabled = options.expansionOptionEnabled + 1
+		end
+		refreshExpansionButtons()
+		settingsPannelMakeButtons()
+	end
+end
+
+function expansionOptionEnabledReverse(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionOptionEnabled, 2) == 2 then
+			options.expansionOptionEnabled = options.expansionOptionEnabled - 2
+		else
+			options.expansionOptionEnabled = options.expansionOptionEnabled + 2
+		end
+		refreshExpansionButtons()
+		settingsPannelMakeButtons()
+	end
+end
+
+function expansionOptionEnabledSwapPower(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionOptionEnabled, 4) == 4 then
+			options.expansionOptionEnabled = options.expansionOptionEnabled - 4
+		else
+			options.expansionOptionEnabled = options.expansionOptionEnabled + 4
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function expansionOptionStatusSwapGov(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionOptionStatus, 1) == 1 then
+			options.expansionOptionStatus = options.expansionOptionStatus - 1
+		else
+			options.expansionOptionStatus = options.expansionOptionStatus + 1
+		end
+		refreshExpansionButtons()
+	end
+end
+
+function expansionOptionStatusReverse(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if bit32.band(options.expansionOptionStatus, 2) == 2 then
+			options.expansionOptionStatus = options.expansionOptionStatus - 2
+		else
+			options.expansionOptionStatus = options.expansionOptionStatus + 2
+		end
+		refreshExpansionButtons()
+	end
+end
+
+function decLiberalCards(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.liberalCards > 5 then
+			options.liberalCards = options.liberalCards - 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function incLiberalCards(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.liberalCards < 8 then
+			options.liberalCards = options.liberalCards + 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function decFascistCards(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.fascistCards > 10 then
+			options.fascistCards = options.fascistCards - 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function incFascistCards(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.fascistCards < 15 then
+			options.fascistCards = options.fascistCards + 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function decExpansionAmount(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.expansionAmount > 2 then
+			options.expansionAmount = options.expansionAmount - 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function incExpansionAmount(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		if options.expansionAmount < 3 then
+			options.expansionAmount = options.expansionAmount + 1
+		end
+		settingsPannelMakeButtons()
+	end
+end
+
+function addJaCard(cardIn)
+	local player = string.gsub(cardIn.getDescription(), '\'s Ja Card', '')
+	jaCardGuids[player] = cardIn.getGUID()
+end
+
+function addNeinCard(cardIn)
+	local player = string.gsub(cardIn.getDescription(), '\'s Nein Card', '')
+	neinCardGuids[player] = cardIn.getGUID()
+end
+
+function displayBannerCardsCoroutine()
+	local tmpZone = getObjectFromGUID(bannerZoneGuid)
+	local inZone = tmpZone.getObjects()
+	local policyCard = nil
+	local boardCard = nil
+
+	-- get the cards
+	for _, j in ipairs(inZone) do
+		if isPolicyCard(j) then
+			policyCard = j
+		elseif isBoardCard(j) and not isBoardCardVeto(j) then
+			boardCard = j
+		end
+	end
+
+	-- kill old banners
+	if bannerGuids then
+		for _, j in ipairs(bannerGuids) do
+			destroyObjectByGUID(j)
+		end
+	end
+	bannerGuids = {}
+
+	-- display and board card handler
+	if policyCard and boardCard and not topdeck then
+		displayBannerCard(policyCard, -14.5, 0)
+		displayBannerCard(boardCard, 20.5, 4)
+		boardCardHandler(boardCard)
+	else
+		displayBannerCard(policyCard, 0, 0)
+		if lastPres and not topdeck then
+			movePlacards(nextPres(lastPres), true)
+		end
+	end
+
+	topdeck = false
+
+	-- Win check
+	if lastLiberalPlayed > 5 or lastFascistPlayed > 6 then
+		if not options.dealRoleCards then giveRoleCards() end
+	end
+
+	return true
+end
+
+function displayBannerCard(card, offset, bannerGuidsOffset)
+	local bannerCard = {}
+	local params = {sound = false}
+	params.snap_to_grid = false
+	params.position = {offset, 33, 144}
+	bannerCard[1] = card.clone(params)
+	params.position = {-offset, 33, -144}
+	bannerCard[2] = card.clone(params)
+	params.position = {144, 33, -offset}
+	bannerCard[3] = card.clone(params)
+	params.position = {-144, 33, offset}
+	bannerCard[4] = card.clone(params)
+	wait(5)
+	bannerCard[1].setRotation({90, 180, 0})
+	bannerCard[2].setRotation({90, 0, 0})
+	bannerCard[3].setRotation({90, 270, 0})
+	bannerCard[4].setRotation({90, 90, 0})
+	for i, j in ipairs(bannerCard) do
+		bannerCard[i].setScale({13, 0, 13})
+		bannerCard[i].setLock(true)
+		bannerCard[i].interactable = false
+		bannerGuids[i + bannerGuidsOffset] = bannerCard[i].guid
+	end
+end
+
+function boardCardHandler(card)
+	if isBoardCardInspect(card) then
+		if lastPres then
+			--expansion
+			local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+			if abilitiesDeck then
+				broadcastToAll('Delaying inspect 5 seconds...', {1,1,1})
+				sleep(5)
+			end
+			if not options.dealPartyCards then createInspectButtons(lastPres) end
+			if options.autoNotate then
+				notateInfo(lastPres, 'inspects', '', '', true)
+			end
+		else
+			printToAll('ERROR: Last president not found.', {1,0,0})
+		end
+	elseif isBoardCardPickPres(card) then
+		if lastPres then
+			if options.autoNotate then
+				notateInfo(lastPres, 'gives pres to', '', '', true)
+			end
+		else
+			printToAll('ERROR: Last president not found.', {1,0,0})
+		end
+	elseif isBoardCardBullet(card) then
+		if lastPres then
+			giveBullet(lastPres)
+			if options.autoNotate then
+				notateInfo(lastPres, string.lower(bulletInfo.action), '', '', true)
+			end
+		else
+			printToAll('ERROR: Last president not found.', {1,0,0})
+		end
+	elseif isBoardCardTopCard(card) then
+		if lastPres then
+			broadcastToColor('Examine the top card from the deck and put it back in the draw pile.', lastPres, {1, 1, 1})
+			drawCards(1, lastPres)
+			if options.autoNotate then
+				notateInfo(lastPres, 'examines deck:', '', '', false)
+			end
+		else
+			printToAll('ERROR: Last president not found.', {1,0,0})
+		end
+	elseif isBoardCardTopThree(card) then
+		if lastPres then
+			broadcastToColor('Examine the top three cards from the deck and put them back in the draw pile (right to left to keep the order).', lastPres, {1, 1, 1})
+			drawCards(3, lastPres)
+			if options.autoNotate then
+				notateInfo(lastPres, 'examines deck:', '', '', false)
+			end
+		else
+			printToAll('ERROR: Last president not found.', {1,0,0})
+		end
+	end
+
+	if lastPres then
+		if isBoardCardPickPres(card) then
+			local saveForcePres = forcePres
+			forcePres = nil
+			movePlacards(lastPres, true)
+			if saveForcePres then
+				forcePres = saveForcePres
+			else
+				forcePres = nextPres(lastPres)
+			end
+		else
+			movePlacards(nextPres(lastPres), true)
+		end
+	end
+end
+
+function isPolicyCard(objIn)
+	if objIn.tag == 'Card' and (objIn.getDescription() == 'Fascist Policy' or
+		objIn.getDescription() == 'Liberal Policy') and not objIn.held_by_color then
+		return true
+	end
+	return false
+end
+
+function isFascistPolicyCard(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'Fascist Policy' and not objIn.held_by_color then
+		return true
+	end
+	return false
+end
+
+function isLiberalPolicyCard(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'Liberal Policy' and not objIn.held_by_color then
+		return true
+	end
+	return false
+end
+
+function isPolicyNotUsedCard(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'Not Used' and not objIn.held_by_color then
+		return true
+	end
+	return false
+end
+
+function isBoardCard(objIn)
+	if objIn.tag == 'Card' and
+	   (objIn.getDescription() == 'The president examines\nthe top card.' or
+	    objIn.getDescription() == 'The president examines\nthe top three cards.' or
+	    objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.' or
+	    objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.' or
+	    objIn.getDescription() == 'The president must\nkill a player.' or
+		 objIn.getDescription() == 'Veto power is\nunlocked.') then
+		return true
+	end
+	return false
+end
+
+function isBoardCardBullet(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president must\nkill a player.' then
+		return true
+	end
+	return false
+end
+
+function isBoardCardInspect(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.' then
+		return true
+	end
+	return false
+end
+
+function isBoardCardTopCard(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president examines\nthe top card.' then
+		return true
+	end
+	return false
+end
+
+function isBoardCardTopThree(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president examines\nthe top three cards.' then
+		return true
+	end
+	return false
+end
+
+function isBoardCardPickPres(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.' then
+		return true
+	end
+	return false
+end
+
+function isBoardCardVeto(objIn)
+	if objIn.tag == 'Card' and objIn.getDescription() == 'Veto power is\nunlocked.' then
+		return true
+	end
+	return false
+end
+
+function nextPres(playerIn)
+	local nextList
+	if bit32.band(options.expansionOptionStatus, 2) == 2 then
+		nextList = {White = 'Maroon', Brown = 'White', Red = 'Brown', Orange = 'Red', Yellow = 'Orange', Green = 'Yellow', Teal = 'Green', Blue = 'Teal', Purple = 'Blue', Pink = 'Purple', Tan = 'Pink', Maroon = 'Tan'}
+	else
+		nextList = {White = 'Brown', Brown = 'Red', Red = 'Orange', Orange = 'Yellow', Yellow = 'Green', Green = 'Teal', Teal = 'Blue', Blue = 'Purple', Purple = 'Pink', Pink = 'Tan', Tan = 'Maroon', Maroon = 'White'}
+	end
+	local checkPres = playerIn
+	local returnVal = nextList[checkPres]
+
+	while not inTable(players, returnVal) or (_G.playerStatus[returnVal] == 3) or (_G.playerStatus[returnVal] > 4)  do
+		checkPres = returnVal
+		returnVal = nextList[checkPres]
+	end
+
+	return returnVal
+end
+
+function movePlacards(playerIn, returnVoteCards)
+	local moveToPlayer = playerIn
+	if forcePres then
+		moveToPlayer = forcePres
+		forcePres = nil
+	end
+
+	--Expansion
+	expansionCounters()
+
+	if options.scriptedVoting and returnVoteCards then
+		returnVoteCardsToHand()
+		disableVote = false
+		blockDraw = false
+		votePassed = false
+	end
+
+	local tmpPres = getObjectFromGUID(president_guid)
+	tmpPres.setVar('lastPres', moveToPlayer)
+	if tmpPres then giveObjectToPlayer(tmpPres, moveToPlayer, {forward = 11, right = 0, up = 0, forceHeight = 2.2}, no_rotation, false, false) end
+	local tmpChan = getObjectFromGUID(chancelor_guid)
+	if tmpChan then giveObjectToPlayer(tmpChan, moveToPlayer, {forward = 11, right = 0, up = 0, forceHeight = 2.8}, no_rotation, false, false) end
+end
+
+function giveBullet(playerIn)
+	local params = {type = bulletInfo.type, sound = false}
+	local bullet = spawnObject(params)
+	custom = {
+		mesh = bulletInfo.mesh,
+		diffuse = bulletInfo.diffuse,
+		assetbundle = bulletInfo.assetbundle,
+		assetbundle_secondary = bulletInfo.assetbundle_secondary,
+		image = bulletInfo.image,
+		convex = bulletInfo.convex,
+		material = bulletInfo.material,
+		specular_color = bulletInfo.specular_color,
+		specular_intensity = bulletInfo.specular_intensity,
+		specular_sharpness = bulletInfo.specular_sharpness,
+		fresnel_strength = bulletInfo.fresnel_strength
+	}
+	bullet.use_grid = bulletInfo.use_grid
+	bullet.setCustomObject(custom)
+	bullet.setColorTint(bulletInfo.colorTint)
+	bullet.setScale(bulletInfo.scale)
+	bullet.setLuaScript(
+			'loadDone = false\r\n' ..
+			'\r\n' ..
+			'function onLoad()\r\n' ..
+			'	loadDone = true\r\n' ..
+			'end\r\n' ..
+			'\r\n' ..
+			'function onDrop(playerColor)\r\n' ..
+			'	local options = Global.getTable(\'options\')\r\n' ..
+			'	if options.scriptedVoting then\r\n' ..
+			'		Global.call(\'markDead\', {self})\r\n' ..
+			'	end\r\n' ..
+			'end\r\n' ..
+			'\r\n' ..
+			'function onCollisionEnter(collisionInfo)\r\n' ..
+			'	if collisionInfo and loadDone then\r\n' ..
+			'		if not self.interactable then\r\n' ..
+			'			self.setLock(true)\r\n' ..
+			'			self.interactable = true\r\n' ..
+			'		end\r\n' ..
+			'		local options = Global.getTable(\'options\')\r\n' ..
+			'		if options.autoNotate then\r\n' ..
+			'			if not collisionInfo.collision_object.guid then\r\n' ..
+			'				local bulletInfo = Global.getTable(\'bulletInfo\')\r\n' ..
+			'				local notate = Global.getTable(\'notate\')\r\n' ..
+			'				if notate.line and notate.action == string.lower(bulletInfo.action) then\r\n' ..
+			'					Global.call(\'notateColor2ByObject\', {self})\r\n' ..
+			'				end\r\n' ..
+			'			end\r\n' ..
+			'		end\r\n' ..
+			'	end\r\n' ..
+			'end\r\n')
+	wait(5)
+	bullet.setPosition({0, 30, 0})
+	giveObjectToPlayer(bullet, playerIn, {forward = 20, right = 0, up = 0, forceHeight = 6}, no_rotation)
+end
+
+function markDead(tableIn)
+	if type(tableIn) == 'table' then
+		local victimColor = closestPlayer(tableIn[1], players, 18)
+		if victimColor then
+			_G.playerStatus[victimColor] = 5
+			refreshStatusButtons()
+			tableIn[1].interactable = false
+		end
+	end
+end
+
+function createPolicyCardTimer()
+	Timer.destroy('policyCardTimer')
+	local parameters = {}
+	parameters.identifier = 'policyCardTimer'
+	parameters.function_name = 'startPolicyCardCheck'
+	parameters.function_owner = Global
+	parameters.delay = 1
+	Timer.create(parameters)
+end
+
+function startPolicyCardCheck()
+	if not Global.getVar('hold') then
+		Global.setVar('hold', true)
+		startLuaCoroutine(Global, 'policyCardCoroutine')
+	end
+end
+
+function policyCardCoroutine()
+	local cardLists = {}
+	local drawZone = nil
+	local discardZone = nil
+	local autoNotateReshuffle = false
+
+	local homeTracker = function()
+		local tracker = getObjectFromGUID(election_tracker_guid)
+		if tracker then
+			tracker.setPositionSmooth(electionTrackerOrgPos)
+			tracker.setRotationSmooth({0, 315, 0})
+		end
+	end
+
+	local movePrevPlacards = function()
+		if lastPres and lastChan then
+			local tmpPres = getObjectFromGUID(prev_president_guid)
+			if tmpPres then giveObjectToPlayer(tmpPres, lastPres, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, false) end
+			local tmpChan = getObjectFromGUID(prev_chancelor_guid)
+			if tmpChan then giveObjectToPlayer(tmpChan, lastChan, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, false) end
+		end
+	end
+
+	local homePrevPlacards = function()
+		local tmpPres = getObjectFromGUID(prev_president_guid)
+		if tmpPres then
+			tmpPres.setRotationSmooth(flip_y, false, false)
+			tmpPres.setPositionSmooth(prev_president_pos, false, false)
+		end
+		local tmpChan = getObjectFromGUID(prev_chancelor_guid)
+		if tmpChan then
+			tmpChan.setRotationSmooth(flip_y, false, false)
+			tmpChan.setPositionSmooth(prev_chancelor_pos, false, false)
+		end
+	end
+
+	drawZone = getObjectFromGUID(draw_zone_guid)
+	discardZone = getObjectFromGUID(discard_zone_guid)
+
+	if drawZone == nil or discardZone == nil then
+		return true
+	end
+
+	-- Get the status of all cards and decks from the zones
+	cardLists = getPolicyCardStatus(true)
+
+	-- protect the cards
+	if #cardLists.drawDeckList == 1 and #cardLists.drawList > 1 then
+		local tmpDeck = getObjectFromGUID(cardLists.drawDeckList[1])
+		if tmpDeck then
+			tmpDeck.interactable = false
+		end
+	end
+	if #cardLists.discardDeckList == 1 and #cardLists.discardList > 1 then
+		local tmpDeck = getObjectFromGUID(cardLists.discardDeckList[1])
+		if tmpDeck then
+			tmpDeck.interactable = false
+		end
+	end
+
+	--Expansion
+	tmpObj = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	if tmpObj then tmpObj.interactable = false end
+	tmpObj = getDeckFromZoneByGUID(effectsPile_zone_guid)
+	if tmpObj then tmpObj.interactable = false end
+
+	-- Msg if cards are added to the draw deck
+	if lastDrawCt and #cardLists.drawList > lastDrawCt and #cardLists.drawDeckList == 1 then
+		broadcastToAll('WARNING: One or more cards have been added to the draw deck!', {1,0,0})
+	end
+	lastDrawCt = #cardLists.drawList
+
+	if started and #cardLists.fascistList > options.fascistCards then
+		broadcastToAll('CHEATING DETECTED: Too many ' .. text.fascistAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
+	end
+	if started and #cardLists.liberalList > options.liberalCards then
+		broadcastToAll('CHEATING DETECTED: Too many ' .. text.liberalAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
+	end
+
+	-- Location of all cards is known
+	if started and #cardLists.fascistList == options.fascistCards and #cardLists.liberalList == options.liberalCards and (#cardLists.discardDeckList == 0 or #cardLists.discardDeckList == 1) then
+		-- Reshuffle
+		if #cardLists.drawList < 3 and #cardLists.discardDeckList == 1 and (#cardLists.drawDeckList == 0 or #cardLists.drawDeckList == 1) then
+			if cardLists.drawDeckList[1] then
+				local tmpDeck = getObjectFromGUID(cardLists.drawDeckList[1])
+				pos = tmpDeck.getPosition()
+			else
+				pos = getPositionByGUID(draw_zone_guid)
+			end
+			broadcastToAll('Starting reshuffle...', {1,1,1})
+			local discardDeck = getObjectFromGUID(cardLists.discardDeckList[1])
+			discardDeck.setPositionSmooth({pos['x'], 3, pos['z']}, false, true)
+			sleep(2)
+			local expectedCards = #cardLists.drawList + #cardLists.discardList
+			local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+			if drawDeck and #drawDeck.getObjects() == expectedCards then
+				lastDrawCt = expectedCards
+				drawDeck.shuffle()
+				broadcastToAll('reshuffle done.', {1,1,1})
+				autoNotateReshuffle = true
+				local discardPileBoard = getObjectFromGUID(discardPileBoard_guid)
+				if discardPileBoard then
+					discardPileBoard.setName(0)
+				end
+			else
+				broadcastToAll('ERROR: reshuffle FAILED! Please fix the issue.', {1,0,0})
+				startLuaCoroutine(Global, 'disableSecurityCoroutine')
+				return true
+			end
+		end
+
+		-- Banners and board card handler
+		if #cardLists.liberalPlayedList > 0 and (#cardLists.liberalPlayedList + #cardLists.liberalNotUsedList) > lastLiberalPlayed then
+			lastLiberalPlayed = #cardLists.liberalPlayedList + #cardLists.liberalNotUsedList
+			bannerZoneGuid = liberal_zone_guids[lastLiberalPlayed]
+			tmpZone = getObjectFromGUID(bannerZoneGuid)
+			inZone = tmpZone.getObjects()
+			local liberalCardFound = false
+			for i, j in ipairs(inZone) do
+				if isLiberalPolicyCard(j) then
+					if isFaceUp(j) then liberalCardFound = true end
+				end
+			end
+			if liberalCardFound then
+				if options.autoNotate then
+					if topdeck then
+						notateInfo('', 'Topdeck:', '', '[0080F8]' .. text.liberalLetter .. '[-]', false)
+					else
+						notateInfo(lastPres, '>', lastChan, '[0080F8]' .. text.liberalLetter .. '[-]', false)
+					end
+					homeTracker()
+					if autoNotateReshuffle then notateInfo('', '', '', '*Reshuffle*', false) end
+				end
+				if topdeck then
+					homePrevPlacards()
+				else
+					movePrevPlacards()
+				end
+				startLuaCoroutine(Global, 'displayBannerCardsCoroutine')
+			else
+				lastLiberalPlayed = 0 -- didn't find the card
+			end
+		elseif #cardLists.fascistPlayedList > 0 and (#cardLists.fascistPlayedList + #cardLists.fascistNotUsedList) > lastFascistPlayed then
+			lastFascistPlayed = #cardLists.fascistPlayedList + #cardLists.fascistNotUsedList
+			bannerZoneGuid = fascist_zone_guids[lastFascistPlayed]
+			tmpZone = getObjectFromGUID(bannerZoneGuid)
+			inZone = tmpZone.getObjects()
+			local fascistCardFound = false
+			for i, j in ipairs(inZone) do
+				if isFascistPolicyCard(j) then
+					if isFaceUp(j) then fascistCardFound = true end
+				end
+			end
+			if fascistCardFound then
+				if options.autoNotate then
+					if topdeck then
+						notateInfo('', 'Topdeck:', '', '[FF0000]' .. text.fascistLetter .. '[-]', false)
+					else
+						notateInfo(lastPres, '>', lastChan, '[FF0000]' .. text.fascistLetter .. '[-]', false)
+					end
+					homeTracker()
+					if lastFascistPlayed == 4 then notateInfo('', '', '', '[FF0000]' .. text.hitler .. ' territory![-]', false) end
+					if autoNotateReshuffle then notateInfo('', '', '', '*Reshuffle*', false) end
+				end
+				if topdeck then
+					homePrevPlacards()
+				else
+					movePrevPlacards()
+				end
+				startLuaCoroutine(Global, 'displayBannerCardsCoroutine')
+			else
+				lastFascistPlayed = 0 -- didn't find the card
+			end
+		end
+	end
+
+	Global.setVar('hold', false)
+
+	return true
+end
+
+function getPolicyCardStatus(removeCards)
+	local returnTable = {}
+	returnTable.fascistList = {}
+	returnTable.fascistPlayedList = {}
+	returnTable.fascistNotUsedList = {}
+	returnTable.liberalList = {}
+	returnTable.liberalPlayedList = {}
+	returnTable.liberalNotUsedList = {}
+	returnTable.drawList = {}
+	returnTable.drawDeckList = {}
+	returnTable.discardList = {}
+	returnTable.discardDeckList = {}
+	local removeCt = 0
+	local cardError = false
+	local drawZone = nil
+	local discardZone = nil
+
+	drawZone = getObjectFromGUID(draw_zone_guid)
+	discardZone = getObjectFromGUID(discard_zone_guid)
+
+	local inZone = drawZone.getObjects()
+	for i, j in ipairs(inZone) do
+		if isFascistPolicyCard(j) then
+			smartTableInsert(returnTable.fascistList, j.guid)
+			smartTableInsert(returnTable.drawList, j.guid)
+			smartTableInsert(returnTable.drawDeckList, j.guid)
+		elseif isLiberalPolicyCard(j) then
+			smartTableInsert(returnTable.liberalList, j.guid)
+			smartTableInsert(returnTable.drawList, j.guid)
+			smartTableInsert(returnTable.drawDeckList, j.guid)
+		elseif j.tag == 'Deck' then
+			smartTableInsert(returnTable.drawDeckList, j.guid)
+			local inDeck = j.getObjects()
+			for k, l in ipairs(inDeck) do
+				if l.description == 'Fascist Policy' then
+					smartTableInsert(returnTable.fascistList, l.guid)
+					smartTableInsert(returnTable.drawList, l.guid)
+				elseif l.description == 'Liberal Policy' then
+					smartTableInsert(returnTable.liberalList, l.guid)
+					smartTableInsert(returnTable.drawList, l.guid)
+				elseif removeCards and removeCt < (#inDeck - 1) then
+					local params = {}
+					params.position = {0,5,0}
+					params.guid = l.guid
+					local card = j.takeObject(params)
+					if not cardError then
+						cardError = true
+						printToAll('ERROR: That is not a policy card.', {1,0,0})
+					end
+					removeCt = removeCt + 1
+				end
+			end
+		end
+	end
+	removeCt = 0
+	inZone = discardZone.getObjects()
+	for i, j in ipairs(inZone) do
+		if j.tag == 'Deck' then
+			smartTableInsert(returnTable.discardDeckList, j.guid)
+			local inDeck = j.getObjects()
+			for k, l in ipairs(inDeck) do
+				if l.description == 'Fascist Policy' then
+					smartTableInsert(returnTable.fascistList, l.guid)
+					smartTableInsert(returnTable.discardList, l.guid)
+				elseif l.description == 'Liberal Policy' then
+					smartTableInsert(returnTable.liberalList, l.guid)
+					smartTableInsert(returnTable.discardList, l.guid)
+				elseif removeCards and removeCt < (#inDeck - 1) then
+					local params = {}
+					params.position = {0,5,0}
+					params.guid = l.guid
+					local card = j.takeObject(params)
+					if not cardError then
+						cardError = true
+						printToAll('ERROR: That is not a policy card.', {1,0,0})
+					end
+					removeCt = removeCt + 1
+				end
+			end
+		end
+	end
+	local tmpZoneGuid
+	local tmpZone
+	local cardFound = false
+	for i = #liberal_zone_guids, 1, -1 do
+		tmpZone = getObjectFromGUID(liberal_zone_guids[i])
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isLiberalPolicyCard(j) then
+					smartTableInsert(returnTable.liberalList, j.guid)
+					smartTableInsert(returnTable.liberalPlayedList, j.guid)
+					cardFound = true
+				elseif isPolicyNotUsedCard(j) and cardFound then
+					smartTableInsert(returnTable.liberalNotUsedList, j.guid)
+				end
+			end
+		end
+	end
+	cardFound = false
+	for i = #fascist_zone_guids, 1, -1 do
+		tmpZone = getObjectFromGUID(fascist_zone_guids[i])
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isFascistPolicyCard(j) then
+					smartTableInsert(returnTable.fascistList, j.guid)
+					smartTableInsert(returnTable.fascistPlayedList, j.guid)
+					cardFound = true
+				elseif isPolicyNotUsedCard(j) and cardFound then
+					smartTableInsert(returnTable.fascistNotUsedList, j.guid)
+				end
+			end
+		end
+	end
+
+	return returnTable
+end
+
+function allPolicyCardsKnown()
+	local cardLists = {}
+
+	cardLists = getPolicyCardStatus(false)
+	if started and #cardLists.fascistList == options.fascistCards and #cardLists.liberalList == options.liberalCards and #cardLists.drawDeckList == 1 and (#cardLists.discardDeckList == 0 or #cardLists.discardDeckList == 1) then
+		return true
+	end
+
+	return false
+end
+
+function createVoteTimer()
+	if not disableVote then
+		Timer.destroy('voteTimer')
+		local parameters = {}
+		parameters.identifier = 'voteTimer'
+		parameters.function_name = 'startVoteCheck'
+		parameters.function_owner = Global
+		parameters.delay = 1
+		Timer.create(parameters)
+	end
+end
+
+function startVoteCheck()
+	local jaVote
+	local neinVote
+	local voteDone = true
+	local pos
+	votes = {}
+
+	for i, playerColor in pairs(players) do
+		jaVote = 0
+		neinVote = 0
+		jaCard = getObjectFromGUID(jaCardGuids[playerColor])
+		neinCard = getObjectFromGUID(neinCardGuids[playerColor])
+		if greyPlayer(playerColor) then
+			ph = getObjectFromGUID(greyPlayerHandGuids[playerColor])
+			if ph then
+				pos = ph.getPosition()
+				pos = {x = pos['x'], y = pos['y'], z = pos['z'] - 2.26}
+			end
+		else
+			local ph = Player[playerColor].getPlayerHand()
+			if ph then
+				pos = {x = ph['pos_x'], y = ph['pos_y'], z = ph['pos_z']}
+			end
+		end
+		if pos and jaCard and neinCard and not (_G.playerStatus[playerColor] > 3) then
+			local distance = findDistance(jaCard.getPosition(), pos);
+			if distance > 8 then
+				if not isFaceUp(jaCard) and not jaCard.held_by_color then
+					jaVote = 1
+				else
+					voteDone = false
+				end
+			end
+			distance = findDistance(neinCard.getPosition(), pos);
+			if distance > 8 then
+				if not isFaceUp(neinCard) and not neinCard.held_by_color then
+					neinVote = -1
+				else
+					voteDone = false
+				end
+			end
+		end
+		votes[playerColor] = jaVote + neinVote
+		if (jaVote + neinVote) == 0 and not (_G.playerStatus[playerColor] > 3) then
+			voteDone = false
+		end
+	end
+
+	if voteDone then
+		voteNotes = getFinalVoteString()
+		setNotes(voteNotes .. '\n\n' .. mainNotes)
+		local presColor = getPres()
+		local chanColor = getChan()
+		local out = '[' .. stringColorToHex(presColor) .. ']' .. presColor .. '[-] > '
+		out = out .. '[' .. stringColorToHex(chanColor) .. ']' .. chanColor .. '[-]\n'
+		out = out .. voteNotes
+		if voteNotebook == '' then
+			voteNotebook = out
+		else
+			voteNotebook = voteNotebook .. '\n\n' .. out
+		end
+		lastVote = out
+		for _, lastVoteGuid in ipairs(lastVote_guids) do
+			local lastVoteObj = getObjectFromGUID(lastVoteGuid)
+			if lastVoteObj then lastVoteObj.TextTool.setValue(removeBBCode(out)) end
+		end
+		flipVotes()
+		disableVote = true
+		if string.find(out, 'Vote passes') then
+			votePassed = true
+		else
+			votePassed = false
+		end
+	else
+		voteNotes = getPrelimVoteString()
+		setNotes(voteNotes .. '\n\n' .. mainNotes)
+	end
+end
+
+function expansionCounters()
+	local allObjs = getAllObjects()
+	local tmpObj
+
+	for _, tmpObj in ipairs(allObjs) do
+		if tmpObj then
+			if tmpObj.tag == 'Counter' and string.match(tmpObj.getName(), 'Turns') then
+				tmpObj.Counter.decrement()
+			end
+		end
+	end
+end
+
+function waitReturnVoteCardsCoroutine()
+	sleep(5)
+	returnVoteCardsToHand()
+	disableVote = false
+	blockDraw = false
+	votePassed = false
+
+	return true
+end
+
+function flipVotes()
+	for i, playerColor in pairs(players) do
+		jaCard = getObjectFromGUID(jaCardGuids[playerColor])
+		neinCard = getObjectFromGUID(neinCardGuids[playerColor])
+		if greyPlayer(playerColor) then
+			ph = getObjectFromGUID(greyPlayerHandGuids[playerColor])
+			if ph then
+				pos = ph.getPosition()
+				pos = {x = pos['x'], y = pos['y'], z = pos['z'] - 2.26}
+			end
+		else
+			local ph = Player[playerColor].getPlayerHand()
+			if ph then
+				pos = {x = ph['pos_x'], y = ph['pos_y'], z = ph['pos_z']}
+			end
+		end
+		if pos and jaCard and neinCard and not (_G.playerStatus[playerColor] > 3) then
+			local distance = findDistance(jaCard.getPosition(), pos);
+			if distance > 8 then jaCard.flip() end
+			distance = findDistance(neinCard.getPosition(), pos);
+			if distance > 8 then neinCard.flip() end
+		end
+	end
+end
+
+function returnVoteCardsToHand()
+	for i, playerColor in pairs(players) do
+		jaCard = getObjectFromGUID(jaCardGuids[playerColor])
+		neinCard = getObjectFromGUID(neinCardGuids[playerColor])
+		if jaCard and neinCard then
+			local jaCardRot = jaCard.getRotation()
+			local neinCardRot = neinCard.getRotation()
+			jaCardRot.exactRot = true
+			neinCardRot.exactRot = true
+			if greyPlayer(playerColor) then
+				jaCardRot = {x = 0, y = 180, z = 180, exactRot = true}
+				neinCardRot = {x = 0, y = 180, z = 180, exactRot = true}
+				giveObjectToPlayer(jaCard, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, jaCardRot, false, true)
+				giveObjectToPlayer(neinCard, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, jaCardRot, false, true)
+			else
+				giveObjectToPlayer(jaCard, playerColor, {forward = 0, right = 0, up = 0}, jaCardRot, false, true)
+				giveObjectToPlayer(neinCard, playerColor, {forward = 0, right = 0, up = 0}, neinCardRot, false, true)
+			end
+		end
+	end
+end
+
+function getFinalVoteString()
+	local jaCount = 0
+	local neinCount = 0
+	local out = '[i]Ja votes[/i]: '
+	for i, playerColor in pairs(ALL_PLAYABLE_COLORS) do -- used for the order
+		if votes[playerColor] == 1 and inTable(players, playerColor) then
+			if string.sub(out, -1) == ']' then out = out .. ', ' end
+			out = out .. '[' .. stringColorToHex(playerColor) .. ']' .. playerColor .. '[-]'
+			jaCount = jaCount + 1
+		end
+	end
+	if jaCount == 0 then out = out .. 'None' end
+	out = out .. '[/i]\n[i]Nein votes[/i]:[i] '
+	for i, playerColor in pairs(ALL_PLAYABLE_COLORS) do -- used for the order
+		if votes[playerColor] == -1 and inTable(players, playerColor) then
+			if string.sub(out, -1) == ']' then out = out .. ', ' end
+			out = out .. '[' .. stringColorToHex(playerColor) .. ']' .. playerColor .. '[-]'
+			neinCount = neinCount + 1
+		end
+	end
+	if neinCount == 0 then out = out .. 'None' end
+	out = out .. '[/i]'
+	if jaCount > neinCount then
+		broadcastToAll('Vote passes', stringColorToRGB('Green'))
+		out = '[' .. stringColorToHex('Green') .. ']-<<<<· Vote passes <══¦-•\n' .. '[-]' .. out
+	else
+		broadcastToAll('Vote fails', stringColorToRGB('Red'))
+		out = '[' .. stringColorToHex('Red') .. ']-<<<<· Vote fails <══¦-•\n' .. '[-]' .. out
+		if options.autoNotate then
+			local lineSave = noteTakerCurrLine
+			noteTakerCurrLine = #noteTakerNotes
+			if not noteTakerBlankLine(noteTakerCurrLine) then
+				addNewLine()
+				noteTakerCurrLine = #noteTakerNotes
+			end
+			noteTakerNotes[noteTakerCurrLine].color1 = getPres()
+			noteTakerNotes[noteTakerCurrLine].action = '>'
+			noteTakerNotes[noteTakerCurrLine].color2 = getChan()
+			noteTakerNotes[noteTakerCurrLine].result = '[222222]Downvoted[-]'
+			noteTakerCurrLine = lineSave
+			refreshNotes(nil)
+			local tracker = getObjectFromGUID(election_tracker_guid)
+			if tracker then
+				tracker.translate({electionTrackerMoveX, 0, 0})
+			end
+		end
+		movePlacards(nextPres(getPres()), false)
+		startLuaCoroutine(Global, 'waitReturnVoteCardsCoroutine')
+	end
+
+	return out
+end
+
+function getPrelimVoteString()
+	local out = '[u]Voted[/u]:[i] '
+	for i, playerColor in pairs(ALL_PLAYABLE_COLORS) do -- used for the order
+		if votes[playerColor] ~= 0 and inTable(players, playerColor) and not (_G.playerStatus[playerColor] > 3) then
+			if string.sub(out, -1) == ']' then out = out .. ', ' end
+			out = out .. '[' .. stringColorToHex(playerColor) .. ']' .. playerColor .. '[-]'
+		end
+	end
+	out = out .. '[/i]\n[u]Waiting on[/u]:[i] '
+	for i, playerColor in pairs(ALL_PLAYABLE_COLORS) do -- used for the order
+		if votes[playerColor] == 0 and inTable(players, playerColor) and not (_G.playerStatus[playerColor] > 3) then
+			if string.sub(out, -1) == ']' then out = out .. ', ' end
+			out = out .. '[' .. stringColorToHex(playerColor) .. ']' .. playerColor .. '[-]'
+		end
+	end
+	out = out .. '[/i]'
+
+	return out
+end
+
+function editButtonByLabel(objectGUIDIn, oldLabelIn, newLabelIn, newFunctionIn)
+	local bObject = getObjectFromGUID(objectGUIDIn)
+	if bObject then
+		local buttonList = bObject.getButtons()
+		if buttonList then
+			local button
+			for _, button in ipairs(buttonList) do
+				if button.label == oldLabelIn then
+					button.label = newLabelIn
+					button.click_function = newFunctionIn
+					bObject.editButton(button)
+				end
+			end
+		end
+	end
+end
+
+function topdeckCard(clickedObject, playerColor)
+	if started then
+		if playerColor == getPres() then
+			drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+			if drawDeck then
+				lastPres = playerColor
+				topdeck = true
+				local params = {}
+				params.position = {0, 2, 0}
+				params.flip = true
+				local card = drawDeck.takeObject(params)
+				if isLiberalPolicyCard(card) then
+					broadcastToAll('The topdeck is '.. text.liberalArticle .. ' ' .. text.liberal .. ' ' .. text.policy .. '!', {0.1, 0.3, 1})
+				else
+					broadcastToAll('The topdeck is '.. text.fascistArticle .. ' ' .. text.fascist .. ' ' .. text.policy .. '!', {1,0,0})
+				end
+			else
+				broadcastToAll('ERROR: Draw deck not found.', {1, 0, 0})
+			end
+		else
+			printToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
+		end
+	else
+		printToColor('ERROR: Game not started.', playerColor, {1, 0, 0})
+	end
+end
+
+function drawThree(clickedObject, playerColor)
+	if started then
+		if bit32.band(options.expansionOptionStatus, 1) == 1 then
+			if playerColor == getChan() then
+				if blockDraw then
+					if greyPlayer(playerColor) then
+						clickedObject.broadcast('ERROR: You can only draw once (move the Chancellor placard to reset).', {1, 0, 0})
+					else
+						broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
+					end
+				else
+					if not options.scriptedVoting or votePassed then
+						blockDraw = true
+						drawCards(3, playerColor)
+					else
+						if greyPlayer(playerColor) then
+							clickedObject.broadcast('ERROR: Vote did not pass.', {1, 0, 0})
+						else
+							broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+						end
+					end
+				end
+			else
+				if greyPlayer(playerColor) then
+					clickedObject.broadcast('ERROR: You are not the chancellor.', {1, 0, 0})
+				else
+					broadcastToColor('ERROR: You are not the chancellor.', playerColor, {1, 0, 0})
+				end
+			end
+		else
+			if playerColor == getPres() then
+				if blockDraw then
+					if greyPlayer(playerColor) then
+						clickedObject.broadcast('ERROR: You can only draw once (move the Chancellor placard to reset).', {1, 0, 0})
+					else
+						broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
+					end
+				else
+					if not options.scriptedVoting or votePassed then
+						blockDraw = true
+						drawCards(3, playerColor)
+					else
+						if greyPlayer(playerColor) then
+							clickedObject.broadcast('ERROR: Vote did not pass.', {1, 0, 0})
+						else
+							broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
+						end
+					end
+				end
+			else
+				if greyPlayer(playerColor) then
+					clickedObject.broadcast('ERROR: You are not the president.', {1, 0, 0})
+				else
+					broadcastToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
+				end
+			end
+		end
+	else
+		if greyPlayer(playerColor) then
+			clickedObject.broadcast('ERROR: Game not started.', {1, 0, 0})
+		else
+			broadcastToColor('ERROR: Game not started.', playerColor, {1, 0, 0})
+		end
+	end
+end
+
+function drawCards(amount, playerColor)
+	local drawCt = 0
+	local drawDeck = nil
+
+	drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+	if drawDeck then
+		drawCt = #drawDeck.getObjects()
+		if drawCt > (amount - 1) then
+			if bit32.band(options.expansionOptionEnabled, 4) == 4 and bit32.band(options.expansionOptionStatus, 1) == 1 then
+				lastPres = getChan()
+				lastChan = getPres()
+			else
+				lastPres = getPres()
+				lastChan = getChan()
+			end
+			if greyPlayer(playerColor) then
+				dealToColor12P(amount, playerColor)
+			else
+				drawDeck.dealToColor(amount, playerColor)
+			end
+			if amount == 1 then
+				broadcastToAll('Dealing 1 card to ' .. playerColor .. '.', stringColorToRGBExtra(playerColor))
+			else
+				broadcastToAll('Dealing ' .. amount .. ' cards to ' .. playerColor .. '.', stringColorToRGBExtra(playerColor))
+			end
+		else
+			broadcastToAll('ERROR: Too few cards to deal.', {1, 0, 0})
+		end
+	else
+		broadcastToAll('ERROR: Draw deck not found.', {1, 0, 0})
+	end
+end
+
+function getPres()
+	local tempObj = getObjectFromGUID(president_guid)
+	return closestPlayer(tempObj, players, 1000)
+end
+
+function getChan()
+	local tempObj = getObjectFromGUID(chancelor_guid)
+	return closestPlayer(tempObj, players, 1000)
+end
+
+function onPlayerChangedColor(color)
+	if started then
+		if not (color == 'Grey') and not (color == 'Black') then
+			printToColor('--------------------------------------',color, {1, 1, 1})
+			printToColor('Welcome! ' .. Player[color].steam_name,color, {1, 1, 1})
+			printToColor('--------------------------------------',color, {1, 1, 1})
+			Player[color]:print(tellRole(color))
+			printToColor('--------------------------------------',color, {1, 1, 1})
+			Player[color]:print(chatHelp(Player[color].admin))
+		elseif color == 'Black' then
+			printToAll('--------------------------------------', {1, 1, 1})
+			local hcol = stringColorToRGBExtra(color)
+			printToAll('All hail the omniscient Black player ' .. Player[color].steam_name, {hcol['r'], hcol['g'], hcol['b']})
+			printToAll('--------------------------------------', {1, 1, 1})
+			Player[color]:print(tellRole(color))
+			printToColor('--------------------------------------',color, {1, 1, 1})
+			Player[color]:print(chatHelp(Player[color].admin))
+		end
+	else
+		local needRefresh = true
+		if lastPlayerCt then
+			if lastPlayerCt < 7 and #getSeatedPlayers() < 7 then
+				needRefresh = false
+			elseif lastPlayerCt > 6 and lastPlayerCt < 9 and
+					 #getSeatedPlayers() > 6 and #getSeatedPlayers() < 9 then
+				needRefresh = false
+			elseif lastPlayerCt > 8 and #getSeatedPlayers() > 8 then
+				needRefresh = false
+			end
+		end
+		if needRefresh then
+			refreshBoardCards()
+		end
+	end
+
+	if options.zoneType == 6 and color ~= 'Grey' then
+		local colorFound = nil
+
+		for testColor, steamId in pairs(greyPlayerSteamIds) do
+			if steamId == Player[color].steam_id then
+				colorFound = testColor
+				break
+			end
+		end
+
+		if colorFound then
+			greyPlayerSteamIds[colorFound] = nil
+			destroyObjectByGUID(greyAvatarGuids[colorFound])
+			local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[colorFound])
+			if textObj then
+				textObj.TextTool.setValue(' ')
+			end
+		end
+	end
+end
+
+function foundBoardCards()
+	local tmpZoneGuid
+	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for i, j in ipairs(inZone) do
+				if isBoardCard(j) then
+					return true
+				elseif j.getDescription() == 'Not Used' then
+					return true
+				end
+			end
+		end
+	end
+	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for i, j in ipairs(inZone) do
+				if isBoardCard(j) then
+					return true
+				elseif j.getDescription() == 'Not Used' then
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+
+function deleteBoardCards()
+	local tmpZoneGuid
+	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for i, j in ipairs(inZone) do
+				if isBoardCard(j) then
+					j.destruct()
+				elseif j.getDescription() == 'Not Used' then
+					j.destruct()
+				end
+			end
+		end
+	end
+	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for i, j in ipairs(inZone) do
+				if isBoardCard(j) then
+					j.destruct()
+				elseif j.getDescription() == 'Not Used' then
+					j.destruct()
+				end
+			end
+		end
+	end
+end
+
+function addMissingItems(deck, count)
+	if deck then
+		local pos = deck.getPosition()
+		local addCt = count - #deck.getObjects()
+		local params = {}
+		params.position = {pos['x'], pos['y'] + 1, pos['z']}
+		local card = deck.takeObject(params)
+		while addCt > 0 do
+			local cloneParams = {position = {pos['x'], pos['y'] + 1 + addCt * 0.1, pos['z']}, sound = false}
+			local newCard = card.clone(cloneParams)
+			newCard.putObject(deck)
+			addCt = addCt - 1
+		end
+		card.putObject(deck)
+	end
+end
+
+function deleteExtraItems(deck, count)
+	if deck then
+		local pos = deck.getPosition()
+		local removeCt = #deck.getObjects() - count
+		while removeCt > 0 do
+			local params = {}
+			params.position = {pos['x'], pos['y'] + 3, pos['z']}
+			local card = deck.takeObject(params)
+			card.destruct()
+			removeCt = removeCt - 1
+		end
+	end
+end
+
+function setupStart(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		startLuaCoroutine(Global, 'setupCoroutine')
+	else
+		broadcastToColor('Only the host or a promoted player can start the game.', playerColor, {1,0,0})
+	end
+end
+
+function setupCoroutine()
+	local tmpObj
+
+	--Get seated players
+	players = getSeatedPlayers()
+
+	if #players < 5 then
+		printToAll('Not enough players!', {1,1,1})
+		return true
+	end
+
+	local playerOneName = Player[players[1]].steam_name
+	if not playerOneName or string.match(playerOneName, 'Player %d') then
+		printToAll('Hotseat game detected.', {1,1,1})
+		if options.shufflePlayers then
+			options.shufflePlayers = false
+			printToAll('Shuffle players is now disabled.', {1,0,0})
+		end
+		if options.policySafety then
+			options.policySafety = false
+			printToAll('Policy safety is now disabled.', {1,0,0})
+		end
+	end
+
+	if options.shufflePlayers then
+		printToAll('Shuffling Players...', {1,1,1})
+		shufflePlayers()
+		printToAll('shuffling done.', {1,1,1})
+	end
+
+	--Hidden zones and status buttons
+	for i, player in pairs(MAIN_PLAYABLE_COLORS) do
+		if not inTable(players, player) then
+			destroyObjectByGUID(hidden_zone_guids[player])
+		else
+			if options.zoneType == 1 then
+				local params = {
+					type = 'BlockRectangle',
+					scale = {15, 0.25, 0.5},
+					position = {-100, 100, -100},
+					sound = false
+				}
+				local block = spawnObject(params)
+				block.setColorTint(stringColorToRGB(player))
+				block.setLock(true)
+				forceObjectToPlayer(block, player, {forward = 7, right = 0, up = 0, forceHeight = 1.09}, flip_y)
+			end
+			-- Player Status Buttons
+			local paramsStatus = {
+				type = 'backgammon_piece_white',
+				position = {-100, 100, -100},
+				callback = 'statusButtonCallback',
+				sound = false
+			}
+			local buttonStatusBase = spawnObject(paramsStatus)
+			buttonStatusBase.setName(player)
+			buttonStatusBase.setColorTint(stringColorToRGB(player))
+			buttonStatusBase.setLock(true)
+			forceObjectToPlayer(buttonStatusBase, player, {forward = 11, right = -8.5, up = 0, forceHeight = 1.09}, flip_y)
+		end
+	end
+	if options.zoneType == 6 then
+		-- Tan Maroon Status Buttons
+		local paramsStatus = {
+			type = 'backgammon_piece_white',
+			callback = 'statusButtonCallback',
+			sound = false
+		}
+		local buttonStatusBase = {}
+		for i, color in ipairs(GREY_PLAYABLE_COLORS) do
+			buttonStatusBase[i] = spawnObject(paramsStatus)
+			buttonStatusBase[i].setName(color)
+			buttonStatusBase[i].setColorTint(stringColorToRGBExtra(color))
+			buttonStatusBase[i].setRotation({0, 180, 0})
+			buttonStatusBase[i].setLock(true)
+		end
+		buttonStatusBase[1].setPosition({20.8, 1.09, -40.66})
+		buttonStatusBase[2].setPosition({-8.5, 1.09, -40.66})
+		for _, color in ipairs(GREY_PLAYABLE_COLORS) do
+			table.insert(players, 1, color)
+		end
+		table.insert(fascist_deck_guids, 1, fascist_deck_extra_guid)
+		table.insert(liberal_deck_guids, 1, liberal_deck_extra_guid)
+	else
+		destroyObjectByGUID(fascist_deck_extra_guid)
+		destroyObjectByGUID(liberal_deck_extra_guid)
+	end
+
+	--Expansion
+	local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	if abilitiesDeck then
+		abilitiesDeck.randomize()
+		abilitiesDeck.deal(options.expansionAmount)
+		--fixme deal cards to tan and maroon
+	else
+		local tmpZone = getObjectFromGUID(abilitiesPile_zone_guid)
+		if tmpZone then
+			local inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				destroyObject(j)
+			end
+			destroyObject(tmpZone)
+		end
+		tmpZone = getObjectFromGUID(effectsPile_zone_guid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				destroyObject(j)
+			end
+			destroyObject(tmpZone)
+		end
+	end
+
+	--spawn note taker(s)
+	local params = {position = {-100, 100, -100}, sound = false}
+	if options.noteType == 1 then
+		params.type = 'Chess_Board'
+		params.scale = {1.54999959, 1.54999959, 1.54999959}
+	elseif options.noteType == 2 then
+		params.type = 'Go_Board'
+		params.scale = {1.44999969, 1.44999969, 1.44999969}
+	elseif options.noteType == 3 then
+		params.type = 'Checker_Board'
+		params.scale = {1.54999959, 1.54999959, 1.54999959}
+	elseif options.noteType == 4 then
+		params.type = 'reversi_board'
+		params.scale = {1.44999969, 1.44999969, 1.44999969}
+	elseif options.noteType == 5 then
+		params.type = 'Custom_Board'
+		params.scale = {1, 1, 1}
+	elseif options.noteType == 6 then
+		params.type = 'Custom_Model'
+		params.scale = {1.05, 1.05, 1.05}
+	elseif options.noteType > 6 then
+		params.type = 'backgammon_board'
+		params.scale = {1.79999948, 1.79999948, 1.79999948}
+	end
+	for _, player in pairs(players) do
+		if not inTable(GREY_PLAYABLE_COLORS, player) then
+			if Player[player].admin or options.noteType > 6 then
+				local notetaker = spawnObject(params)
+				if options.noteType < 7 then
+					notetaker.setLuaScript(newNoteTakerLuaScript(player, 'true', 'false', 'false', 'false', 'false', 'true'))
+				elseif options.noteType == 7 then
+					notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'false', 'false', 'false', 'false', 'false'))
+				elseif options.noteType == 8 then
+					notetaker.setLuaScript(newNoteTakerLuaScript(player, 'false', 'true', 'false', 'false', 'false', 'false'))
+				end
+				if options.noteType == 5 then
+					local custom = {}
+					custom.image = 'http://cloud-3.steamusercontent.com/ugc/486766424829587499//FDF54ECD5D1706DE0A590239E84D62CDE757FE46/'
+					notetaker.setCustomObject(custom)
+				elseif options.noteType == 6 then
+						local custom = {}
+						custom.diffuse = 'http://cloud-3.steamusercontent.com/ugc/478894184492866532/6639B6E1AB511AB10D53DB91B2A47A0A63410DDF/'
+						custom.mesh = 'http://cloud-3.steamusercontent.com/ugc/478894184492865468/51C18F993BBDD5D1B55FE5261A625B2CE0B2FD9F/'
+						custom.type = 4
+						custom.material = 3
+						notetaker.setCustomObject(custom)
+				end
+			end
+		end
+	end
+
+	--destroy the settings pannel
+	destroyObjectByGUID(settingsPannel_guid)
+
+	local numFascists = 0
+
+	--figure out number of fascists
+	if #players > 10 then
+		numFascists = 4
+	elseif #players > 8 then
+		numFascists = 3
+	elseif #players > 6 then
+		numFascists = 2
+	else
+		numFascists = 1
+	end
+
+	printToAll( #players .. ' player game starting!', {1,1,1})
+
+	local fascistDecks = {}
+	local liberalDecks = {}
+
+	for i = 1, #fascist_deck_guids do
+ 		fascistDecks[i] = getObjectFromGUID(fascist_deck_guids[i])
+ 	end
+ 	for i = 1, #liberal_deck_guids do
+ 		liberalDecks[i] = getObjectFromGUID(liberal_deck_guids[i])
+ 	end
+
+	shuffleTable(fascistDecks)
+	shufflePosition(fascistDecks)
+	shuffleTable(liberalDecks)
+	shufflePosition(liberalDecks)
+
+	wait(5)
+
+	--Figure out which decks we're using
+	local player_decks = {}
+	for i = 1, #players do
+		if i == 1 then
+			player_decks[i] = getObjectFromGUID(hitler_deck_guid)
+		elseif i <= numFascists+1 then
+			player_decks[i] = fascistDecks[i-1]
+		else
+			player_decks[i] = liberalDecks[i-numFascists-1]
+		end
+	end
+
+	--Cleanup Extra Cards
+	for i = numFascists + 1, #fascist_deck_guids do
+		destroyObject(fascistDecks[i])
+	end
+	for i = #players - numFascists, #liberal_deck_guids do
+		destroyObject(liberalDecks[i])
+	end
+
+	--Shuffle Roles/Players
+	shuffleTable(player_decks)
+	shufflePosition(player_decks)
+	shuffleTable(players)
+
+	wait(5)
+
+	--Deal the Cards
+	for i, player in ipairs(players) do
+		for j = 1, #player_decks[i].getObjects() do
+			local params = {}
+			local card = player_decks[i].takeObject(params)
+
+			local description = card.getDescription()
+			local offset = 0;
+
+			if description == 'Hitler Role Card' then
+				roles[player] = 'hitler'
+				table.insert(hitler, 1, player)
+				offset = -2
+			elseif description == 'Fascist Role Card' then
+				roles[player] = 'fascist'
+				table.insert(fascists, 1, player)
+				offset = -2
+			elseif description == 'Liberal Role Card' then
+				roles[player] = 'liberal'
+				offset = -2
+			elseif description == 'Fascist Party Card' or
+				description == 'Liberal Party Card' then
+				offset = -1
+				if options.dealPartyCards then
+					if greyPlayer(player) then
+						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z, false, true)
+					else
+						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+					end
+				else
+					destroyObject(card)
+				end
+			elseif description == 'Ja Card' then
+				card.setDescription(player .. '\'s Ja Card')
+				card.setLuaScript(
+					'collision = false -- workaround for rewind error\r\n' ..
+					'\r\n' ..
+					'function onObjectSpawn(spawnObject)\r\n' ..
+					'	Global.call(\'callFunction\', {fcn = \'addJaCard\', params = {self}})\r\n' ..
+					'end\r\n' ..
+					'\r\n' ..
+					'function onDrop(playerColor)\r\n' ..
+					'	local options = Global.getTable(\'options\')\r\n' ..
+					'	if options.scriptedVoting then\r\n' ..
+					'		collision = true\r\n' ..
+					'		Global.call(\'createVoteTimer\')\r\n' ..
+					'	end\r\n' ..
+					'end\r\n' ..
+					'\r\n' ..
+					'function onCollisionEnter(collisionInfo)\r\n' ..
+					'	local options = Global.getTable(\'options\')\r\n' ..
+					'	if collision and options.scriptedVoting then\r\n' ..
+					'		Global.call(\'createVoteTimer\')\r\n' ..
+					'	end\r\n' ..
+					'end\r\n')
+				card.setScale({1.51, 1, 1.51})
+				offset = 1
+				if greyPlayer(player) then
+					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z, false, true)
+				else
+					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+				end
+			elseif description == 'Nein Card' then
+				card.setDescription(player .. '\'s Nein Card')
+				card.setLuaScript(
+					'collision = false -- workaround for rewind error\r\n' ..
+					'\r\n' ..
+					'function onObjectSpawn(spawnObject)\r\n' ..
+					'	Global.call(\'callFunction\', {fcn = \'addNeinCard\', params = {self}})\r\n' ..
+					'end\r\n' ..
+					'\r\n' ..
+					'function onDrop(playerColor)\r\n' ..
+					'	local options = Global.getTable(\'options\')\r\n' ..
+					'	if options.scriptedVoting then\r\n' ..
+					'		collision = true\r\n' ..
+					'		Global.call(\'createVoteTimer\')\r\n' ..
+					'	end\r\n' ..
+					'end\r\n' ..
+					'\r\n' ..
+					'function onCollisionEnter(collisionInfo)\r\n' ..
+					'	local options = Global.getTable(\'options\')\r\n' ..
+					'	if collision and options.scriptedVoting then\r\n' ..
+					'		Global.call(\'createVoteTimer\')\r\n' ..
+					'	end\r\n' ..
+					'end\r\n')
+				card.setScale({1.51, 1, 1.51})
+				offset = 2
+				if greyPlayer(player) then
+					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z, false, true)
+				else
+					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y, false, true)
+				end
+			end
+			if offset == -2 then
+				if options.dealRoleCards then
+					if greyPlayer(player) then
+						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z, false, true)
+					else
+						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+					end
+				else
+					local tmpGUID = player_decks[i].getVar('displayGuid')
+					if not tmpGUID then
+						tmpGUID = string.format('%06x', tonumber(card.getGUID(), 16) + 1)
+					end
+					playerRoleCardGuids[player] = tmpGUID
+					destroyObject(card)
+				end
+			end
+		end
+	end
+
+	mainNotes = 'For long games the old notes will be\nremoved automatically by the note taker.\nThis is functionality does not work well when\nenabling player names in the notes.\n\n'
+	mainNotes = mainNotes .. 'Only the president can draw cards.\n\nTo topdeck a card move the election tracker\nto the \34REVEAL & PASS TOP POLICY\34 circle.\n\n'
+	if not options.dealRoleCards then
+		mainNotes = mainNotes .. '[FFFF00]No role cards will be dealt.[-]\n\n'
+	end
+	if not options.dealPartyCards then
+		mainNotes = mainNotes .. '[FFFF00]No party membership cards will be dealt.[-]\n\n'
+	end
+	mainNotes = mainNotes .. 'There are [0000FF][b]' .. #players - #fascists - #hitler .. ' ' .. string.upper(text.liberal) .. 'S[/b][-]\nagainst '
+	if #fascists > 0 then
+		mainNotes = mainNotes .. '[FF0000][b]' .. #fascists .. ' ' .. string.upper(text.fascist) .. '[/b][-]'
+	end
+	if #hitler > 1 and #fascists > 0 then
+		mainNotes = mainNotes .. ','
+	end
+	if #hitler > 1 then
+		mainNotes = mainNotes .. ' [FF0000][b]' .. #hitler - 1 .. ' FAKE ' .. string.upper(text.hitler)
+	end
+	if #hitler == 2 then
+		mainNotes = mainNotes .. '[/b][-]'
+	elseif #hitler > 2 then
+		mainNotes = mainNotes .. 'S[/b][-]'
+	end
+	mainNotes = mainNotes .. ' and [FF0000][b]' .. string.upper(text.hitler) .. '[/b][-].\n'
+	mainNotes = mainNotes .. string.upper(text.hitler)
+	if (#players - #fascists - #hitler) > 4 then
+		mainNotes = mainNotes .. ' [b]doesn\'t know[/b] who the '
+	else
+		mainNotes = mainNotes .. ' [b]knows[/b] who the '
+	end
+	mainNotes = mainNotes .. string.upper(text.fascist) .. 'S are.\n\n'
+	setNotes(mainNotes)
+
+	-- Pick a random first president
+	local randomPlayer = math.random(#players)
+	local president = getObjectFromGUID(president_guid)
+	local pos = president.getPosition()
+	president.setVar('lastPres', players[randomPlayer])
+	president.setPositionSmooth({0, pos['y']+7, 0})
+	local chancelor = getObjectFromGUID(chancelor_guid)
+	pos = chancelor.getPosition()
+	chancelor.setPositionSmooth({0, pos['y']+14, 0})
+
+	-- Policy card setup
+	local params = {}
+	params.flip = false
+	local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+	if drawDeck then
+		local pos = drawDeck.getPosition()
+		local remove_fascistCt = 15 - options.fascistCards
+		local remove_liberalCt = 8 - options.liberalCards
+		local inDeck = drawDeck.getObjects()
+		for k, l in ipairs(inDeck) do
+			if l.description == 'Fascist Policy' and remove_fascistCt > 0 then
+				local params = {}
+				params.position = {pos['x'], pos['y'] + 7, pos['z']}
+				params.guid = l.guid
+				local card = drawDeck.takeObject(params)
+				wait(5)
+				destroyObject(card)
+				remove_fascistCt = remove_fascistCt - 1
+			elseif l.description == 'Liberal Policy' and remove_liberalCt > 0 then
+				local params = {}
+				params.position = {pos['x'], pos['y'] + 7, pos['z']}
+				params.guid = l.guid
+				local card = drawDeck.takeObject(params)
+				wait(5)
+				destroyObject(card)
+				remove_liberalCt = remove_liberalCt - 1
+			end
+		end
+	else
+		broadcastToAll('ERROR: Could not find draw deck! Restart required.', {1,0,0})
+		return true
+	end
+
+	sleep(0.5)
+
+	-- Tell everyone their role
+	printToAll('--------------------------------------', {1,1,1})
+	for _, color in ipairs(players) do
+		if not inTable(GREY_PLAYABLE_COLORS, color) then
+			Player[color]:print(tellRole(color))
+		end
+	end
+	printToAll('--------------------------------------', {1,1,1})
+
+	-- Move and tell first pres
+	giveObjectToPlayer(president, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 3}, no_rotation)
+	giveObjectToPlayer(chancelor, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 5.5}, no_rotation)
+	local hcol = stringColorToRGBExtra(players[randomPlayer])
+	printToAll(players[randomPlayer] .. ' is first president!', hcol)
+	printToAll('--------------------------------------', {1,1,1})
+	for _, color in ipairs(players) do
+		if not inTable(GREY_PLAYABLE_COLORS, color) then
+			Player[color]:print(chatHelp(Player[color].admin))
+		end
+	end
+	--fixme print chatHelp to grey players that are playing
+
+	-- Cleanup custom pieces
+	for _, v in pairs(all_deck_guids) do
+		destroyObject(getObjectFromGUID(v));
+	end
+
+	sleep(1)
+
+	--Shuffle the policy deck
+	if not shuffleDrawDeck() then
+		broadcastToAll('ERROR: Unable to shuffle draw deck! Restart required.', {1,0,0})
+		return true
+	end
+
+	-- interactable/unlock other items
+	president.setLock(false)
+	president.interactable = true
+	chancelor.setLock(false)
+	chancelor.interactable = true
+	tmpObj = getObjectFromGUID(election_tracker_guid)
+	tmpObj.setLock(false)
+	if #players == 5 then
+		destroyObjectByGUID(prev_president_guid)
+	else
+		tmpObj = getObjectFromGUID(prev_president_guid)
+		tmpObj.setLock(false)
+	end
+	tmpObj = getObjectFromGUID(prev_chancelor_guid)
+	tmpObj.setLock(false)
+
+	-- Lock placed board cards
+	local tmpZoneGuid
+	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) then
+					j.setLock(true)
+				elseif j.getDescription() == 'Not Used' then
+					j.setLock(true)
+				end
+			end
+		end
+	end
+	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) then
+					j.setLock(true)
+				elseif j.getDescription() == 'Not Used' then
+					j.setLock(true)
+				end
+			end
+		end
+	end
+
+	--Set the started variable to true
+	started = true
+	refreshStatusButtons()
+	refreshUI()
+
+	return true
+end
+
+function statusButtonCallback(objIn, paramsIn)
+	table.insert(playerStatusButtonGuids, 1, objIn.getGUID())
+end
+
+function greyPlayerHandCallback(objIn, paramsIn)
+	local color = string.gsub(objIn.getDescription(), ' Hand', '')
+	greyPlayerHandGuids[color] = objIn.getGUID()
+	objIn.AssetBundle.playLoopingEffect(1)
+end
+
+function greyAvatarCallback(objIn, paramsIn)
+	local color = string.gsub(objIn.getDescription(), ' Avatar', '')
+	greyAvatarGuids[color] = objIn.getGUID()
+end
+
+function changePlayerStatus(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		local ownerColor = clickedObject.getName()
+		_G.playerStatus[ownerColor] = _G.playerStatus[ownerColor] + 1
+		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+		if not abilitiesDeck then
+			if _G.playerStatus[ownerColor] == 3 then
+				_G.playerStatus[ownerColor] = 5
+			end
+		end
+		if _G.playerStatus[ownerColor] > 6 then _G.playerStatus[ownerColor] = 1 end
+		refreshStatusButtons()
+	else
+		printToColor('ERROR: You are not the host or a promoted player.', playerColor, {1, 0, 0})
+	end
+end
+
+function tellRole(player)
+	local msg = ''
+	if player == 'Black' then
+		if #hitler == 0 and #fascists == 0 and #players > 0 then
+			msg = msg .. '[0080F8]Everyone is ' .. text.liberalArticle .. ' ' .. text.liberal .. '![-]\n'
+		else
+			for _, l in pairs(hitler) do
+				msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.hitler .. '!' .. '[-]\n'
+			end
+			for _, l in pairs(fascists) do
+				msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!' .. '[-]\n'
+			end
+		end
+	else
+		local role = roles[player]
+		if role == 'fascist' then
+			msg = msg .. '[' .. stringColorToHex(player) .. ']You are ' .. text.fascistArticle .. ' [FF0000]' .. text.fascist .. '[-]![-]\n'
+			for _, l in pairs(hitler) do
+				msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.hitler .. '!' .. '[-]\n'
+			end
+			for _, l in pairs(fascists) do
+				if not (l == player) then
+					msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. ', too!' .. '[-]\n'
+				end
+			end
+		elseif role == 'hitler' then
+			msg = msg .. '[' .. stringColorToHex(player) .. ']You are [FF0000]' .. text.hitler .. '[-]![-]\n'
+			if #players < 7 then
+				for _, l in pairs(hitler) do
+					if not (l == player) then
+						msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is also ' .. text.hitler .. '!' .. '[-]\n'
+					end
+				end
+				for _, l in pairs(fascists) do
+					msg = msg .. '[' .. stringColorToHex(l) .. ']' .. l .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!' .. '[-]\n'
+				end
+			end
+		elseif role == 'liberal' then
+			msg = msg .. '[' .. stringColorToHex(player) .. ']You are ' .. text.liberalArticle .. ' [0080F8]' .. text.liberal .. '[-]![-]\n'
+		else
+			msg = msg .. player .. ' is not Playing!\n'
+		end
+	end
+
+	return string.gsub(msg, '\n$', '')
+end
+
+function shuffleDrawDeck()
+	local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+	if drawDeck then
+		drawDeck.shuffle()
+		return true
+	end
+
+	return false
+end
+
+function disableSecurity()
+	startLuaCoroutine(Global, 'disableSecurityCoroutine')
+end
+
+function disableSecurityCoroutine()
+	local allObjs = getAllObjects()
+	local tmpObj
+
+	Global.setVar('hold', true)
+	broadcastToAll('WARNING: Security has been disabled for 30 seconds!', {1,0,0})
+	for _, tmpObj in ipairs(allObjs) do
+		if isPolicyCard(tmpObj) then
+			tmpObj.interactable = true
+		elseif tmpObj.tag == 'Deck' then
+			tmpObj.interactable = true
+		end
+	end
+	sleep(30)
+
+	--Expansion
+	tmpObj = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	if tmpObj then tmpObj.interactable = false end
+	tmpObj = getDeckFromZoneByGUID(effectsPile_zone_guid)
+	if tmpObj then	tmpObj.interactable = false end
+
+	Global.setVar('hold', false)
+
+	return true
+end
+
+function createInspectButtons(pres)
+	local membershipCard = getObjectFromGUID(fakeMembership_card_guid)
+
+	if membershipCard then
+		broadcastToColor('Click on the party membership card of the person you want to inspect.', pres, {1, 1, 1})
+		for i, playerColor in ipairs(players) do
+			if playerColor ~= pres and not inTable(inspected, playerColor) and not (_G.playerStatus[playerColor] > 4) then
+				local params = {rotation = {0, 0, 180}, sound = false}
+				card = membershipCard.clone(params)
+				card.setDescription('Fake Party Card')
+				card.setLuaScript(
+					'playerColor = \'' .. playerColor .. '\'\r\n\r\n' ..
+					'function onCollisionEnter(collision_info)\r\n' ..
+					'	if Global.call(\'greyPlayer\', {playerColor}) then\r\n' ..
+					'		--hard coded\r\n' ..
+					'		self.setRotation({0, 180, 180})\r\n' ..
+					'	else\r\n' ..
+					'		local ph = Player[playerColor].getPlayerHand()\r\n' ..
+					'		if ph then\r\n' ..
+					'			self.setRotation({0, ph[\'rot_y\']+180, 180})\r\n' ..
+					'		end\r\n' ..
+					'	end\r\n' ..
+					'	self.setLock(true)\r\n' ..
+					'end\r\n\r\n' ..
+					'function onLoad(saveString)\r\n' ..
+					'	local button = {}\r\n' ..
+					'	button.click_function = \'' .. playerColor .. 'Inspected\'\r\n' ..
+					'	button.label = \'Inspect\\n' .. playerColor .. '\'\r\n' ..
+					'	button.function_owner = Global\r\n' ..
+					'	button.position = {0, 3, 0}\r\n' ..
+					'	button.rotation = {0, 0, 180}\r\n' ..
+					'	button.width = 1000\r\n' ..
+					'	button.height = 1500\r\n' ..
+					'	button.font_size = 150\r\n' ..
+					'	self.createButton(button)\r\n' ..
+					'end')
+				card.setPosition({0, 30 + (i * 0.25), 0})
+				card.setLock(false)
+				wait(5)
+				giveObjectToPlayer(card, playerColor, {forward = 16.5, right = 0, up = 0}, flip_y_z)
+			end
+		end
+	else
+		printToAll('ERROR: Base membership card not found.', {1,0,0})
+	end
+end
+
+function playerInspected(clickedObject, inspectorColor, checkedColor)
+	if inspectorColor == lastPres then
+		local role = roles[checkedColor]
+		local playerColor = stringColorToRGBExtra(checkedColor)
+		local roleText
+		local roleColor
+		if role == 'hitler' or role == 'fascist' then
+			roleText = text.fascistArticle .. ' ' .. string.lower(text.fascist)
+			roleColor = {1, 0, 0}
+		else
+			roleText = text.liberalArticle .. ' ' .. string.lower(text.liberal)
+			roleColor = {0.1, 0.3, 1}
+		end
+		printToAll(inspectorColor .. ' inspected ' .. checkedColor, playerColor)
+		broadcastToColor(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
+		--fixme message grey player
+		table.insert(inspected, 1, checkedColor)
+		removeInspect()
+		if options.autoNotate and notate.line and notate.action == 'inspects' then
+			noteTakerNotes[notate.line].color2 = checkedColor
+			refreshNotes(nil)
+			notate.line = nil
+			notate.action = ''
+		end
+	end
+end
+
+function WhiteInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'White')
+end
+
+function BrownInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Brown')
+end
+
+function RedInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Red')
+end
+
+function OrangeInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Orange')
+end
+
+function YellowInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Yellow')
+end
+
+function GreenInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Green')
+end
+
+function TealInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Teal')
+end
+
+function BlueInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Blue')
+end
+
+function PurpleInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Purple')
+end
+
+function PinkInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Pink')
+end
+
+function TanInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Tan')
+end
+
+function MaroonInspected(clickedObject, inspectorColor)
+	playerInspected(clickedObject, inspectorColor, 'Maroon')
+end
+
+function removeInspect()
+	local allObjs = getAllObjects()
+	local object
+
+	for _, object in ipairs(allObjs) do
+		if object.tag == 'Card' and (object.getDescription() == 'Fake Party Card') then
+			destroyObject(object)
+		end
+	end
+end
+
+function giveRoleCards()
+	if not options.dealRoleCards then
+		for i, player in ipairs(players) do
+			local card = getObjectFromGUID(playerRoleCardGuids[player])
+			if card then
+				local pos = card.getPosition()
+				local params = {position = {pos['x'], pos['y'] + 1 + i * 0.1, pos['z']}, sound = false}
+				local newCard = card.clone(params)
+				newCard.interactable = true
+				newCard.setLock(false)
+				if greyPlayer(player) then
+					forceObjectToPlayer(newCard, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z)
+				else
+					forceObjectToPlayer(newCard, player, {forward = 0, right = -2, up = 0}, flip_y_z)
+				end
+			end
+		end
+		options.dealRoleCards = true
+	end
+end
+
+function findUnusedColor()
+	local checkList = {'Brown', 'Teal', 'Black', 'White', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink'}
+
+	for _, playerColor in ipairs(checkList) do
+		if not Player[playerColor].seated then
+			return playerColor
+		end
+	end
+end
+
+function shufflePlayers()
+	local blackSteamId
+	if #getSeatedPlayers() == 10 and Player['Black'].seated then
+		blackSteamId = Player['Black'].steam_id
+		Player['Black']:changeColor('Grey')
+		while Player['Black'].seated do
+			coroutine.yield()
+		end
+	end
+	swapColor = findUnusedColor()
+
+	local ranColors = {}
+	for _, v in pairs(getSeatedPlayers()) do
+		if (not Player[v].host) or options.shuffleHost then
+			table.insert(ranColors, 1, v)
+		end
+	end
+	shuffleTable(ranColors)
+
+	seatedPlayers = {}
+	local j = 1
+	for _, v in pairs(getSeatedPlayers()) do
+		if (not Player[v].host) or options.shuffleHost then
+			local playerInfo = {}
+			playerInfo.target = ranColors[j]
+			playerInfo.myColor = v
+			table.insert(seatedPlayers, 1, playerInfo)
+			j = j + 1
+		end
+	end
+
+	local doneCount = 0
+	local tryCount = #seatedPlayers
+	while doneCount ~= #seatedPlayers and tryCount > 0 do
+		doneCount = 0
+		for i, v in pairs(seatedPlayers) do
+			if v.target ~= v.myColor then
+				if Player[v.target].seated == false then
+					local myC = v.myColor
+					if Player[myC].seated == true then
+						Player[myC]:changeColor(v.target)
+						while Player[myC].seated and not Player[v.target].seated do
+							coroutine.yield()
+						end
+						v.myColor = v.target
+						doneCount = doneCount + 1
+					end
+				elseif Player[swapColor].seated == false then
+					local myC = v.myColor
+					if Player[myC].seated == true then
+						Player[myC]:changeColor(swapColor)
+						while Player[myC].seated and not Player[swapColor].seated do
+							coroutine.yield()
+						end
+						v.myColor = swapColor
+					end
+				end
+			else
+				doneCount = doneCount + 1
+			end
+		end
+		tryCount = tryCount - 1
+		coroutine.yield()
+	end
+
+	if blackSteamId then
+		for _, p in pairs(Player.getSpectators()) do
+			if p.steam_id == blackSteamId then
+				p:changeColor('Black')
+			end
+		end
+	end
+end
+
+function notateColor2ByObject(tableIn)
+	if type(tableIn) == 'table' then
+		if tableIn[1] then
+			local playerColor = closestPlayer(tableIn[1], players, 18)
+			if playerColor and notate.line then
+				if noteTakerNotes[notate.line].color1 ~= playerColor then
+					noteTakerNotes[notate.line].color2 = playerColor
+					refreshNotes(nil)
+					notate.line = nil
+					notate.action = ''
+				end
+			end
+		end
+	end
+end
+
+function shufflePosition(objects)
+	local positionA
+	local positionB
+
+	for i = 1, #objects * 5 do
+		local a = math.random(#objects)
+		local b = math.random(#objects)
+		positionA = objects[a].getPosition()
+		positionB = objects[b].getPosition()
+		objects[b].setPosition(positionA)
+		objects[a].setPosition(positionB)
+	end
+end
+
+function shuffleTable(objects)
+	for i = 1, #objects * 5 do
+		local a = math.random(#objects)
+		local b = math.random(#objects)
+		objects[a], objects[b] = objects[b], objects[a]
+	end
+end
+
+function isFaceUp(cardIn)
+	if cardIn then
+		local zrot=cardIn.getRotation()['z']
+		if zrot > -20 and zrot < 20 then
+			return true
+		else
+			return false
+		end
+	else
+		return nil
+	end
+end
+
+function getPositionByGUID(guidIn)
+	local tmpZone = getObjectFromGUID(guidIn)
+	return tmpZone.getPosition()
+end
+
+function getDeckFromZoneByGUID(guidIn)
+	local deck = nil
+	local deck_ct = 0
+	local zone = getObjectFromGUID(guidIn)
+	local object
+
+	if zone then
+		local inZone = zone.getObjects()
+		for _, object in ipairs(inZone) do
+			if object.tag == 'Card' then
+				deck_ct = 2
+			elseif object.tag == 'Deck' then
+				deck = object
+				deck_ct = deck_ct + 1
+			end
+		end
+	end
+	if deck_ct == 1 then
+		return deck
+	end
+	return nil
+end
+
+function moveObjectToPlayerByGUID(tableIn)
+	local object = getObjectFromGUID(tableIn.guid)
+	if object then
+		local playerColor = closestPlayer(object, players, tableIn.max)
+		if playerColor then
+			giveObjectToPlayer(object, playerColor, {forward = tableIn.forward, right = 0, up = 0, forceHeight = tableIn.height}, no_rotation, false, true)
+		end
+	end
+end
+
+function inTable(tableIn, valueIn)
+	local value
+	if tableIn then
+		for _, value in pairs(tableIn) do
+			if value == valueIn then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+function smartTableInsert(tableIn, valueIn)
+	if not inTable(tableIn, valueIn) then
+		table.insert(tableIn, 1, valueIn)
+	end
+end
+
+function generateAvatarImageUrl(steamId)
+   return string.format("http://steam-tts.bclass.info/avatar/?i=%s&s=l", steamId)
+end
+
+function versionInfo()
+	local msg
+
+	msg = _VERSION -- Lua info
+	if mod_name then
+		msg = msg .. '\nmod_name = ' .. mod_name
+	else
+		msg = msg .. '\nmod_name = nil'
+	end
+	if update_version then
+		msg = msg .. '\nupdate_version = ' .. update_version
+	else
+		msg = msg .. '\nupdate_version = nil'
+	end
+	msg = msg .. '\nGlobal Lua length ' .. string.len(Global.getLuaScript())
+
+	return msg
+end
+
+--UI
+
+function refreshUI()
+	if started then
+		local youHitler = ''
+		local youFas = ''
+		local youLib = ''
+		local youNotPlaying = 'Grey'
+		local hitWhite = ''
+		local hitBrown = ''
+		local hitRed = ''
+		local hitOrange = ''
+		local hitYellow = ''
+		local hitGreen = ''
+		local hitTeal = ''
+		local hitBlue = ''
+		local hitPurple = ''
+		local hitPink = ''
+		local hitTan = ''
+		local hitMaroon = ''
+		local fasWhite = ''
+		local fasBrown = ''
+		local fasRed = ''
+		local fasOrange = ''
+		local fasYellow = ''
+		local fasGreen = ''
+		local fasTeal = ''
+		local fasBlue = ''
+		local fasPurple = ''
+		local fasPink = ''
+		local fasTan = ''
+		local fasMaroon = ''
+
+		if options.zoneType == 6 then
+			youNotPlaying = ''
+			for _, playerColor in pairs(GREY_PLAYABLE_COLORS) do
+				if roles[playerColor] == 'hitler' then
+					UI.setAttribute('hit' .. playerColor, 'Text', playerColor .. ' is ' .. text.hitler .. '!')
+				elseif roles[playerColor] == 'fascist' then
+					UI.setAttribute('fas' .. playerColor, 'Text', playerColor .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
+				end
+			end
+		end
+
+		for _, playerColor in pairs(MAIN_PLAYABLE_COLORS) do
+			UI.setAttribute('player' .. playerColor, 'visibility', playerColor)
+			if roles[playerColor] == 'hitler' then
+				UI.setAttribute('hit' .. playerColor, 'Text', playerColor .. ' is ' .. text.hitler .. '!')
+				if youHitler == '' then
+					youHitler = playerColor
+				else
+					youHitler = youHitler .. '|' .. playerColor
+				end
+			elseif roles[playerColor] == 'fascist' then
+				UI.setAttribute('fas' .. playerColor, 'Text', playerColor .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
+				if youFas == '' then
+					youFas = playerColor
+				else
+					youFas = youFas .. '|' .. playerColor
+				end
+			elseif roles[playerColor] == 'liberal' then
+				if youLib == '' then
+					youLib = playerColor
+				else
+					youLib = youLib .. '|' .. playerColor
+				end
+			else
+				if youNotPlaying == '' then
+					youNotPlaying = playerColor
+				else
+					youNotPlaying = youNotPlaying .. '|' .. playerColor
+				end
+			end
+		end
+		hitWhite = hitVisibility('White')
+		hitBrown = hitVisibility('Brown')
+		hitRed = hitVisibility('Red')
+		hitOrange = hitVisibility('Orange')
+		hitYellow = hitVisibility('Yellow')
+		hitGreen = hitVisibility('Green')
+		hitTeal = hitVisibility('Teal')
+		hitBlue = hitVisibility('Blue')
+		hitPurple = hitVisibility('Purple')
+		hitPink = hitVisibility('Pink')
+		hitTan = hitVisibility('Tan')
+		hitMaroon = hitVisibility('Maroon')
+		fasWhite = fasVisibility('White')
+		fasBrown = fasVisibility('Brown')
+		fasRed = fasVisibility('Red')
+		fasOrange = fasVisibility('Orange')
+		fasYellow = fasVisibility('Yellow')
+		fasGreen = fasVisibility('Green')
+		fasTeal = fasVisibility('Teal')
+		fasBlue = fasVisibility('Blue')
+		fasPurple = fasVisibility('Purple')
+		fasPink = fasVisibility('Pink')
+		fasTan = fasVisibility('Tan')
+		fasMaroon = fasVisibility('Maroon')
+
+		UI.setAttribute('youLib', 'Text', 'You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!')
+		UI.setAttribute('youFas', 'Text', 'You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
+		UI.setAttribute('youHitler', 'Text', 'You are ' .. text.hitler .. '!')
+		UI.setAttribute('youLib', 'visibility', youLib)
+		UI.setAttribute('youFas', 'visibility', youFas)
+		UI.setAttribute('youHitler', 'visibility', youHitler)
+		UI.setAttribute('youNotPlaying', 'visibility', youNotPlaying)
+		UI.setAttribute('hitWhite', 'visibility', hitWhite)
+		UI.setAttribute('hitBrown', 'visibility', hitBrown)
+		UI.setAttribute('hitRed', 'visibility', hitRed)
+		UI.setAttribute('hitOrange', 'visibility', hitOrange)
+		UI.setAttribute('hitYellow', 'visibility', hitYellow)
+		UI.setAttribute('hitGreen', 'visibility', hitGreen)
+		UI.setAttribute('hitTeal', 'visibility', hitTeal)
+		UI.setAttribute('hitBlue', 'visibility', hitBlue)
+		UI.setAttribute('hitPurple', 'visibility', hitPurple)
+		UI.setAttribute('hitPink', 'visibility', hitPink)
+		UI.setAttribute('hitTan', 'visibility', hitTan)
+		UI.setAttribute('hitMaroon', 'visibility', hitMaroon)
+		UI.setAttribute('fasWhite', 'visibility', fasWhite)
+		UI.setAttribute('fasBrown', 'visibility', fasBrown)
+		UI.setAttribute('fasRed', 'visibility', fasRed)
+		UI.setAttribute('fasOrange', 'visibility', fasOrange)
+		UI.setAttribute('fasYellow', 'visibility', fasYellow)
+		UI.setAttribute('fasGreen', 'visibility', fasGreen)
+		UI.setAttribute('fasTeal', 'visibility', fasTeal)
+		UI.setAttribute('fasBlue', 'visibility', fasBlue)
+		UI.setAttribute('fasPurple', 'visibility', fasPurple)
+		UI.setAttribute('fasPink', 'visibility', fasPink)
+		UI.setAttribute('fasTan', 'visibility', fasTan)
+		UI.setAttribute('fasMaroon', 'visibility', fasMaroon)
+	end
+end
+
+function hitVisibility(colorIn)
+	local visList = ''
+
+	if inTable(hitler, colorIn) then
+		visList = 'Black'
+		for _, playerColor in pairs(fascists) do
+			if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
+				visList = visList .. '|' .. playerColor
+			end
+		end
+		if #players < 7 then
+			for _, playerColor in pairs(hitler) do
+				if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
+					visList = visList .. '|' .. playerColor
+				end
+			end
+		end
+	end
+
+	return visList
+end
+
+function fasVisibility(colorIn)
+	local visList = ''
+
+	if inTable(fascists, colorIn) then
+		visList = 'Black'
+		for _, playerColor in pairs(fascists) do
+			if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
+				visList = visList .. '|' .. playerColor
+			end
+		end
+		if #players < 7 then
+			for _, playerColor in pairs(hitler) do
+				if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
+					visList = visList .. '|' .. playerColor
+				end
+			end
+		end
+	end
+
+	return visList
+end
+
+function sitMaroon(player, value, id)
+	sitColorGrey(player, 'Maroon')
+end
+
+function sitTan(player, value, id)
+	sitColorGrey(player, 'Tan')
+end
+
+function sitColorGrey(player, color)
+	if inTable(greyPlayerSteamIds, player.steam_id) then
+   	player.print('You are already sitting.')
+      return
+	end
+	printToAll(player.steam_name .. ' is color ' .. color .. '.', GREY_PLAYABLE_COLORS_RGB[color])
+	local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[color])
+	textObj.TextTool.setValue(player.steam_name)
+	greyPlayerSteamIds[color] = player.steam_id
+	local objParam = {
+		type = "Custom_Model",
+		position = GREY_AVATAR_POS[color],
+		rotation = {0, 0, 0},
+		scale = {2.5, 2.5, 1},
+		callback = 'greyAvatarCallback',
+		sound = false
+	}
+	local avatar = spawnObject(objParam)
+	avatar.setLock(true)
+	avatar.setDescription(color .. ' Avatar')
+	avatar.interactable = false
+	local customParam = {
+		diffuse = generateAvatarImageUrl(player.steam_id),
+		mesh = 'http://cloud-3.steamusercontent.com/ugc/933813375177509684/900B7683E01C43C394C408BC38E034B305F1B3AA/',
+		collider = 'http://cloud-3.steamusercontent.com/ugc/487893695356616224/E3E39A827C062914E4185D8757A81D4D14892B8B/',
+		type = 0,
+		material = 3
+	}
+	avatar.setCustomObject(customParam)
+end
+
+function leaveSeat(player, value, id)
+	local colorFound = nil
+
+	for testColor, steamId in pairs(greyPlayerSteamIds) do
+		if steamId == player.steam_id then
+			colorFound = testColor
+			break
+		end
+	end
+
+	if colorFound then
+		greyPlayerSteamIds[colorFound] = nil
+		destroyObjectByGUID(greyAvatarGuids[colorFound])
+		local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[colorFound])
+		if textObj then
+			textObj.TextTool.setValue(' ')
+		end
+	else
+		player.print('You are not sitting.')
+	end
+end
+
+function tellRoleButtonUI(player, value, id)
+	--fixme this won't work for grey
+	bigBroadcast(tellRole(player.color), player)
+end
