@@ -3209,8 +3209,11 @@ function playerInspected(clickedObject, inspectorColor, checkedColor)
 			roleColor = {0.1, 0.3, 1}
 		end
 		printToAll(inspectorColor .. ' inspected ' .. checkedColor, playerColor)
-		broadcastToColor(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
-		--fixme message grey player
+		if inspectorColor == 'Maroon' or inspectorColor == 'Tan' then
+			clickedObject.broadcast(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
+		else
+			broadcastToColor(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
+		end
 		table.insert(inspected, 1, checkedColor)
 		removeInspect()
 		if options.autoNotate and notate.line and notate.action == 'inspects' then
@@ -3755,6 +3758,10 @@ function leaveSeat(player, value, id)
 end
 
 function tellRoleButtonUI(player, value, id)
-	--fixme this won't work for grey
-	bigBroadcast(tellRole(player.color), player)
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+   		bigBroadcast(tellRole(colorFound), player)
+	else
+		bigBroadcast(tellRole(player.color), player)
+	end
 end
