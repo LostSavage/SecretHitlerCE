@@ -3758,6 +3758,10 @@ function leaveSeat(player, value, id)
 end
 
 function tellRoleButtonUI(player, value, id)
-	--fixme this won't work for grey
-	bigBroadcast(tellRole(player.color), player)
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+   		bigBroadcast(tellRole(colorFound), player)
+	else
+		bigBroadcast(tellRole(player.color), player)
+	end
 end
