@@ -1,5 +1,6 @@
 --Scripts can be found on https://github.com/LostSavage/SecretHitlerCE
 #include \SecretHitlerCE\main.ttslua
+#include \SecretHitlerCE\UI.ttslua
 #include \SecretHitlerCE\notetaker.ttslua
 #include \SecretHitlerCE\common.ttslua
 #include \SecretHitlerCE\newcode.ttslua

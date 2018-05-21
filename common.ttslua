@@ -17,10 +17,10 @@ prev_chancelor_guid = '448483'
 prev_chancelor_pos = {x = 8.0, y = 1.06, z = 14.0}
 election_tracker_guid = 'dd57c4'
 
--- rotations
-no_rotation = {x = 0, y = 0, z = 0}
-flip_y = {x = 0, y = 180, z = 0}
-flip_y_z = {x = 0, y = 180, z = 180}
+-- Rotations
+NO_ROT = {x = 0, y = 0, z = 0}
+FACE_UP_ROT = {x = 0, y = 180, z = 0}
+FACE_DOWN_ROT = {x = 0, y = 180, z = 180}
 
 function giveObjectToPlayer(object, playerColor, posAdd, rotAdd, ...)
 	local pos
@@ -201,8 +201,90 @@ function removeBBCode(stringIn)
 	return out
 end
 
+function getPositionByGUID(guidIn)
+	local tmpZone = getObjectFromGUID(guidIn)
+	return tmpZone.getPosition()
+end
+
+function getDeckFromZoneByGUID(guidIn)
+	local deck = nil
+	local deck_ct = 0
+	local zone = getObjectFromGUID(guidIn)
+	local object
+
+	if zone then
+		local inZone = zone.getObjects()
+		for _, object in ipairs(inZone) do
+			if object.tag == 'Card' then
+				deck_ct = 2
+			elseif object.tag == 'Deck' then
+				deck = object
+				deck_ct = deck_ct + 1
+			end
+		end
+	end
+	if deck_ct == 1 then
+		return deck
+	end
+	return nil
+end
+
+function moveObjectToPlayerByGUID(tableIn)
+	local object = getObjectFromGUID(tableIn.guid)
+	if object then
+		local playerColor = closestPlayer(object, players, tableIn.max)
+		if playerColor then
+			giveObjectToPlayer(object, playerColor, {forward = tableIn.forward, right = 0, up = 0, forceHeight = tableIn.height}, NO_ROT, false, true)
+		end
+	end
+end
+
+function inTable(tableIn, valueIn)
+	local value
+	if tableIn then
+		for _, value in pairs(tableIn) do
+			if value == valueIn then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+function smartTableInsert(tableIn, valueIn)
+	if not inTable(tableIn, valueIn) then
+		table.insert(tableIn, 1, valueIn)
+	end
+end
+
+function versionInfo()
+	local msg
+
+	msg = _VERSION -- Lua info
+	if mod_name then
+		msg = msg .. '\nmod_name = ' .. mod_name
+	else
+		msg = msg .. '\nmod_name = nil'
+	end
+	if update_version then
+		msg = msg .. '\nupdate_version = ' .. update_version
+	else
+		msg = msg .. '\nupdate_version = nil'
+	end
+	msg = msg .. '\nGlobal Lua length ' .. string.len(Global.getLuaScript())
+
+	return msg
+end
+
 function nullFunction()
 	--nothing here
+end
+
+-- This allows outside objects to call any function from this code.
+-- Global.call('callFunction', { fcn = 'drawCards', params = {amountToDraw, color} })
+function callFunction(packet)
+    assert(type(_G[packet.fcn]) == 'function', 'No function named ' .. packet.fcn .. ' exists!')
+    return table.pack(_G[packet.fcn](unpack(packet.params or {})))
 end
 
 function tableToString(tbl, indent)
@@ -221,6 +303,10 @@ function tableToString(tbl, indent)
   end
 
   return out
+end
+
+function generateAvatarImageUrl(steamId)
+   return string.format("http://steam-tts.bclass.info/avatar/?i=%s&s=l", steamId)
 end
 
 function greyPlayer(color)
@@ -260,4 +346,72 @@ function getGreyColor(steamId)
 	end
 	return colorFound
 end
--- end Common Globals and Functions
+
+--Returns a simple table with all objects and their container GUIDs
+function getObjsFromZone(zoneGUID)
+	local zoneObj = getObjectFromGUID(zoneGUID)
+	local objs = zoneObj.getObjects()
+	local returnTable = {}
+	local deckTab = {}
+	local deckGUID
+
+	for k1,v1 in pairs(objs) do
+		if v1.tag == 'Card' then
+			table.insert(returnTable, {
+				name = v1.getName(),
+				description = v1.getDescription(),
+				deck_guid = nil,
+				index = nil,
+				guid = v1.getGUID()
+			})
+		elseif v1.tag == 'Deck' or v1.tag == 'DeckCustom' then
+			deckGuid = v1.getGUID()
+			deckTab = v1.getObjects()
+			for k2, v2 in pairs(deckTab) do
+				table.insert(returnTable, {
+					name = v2.nickname,
+					description = v2.description,
+					deck_guid = deckGuid,
+					index = v2.index,
+					guid = v2.guid
+				})
+			end
+		end
+	end
+	return returnTable
+end
+
+function shufflePosition(objects)
+	local positionA
+	local positionB
+
+	for i = 1, #objects * 5 do
+		local a = math.random(#objects)
+		local b = math.random(#objects)
+		positionA = objects[a].getPosition()
+		positionB = objects[b].getPosition()
+		objects[b].setPosition(positionA)
+		objects[a].setPosition(positionB)
+	end
+end
+
+function shuffleTable(objects)
+	for i = 1, #objects * 5 do
+		local a = math.random(#objects)
+		local b = math.random(#objects)
+		objects[a], objects[b] = objects[b], objects[a]
+	end
+end
+
+function isFaceUp(cardIn)
+	if cardIn then
+		local zrot=cardIn.getRotation()['z']
+		if zrot > -20 and zrot < 20 then
+			return true
+		else
+			return false
+		end
+	else
+		return nil
+	end
+end

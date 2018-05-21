@@ -47,11 +47,10 @@
 <HorizontalLayout id="actions" padding="100 0 0 0" height="6%" width="30%" rectAlignment="MiddleLeft" visibility="grey">
     <Dropdown id="action" onValueChanged="UIAction">
        <Option selected="true" >Choose Action</Option>
-       <Option>Choose Chancellor </Option>
+       <Option>Choose Chancellor</Option>
        <Option>Inspect Player</Option>
        <Option>Give Presidency To</Option>
    </Dropdown>
-
    <Dropdown id="color" onValueChanged="UIColor">
       <Option selected="true">Choose Player</Option>
       <Option>White</Option>
@@ -69,7 +68,6 @@
   </Dropdown>
   <Button id="start" onClick="UIStart">Start</Button>
 </HorizontalLayout>
-
 
 <HorizontalLayout id="admin" padding="0 135 4 87" height="16%" width="50%" rectAlignment="LowerRight" visibility="grey">
       <Button id="sitMaroon" onClick="sitMaroon">Sit in Maroon</Button>
