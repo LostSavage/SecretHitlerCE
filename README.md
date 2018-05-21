@@ -13,4 +13,4 @@ For example, if you have this repository saved in 'D:\Documents\My Games\Tableto
 
 If you want to edit the scripts directly from the temp folder, uncheck the 'Insert other files specified in source code' box and reload the scripts in Atom.
 
-Note tabs are used to save space in the resulting .json file.  I also use tab length of 3.
+Note: Tabs are used to save space in the resulting .json file and I use a tab length of 3.
