@@ -1,4 +1,7 @@
 
+UIActionTable = {}
+UITargetColorTable = {}
+
 function refreshUI()
 	if started then
 		local youHitler = ''
@@ -199,6 +202,9 @@ function sitColorGrey(player, color)
 		callback = 'greyAvatarCallback',
 		sound = false
 	}
+	if greyAvatarGuids[color] then
+		destroyObjectByGUID(greyAvatarGuids[color])
+	end
 	local avatar = spawnObject(objParam)
 	avatar.setLock(true)
 	avatar.setDescription(color .. ' Avatar')
@@ -211,6 +217,11 @@ function sitColorGrey(player, color)
 		material = 3
 	}
 	avatar.setCustomObject(customParam)
+end
+
+function greyAvatarCallback(objIn, paramsIn)
+	local color = string.gsub(objIn.getDescription(), ' Avatar', '')
+	greyAvatarGuids[color] = objIn.getGUID()
 end
 
 function leaveSeat(player, value, id)
@@ -328,5 +339,53 @@ function UICheckCards(player, value, id)
    		printPolicyCards12P('Check', colorFound)
 	else
    		player.print('You are not seated.')
+	end
+end
+
+function UIAction(player, value, id)
+	UIActionTable[player.steam_id] = value
+end
+
+function UIColor(player, value, id)
+	UITargetColorTable[player.steam_id] = value
+end
+
+function UIStart(player, value, id)
+	if not started then
+		player.print('Game has not started.')
+		return
+	end
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
+			chooseChan12P(UITargetColorTable[player.steam_id], colorFound)
+		elseif UIActionTable[player.steam_id] == 'Inspect Player' then
+			playerInspected(nil, colorFound, UITargetColorTable[player.steam_id])
+		elseif UIActionTable[player.steam_id] == 'Give Presidency To' then
+			givePres12P(UITargetColorTable[player.steam_id], colorFound)
+		end
+ 	else
+		player.print('You are not seated.')
+	end
+end
+
+function chooseChan12P(targetColor, playerColor)
+	local player = getPlayerObj(playerColor)
+	local currPres = getPres()
+	if currPres == playerColor then
+		local tmpChan = getObjectFromGUID(chancelor_guid)
+		if tmpChan then giveObjectToPlayer(tmpChan, targetColor, {forward = 11, right = 0, up = 0, forceHeight = 2.8}, NO_ROT, false, false) end
+	else
+		player.print('You are not the current president.', {1,0,0})
+	end
+end
+
+function givePres12P(targetColor, playerColor)
+	local player = getPlayerObj(playerColor)
+	local currPres = getPres()
+	if currPres == playerColor then
+		movePlacards(targetColor, true)
+	else
+		player.print('You are not the current president.',{1,0,0})
 	end
 end

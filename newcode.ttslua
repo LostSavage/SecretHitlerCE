@@ -9,8 +9,6 @@ MAROON_DRAW_POS = {-9, 1.5, -49}
 TAN_DRAW_POS = {20.30, 1.5, -49}
 DISCARD_POS = {20,1.6,-5.68}
 
-UIActionTable = {}
-UITargetColorTable = {}
 
 function vote12P(playerColor, vote)
 	function vote12PCoroutine()
@@ -211,66 +209,5 @@ function printPolicyCards12P(mode, playerColor)
 		player.broadcast('You drew ' .. policyCardStr .. '.', {1,1,1})
 	elseif mode == 'Check' then
 		player.broadcast('Your policy cards are ' .. policyCardStr .. '.', {1,1,1})
-	end
-end
-
-function UIAction(player, value, id)
-	action = value
-end
-
-function UIColor(player, value, id)
-	targetColor = value
-end
-
-function UIStart(player, value, id)
-	if not started then
-		player.print('Game has not started.')
-		return
-	end
-
-	local colorFound = getGreyColor(player.steam_id)
-	if colorFound then
-		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
-			chooseChan12P(UITargetColorTable[player.steam_id], colorFound)
-		elseif UIActionTable[player.steam_id] == 'Inspect Player' then
-			inspect12P(UITargetColorTable[player.steam_id], colorFound)
-		elseif UIActionTable[player.steam_id] == 'Give Presidency To' then
-			givePres12P(UITargetColorTable[player.steam_id], colorFound)
-		end
- 	else
-		player.print('You are not seated.')
-	end
-end
-
-function UIAction(player, value, id)
-	UIActionTable[player.steam_id] = value
-end
-
-function UIColor(player, value, id)
-	UITargetColorTable[player.steam_id] = value
-end
-
-function chooseChan12P(targetColor, playerColor)
-	local player = getPlayerObj(playerColor)
-	local currPres = getPres()
-	if currPres == playerColor then
-		local tmpChan = getObjectFromGUID(chancelor_guid)
-		if tmpChan then giveObjectToPlayer(tmpChan, targetColor, {forward = 11, right = 0, up = 0, forceHeight = 2.8}, NO_ROT, false, false) end
-	else
-		player.print('You are not the current president.', {1,0,0})
-	end
-end
-
-function inspect12P(targetColor, playerColor)
-	playerInspected(nil, playerColor, targetColor)
-end
-
-function givePres12P(targetColor, playerColor)
-	local player = getPlayerObj(playerColor)
-	local currPres = getPres()
-	if currPres == playerColor then
-		movePlacards(targetColor, true)
-	else
-		player.print('You are not the current president.',{1,0,0})
 	end
 end

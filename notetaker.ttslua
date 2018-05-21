@@ -1875,7 +1875,7 @@ function noteTakerNotesLine(lineIn, useColorIn)
 			else
 				playerObj = Player[noteTakerNotes[lineIn].color1]
 			end
-			if playerObj then	text = string.sub(playerObj.steam_name, 1, 7) end
+			if playerObj then text = string.sub(playerObj.steam_name, 1, 7) end
 		end
 		if useColorIn then
 			text = '[' .. stringColorToHex(noteTakerNotes[lineIn].color1) .. ']' .. text .. '[-]'
@@ -1894,7 +1894,7 @@ function noteTakerNotesLine(lineIn, useColorIn)
 			else
 				playerObj = Player[noteTakerNotes[lineIn].color2]
 			end
-			if playerObj then	text = string.sub(playerObj.steam_name, 1, 7) end
+			if playerObj then text = string.sub(playerObj.steam_name, 1, 7) end
 		end
 		if useColorIn then
 			text = '[' .. stringColorToHex(noteTakerNotes[lineIn].color2) .. ']' .. text .. '[-]'

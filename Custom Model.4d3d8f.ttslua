@@ -23,11 +23,9 @@ function onCollisionEnter(collisionInfo)
 	if collisionInfo and loadDone then
 		local options = Global.getTable('options')
 		if options.autoNotate then
-			if not collisionInfo.collision_object.guid then
-				local notate = Global.getTable('notate')
-				if notate.line and notate.action == 'gives pres to' then
-					Global.call('notateColor2ByObject', {self})
-				end
+			local notate = Global.getTable('notate')
+			if notate.line and notate.action == 'gives pres to' then
+				Global.call('notateColor2ByObject', {self})
 			end
 		end
 	end

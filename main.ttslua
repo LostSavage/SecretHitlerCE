@@ -1,9 +1,4 @@
 
--- Created by LostGod on 5/8/2016
--- Heavily modified by Lost Savage
--- Also used code from smiling Aktheon, SwiftPanda, Rodney,
--- Markimus, Sionar, Morten G and Hmmmpf
-
 -- Static Global Variables
 mod_name = 'Secret Hitler: CE'
 update_version = 102
@@ -99,7 +94,8 @@ bulletInfo = {
 	colorTint = {0, 0, 0.0382530019},
 	scale = {0.75, 0.75, 0.75},
 	action = 'Shoots',
-	status = 'Dead'
+	status = 'Dead',
+	shooterColor = nil
 }
 fascists = {}
 forcePres = nil
@@ -1627,18 +1623,9 @@ function giveBullet(playerIn)
 			'			self.setLock(true)\r\n' ..
 			'			self.interactable = true\r\n' ..
 			'		end\r\n' ..
-			'		local options = Global.getTable(\'options\')\r\n' ..
-			'		if options.autoNotate then\r\n' ..
-			'			if not collisionInfo.collision_object.guid then\r\n' ..
-			'				local bulletInfo = Global.getTable(\'bulletInfo\')\r\n' ..
-			'				local notate = Global.getTable(\'notate\')\r\n' ..
-			'				if notate.line and notate.action == string.lower(bulletInfo.action) then\r\n' ..
-			'					Global.call(\'notateColor2ByObject\', {self})\r\n' ..
-			'				end\r\n' ..
-			'			end\r\n' ..
-			'		end\r\n' ..
 			'	end\r\n' ..
 			'end\r\n')
+	bulletInfo.shooterColor = playerIn
 	wait(5)
 	bullet.setPosition({0, 30, 0})
 	giveObjectToPlayer(bullet, playerIn, {forward = 20, right = 0, up = 0, forceHeight = 6}, NO_ROT)
@@ -1647,10 +1634,16 @@ end
 function markDead(tableIn)
 	if type(tableIn) == 'table' then
 		local victimColor = closestPlayer(tableIn[1], players, 18)
-		if victimColor then
+		if victimColor and victimColor ~= bulletInfo.shooterColor then
+			bulletInfo.shooterColor = nil
 			_G.playerStatus[victimColor] = 5
 			refreshStatusButtons()
 			tableIn[1].interactable = false
+			if options.autoNotate then
+				if notate.line and notate.action == string.lower(bulletInfo.action) then
+					notateColor2ByObject(tableIn)
+				end
+			end
 		end
 	end
 end
@@ -3058,11 +3051,6 @@ function greyPlayerHandCallback(objIn, paramsIn)
 	local color = string.gsub(objIn.getDescription(), ' Hand', '')
 	greyPlayerHandGuids[color] = objIn.getGUID()
 	objIn.AssetBundle.playLoopingEffect(1)
-end
-
-function greyAvatarCallback(objIn, paramsIn)
-	local color = string.gsub(objIn.getDescription(), ' Avatar', '')
-	greyAvatarGuids[color] = objIn.getGUID()
 end
 
 function changePlayerStatus(clickedObject, playerColor)

@@ -1,4 +1,9 @@
---Scripts can be found on https://github.com/LostSavage/SecretHitlerCE
+-- Created by LostGod on 5/8/2016
+-- Heavily modified by Lost Savage
+-- Lots of code from Sionar
+-- Also used code from smiling Aktheon, SwiftPanda,
+-- Rodney, Markimus, Morten G and Hmmmpf
+-- Scripts can be found on https://github.com/LostSavage/SecretHitlerCE
 #include \SecretHitlerCE\main.ttslua
 #include \SecretHitlerCE\UI.ttslua
 #include \SecretHitlerCE\notetaker.ttslua
