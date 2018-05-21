@@ -11,8 +11,8 @@ DISCARD_POS = {20,1.6,-5.68}
 FACE_UP_ROT = {0, 180, 0}
 FACE_DOWN_ROT = {0, 180, 180}
 
-action = nil
-targetColor = nil
+UIActionTable = {}
+UITargetColorTable = {}
 
 function UIvoteJa(player, value, id)
 	if not started then
@@ -174,7 +174,7 @@ end
 
 function UIDrawCards(player, value, id)
 	if not started then
-   	player.print('Game has not started.')
+   		player.print('Game has not started.')
 		return
 	end
 	local colorFound = getGreyColor(player.steam_id)
@@ -324,14 +324,19 @@ function printPolicyCards12P(mode, playerColor)
 end
 
 function UIStart(player, value, id)
+	if not started then
+		player.print('Game has not started.')
+		return
+	end
+
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-		if action == 'Choose Chancellor' then
-			chooseChan12P(targetColor, colorFound)
-		elseif action == 'Inspect Player' then
-			inspect12P(targetColor, colorFound)
-		elseif action == 'Give Presidency To' then
-			givePres12P(targetColor, colorFound)
+		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
+			chooseChan12P(UITargetColorTable[player.steam_id], colorFound)
+		elseif UIActionTable[player.steam_id] == 'Inspect Player' then
+			inspect12P(UITargetColorTable[player.steam_id], colorFound)
+		elseif UIActionTable[player.steam_id] == 'Give Presidency To' then
+			givePres12P(UITargetColorTable[player.steam_id], colorFound)
 		end
  	else
    		player.print('You are not seated.')
@@ -340,11 +345,11 @@ function UIStart(player, value, id)
 end
 
 function UIAction(player, value, id)
-	action = value
+	UIActionTable[player.steam_id] = value
 end
 
 function UIColor(player, value, id)
-	targetColor = value
+	UITargetColorTable[player.steam_id] = value
 end
 
 function chooseChan12P(targetColor, playerColor)

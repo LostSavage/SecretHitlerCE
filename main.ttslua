@@ -669,6 +669,14 @@ function init()
 		tmpObj.setLock(true)
 	end
 
+	tmpObj = getObjectFromGUID(fascist_deck_extra_guid)
+	tmpObj.interactable = false
+	tmpObj.setLock(true)
+
+	tmpObj = getObjectFromGUID(liberal_deck_extra_guid)
+	tmpObj.interactable = false
+	tmpObj.setLock(true)
+
 	tmpObj = getObjectFromGUID(policy_deck_guid)
 	if tmpObj == nil then error('Policy Deck') end
 	tmpObj.interactable = false
