@@ -280,7 +280,7 @@ function refreshHiddenZones()
 		elseif options.zoneType == 2 then
 			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 			tmpObj.setScale({15.3268776, 5.1, 6.35014629})
-			forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
+			forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, NO_ROT)
 		elseif options.zoneType == 3 then
 			local pos = {White = {29.65, 3.51, -32.75}, Brown = {0, 3.51, -32.75}, Red = {-29.65, 3.51, -32.75}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 32.75}, Teal = {0, 3.51, 32.75}, Blue = {29.65, 3.51, 32.75}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
 			local scale = {White = {28.4, 5.1, 10.1}, Brown = {28.4, 5.1, 10.1}, Red = {28.4, 5.1, 10.1}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 10.1}, Teal = {28.4, 5.1, 10.1}, Blue = {28.4, 5.1, 10.1}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
@@ -288,7 +288,7 @@ function refreshHiddenZones()
 			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
-			tmpObj.setRotation(no_rotation)
+			tmpObj.setRotation(NO_ROT)
 		elseif options.zoneType == 4 then
 			local pos = {White = {29.65, 3.51, -31.9}, Brown = {0, 3.51, -31.9}, Red = {-29.65, 3.51, -31.9}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 31.9}, Teal = {0, 3.51, 31.9}, Blue = {29.65, 3.51, 31.9}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
 			local scale = {White = {28.4, 5.1, 11.8}, Brown = {28.4, 5.1, 11.8}, Red = {28.4, 5.1, 11.8}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 11.8}, Teal = {28.4, 5.1, 11.8}, Blue = {28.4, 5.1, 11.8}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
@@ -296,7 +296,7 @@ function refreshHiddenZones()
 			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
-			tmpObj.setRotation(no_rotation)
+			tmpObj.setRotation(NO_ROT)
 		elseif options.zoneType == 5 then
 			local pos = {White = {29.3, 3.51, -31.9}, Brown = {0, 3.51, -31.9}, Red = {-29.3, 3.51, -31.9}, Orange = {-49.4, 3.51, -19}, Yellow = {-49.4, 3.51, 19}, Green = {-29.3, 3.51, 31.9}, Teal = {0, 3.51, 31.9}, Blue = {29.3, 3.51, 31.9}, Purple = {49.4, 3.51, 19}, Pink = {49.4, 3.51, -19}}
 			local scale = {White = {29.3, 5.1, 11.8}, Brown = {29.3, 5.1, 11.8}, Red = {29.3, 5.1, 11.8}, Orange = {10.8, 5.1, 38.0}, Yellow = {10.8, 5.1, 38.0}, Green = {29.3, 5.1, 11.8}, Teal = {29.3, 5.1, 11.8}, Blue = {29.3, 5.1, 11.8}, Purple = {10.8, 5.1, 38.0}, Pink = {10.8, 5.1, 38.0}}
@@ -304,7 +304,7 @@ function refreshHiddenZones()
 			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
-			tmpObj.setRotation(no_rotation)
+			tmpObj.setRotation(NO_ROT)
 		elseif options.zoneType == 6 then
 			local pos = {White = {-29.3, 3.51, -49.4}, Brown = {-49.4, 3.51, -29.3}, Red = {-49.4, 3.51, 0}, Orange = {-49.4, 3.51, 29.3}, Yellow = {-29.3, 3.51, 49.4}, Green = {0, 3.51, 49.4}, Teal = {29.3, 3.51, 49.4}, Blue = {49.4, 3.51, 29.3}, Purple = {49.4, 3.51, 0}, Pink = {49.4, 3.51, -29.3}}
 			local scale = {White = {28.4, 5.1, 10.8}, Brown = {10.8, 5.1, 28.4}, Red = {10.8, 5.1, 28.4}, Orange = {10.8, 5.1, 28.4}, Yellow = {28.4, 5.1, 10.8}, Green = {28.4, 5.1, 10.8}, Teal = {28.4, 5.1, 10.8}, Blue = {10.8, 5.1, 28.4}, Purple = {10.8, 5.1, 28.4}, Pink = {10.8, 5.1, 28.4}}
@@ -312,7 +312,7 @@ function refreshHiddenZones()
 			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
-			tmpObj.setRotation(no_rotation)
+			tmpObj.setRotation(NO_ROT)
 
 			local handPos = {White = {-29.3, 4.46, -51.66}, Brown = {-51.66, 4.46, -29.3}, Red = {-51.66, 4.46, 0}, Orange = {-51.66, 4.46, 29.3}, Yellow = {-29.3, 4.46, 51.66}, Green = {0, 4.46, 51.66}, Teal = {29.3, 4.46, 51.66}, Blue = {51.66, 4.46, 29.3}, Purple = {51.66, 4.46, 0}, Pink = {51.66, 4.46, -29.3}}
 			local handRot = {White = {0, 0, 0}, Brown = {0, 90, 0}, Red = {0, 90, 0}, Orange = {0, 90, 0}, Yellow = {0, 180, 0}, Green = {0, 180, 0}, Teal = {0, 180, 0}, Blue = {0, 270, 0}, Purple = {0, 270, 0}, Pink = {0, 270, 0}}
@@ -325,7 +325,7 @@ function refreshHiddenZones()
 			Player[player].setHandTransform(handParams)
 
 			tmpObj = getObjectFromGUID(policySafety_zone_guids[player])
-			forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, no_rotation)
+			forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, NO_ROT)
 		end
 	end
 	if options.zoneType == 6 then
@@ -403,7 +403,7 @@ function refreshBoardCards()
 	local tmpObj
 	local params = {}
 
-	params.rotation = flip_y
+	params.rotation = FACE_UP_ROT
 	if options.gameType < 2 then
 		resetDecks()
 		if options.gameType == 0 then
@@ -899,13 +899,6 @@ function chatHelp(admin)
 	end
 
 	return msg
-end
-
--- This allows outside objects to call any function from this code.
---  Global.call('callFunction', { fcn = 'drawCards', params = {amountToDraw, color} })
-function callFunction(packet)
-    assert(type(_G[packet.fcn]) == 'function', 'No function named ' .. packet.fcn .. ' exists!')
-    return table.pack(_G[packet.fcn](unpack(packet.params or {})))
 end
 
 function settingsPannelMakeButtons()
@@ -1589,9 +1582,9 @@ function movePlacards(playerIn, returnVoteCards)
 
 	local tmpPres = getObjectFromGUID(president_guid)
 	tmpPres.setVar('lastPres', moveToPlayer)
-	if tmpPres then giveObjectToPlayer(tmpPres, moveToPlayer, {forward = 11, right = 0, up = 0, forceHeight = 2.2}, no_rotation, false, false) end
+	if tmpPres then giveObjectToPlayer(tmpPres, moveToPlayer, {forward = 11, right = 0, up = 0, forceHeight = 2.2}, NO_ROT, false, false) end
 	local tmpChan = getObjectFromGUID(chancelor_guid)
-	if tmpChan then giveObjectToPlayer(tmpChan, moveToPlayer, {forward = 11, right = 0, up = 0, forceHeight = 2.8}, no_rotation, false, false) end
+	if tmpChan then giveObjectToPlayer(tmpChan, moveToPlayer, {forward = 11, right = 0, up = 0, forceHeight = 2.8}, NO_ROT, false, false) end
 end
 
 function giveBullet(playerIn)
@@ -1648,7 +1641,7 @@ function giveBullet(playerIn)
 			'end\r\n')
 	wait(5)
 	bullet.setPosition({0, 30, 0})
-	giveObjectToPlayer(bullet, playerIn, {forward = 20, right = 0, up = 0, forceHeight = 6}, no_rotation)
+	giveObjectToPlayer(bullet, playerIn, {forward = 20, right = 0, up = 0, forceHeight = 6}, NO_ROT)
 end
 
 function markDead(tableIn)
@@ -1696,21 +1689,21 @@ function policyCardCoroutine()
 	local movePrevPlacards = function()
 		if lastPres and lastChan then
 			local tmpPres = getObjectFromGUID(prev_president_guid)
-			if tmpPres then giveObjectToPlayer(tmpPres, lastPres, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, false) end
+			if tmpPres then giveObjectToPlayer(tmpPres, lastPres, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, NO_ROT, false, false) end
 			local tmpChan = getObjectFromGUID(prev_chancelor_guid)
-			if tmpChan then giveObjectToPlayer(tmpChan, lastChan, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, false) end
+			if tmpChan then giveObjectToPlayer(tmpChan, lastChan, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, NO_ROT, false, false) end
 		end
 	end
 
 	local homePrevPlacards = function()
 		local tmpPres = getObjectFromGUID(prev_president_guid)
 		if tmpPres then
-			tmpPres.setRotationSmooth(flip_y, false, false)
+			tmpPres.setRotationSmooth(FACE_UP_ROT, false, false)
 			tmpPres.setPositionSmooth(prev_president_pos, false, false)
 		end
 		local tmpChan = getObjectFromGUID(prev_chancelor_guid)
 		if tmpChan then
-			tmpChan.setRotationSmooth(flip_y, false, false)
+			tmpChan.setRotationSmooth(FACE_UP_ROT, false, false)
 			tmpChan.setPositionSmooth(prev_chancelor_pos, false, false)
 		end
 	end
@@ -2578,7 +2571,7 @@ function setupCoroutine()
 				local block = spawnObject(params)
 				block.setColorTint(stringColorToRGB(player))
 				block.setLock(true)
-				forceObjectToPlayer(block, player, {forward = 7, right = 0, up = 0, forceHeight = 1.09}, flip_y)
+				forceObjectToPlayer(block, player, {forward = 7, right = 0, up = 0, forceHeight = 1.09}, FACE_UP_ROT)
 			end
 			-- Player Status Buttons
 			local paramsStatus = {
@@ -2591,7 +2584,7 @@ function setupCoroutine()
 			buttonStatusBase.setName(player)
 			buttonStatusBase.setColorTint(stringColorToRGB(player))
 			buttonStatusBase.setLock(true)
-			forceObjectToPlayer(buttonStatusBase, player, {forward = 11, right = -8.5, up = 0, forceHeight = 1.09}, flip_y)
+			forceObjectToPlayer(buttonStatusBase, player, {forward = 11, right = -8.5, up = 0, forceHeight = 1.09}, FACE_UP_ROT)
 		end
 	end
 	if options.zoneType == 6 then
@@ -2626,7 +2619,18 @@ function setupCoroutine()
 	if abilitiesDeck then
 		abilitiesDeck.randomize()
 		abilitiesDeck.deal(options.expansionAmount)
-		--fixme deal cards to tan and maroon
+		-- Tan and Maroon
+		if options.zoneType == 6 then
+			for _, playerColor in ipairs(GREY_PLAYABLE_COLORS) do
+				for j = 1, options.expansionAmount do
+					local params = {}
+					local card = abilitiesDeck.takeObject(params)
+					if card then
+						giveObjectToPlayer(card, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+					end
+				end
+			end
+		end
 	else
 		local tmpZone = getObjectFromGUID(abilitiesPile_zone_guid)
 		if tmpZone then
@@ -2784,9 +2788,9 @@ function setupCoroutine()
 				offset = -1
 				if options.dealPartyCards then
 					if greyPlayer(player) then
-						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z, false, true)
+						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
 					else
-						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
 					end
 				else
 					destroyObject(card)
@@ -2817,9 +2821,9 @@ function setupCoroutine()
 				card.setScale({1.51, 1, 1.51})
 				offset = 1
 				if greyPlayer(player) then
-					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z, false, true)
+					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
 				else
-					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
 				end
 			elseif description == 'Nein Card' then
 				card.setDescription(player .. '\'s Nein Card')
@@ -2847,17 +2851,17 @@ function setupCoroutine()
 				card.setScale({1.51, 1, 1.51})
 				offset = 2
 				if greyPlayer(player) then
-					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z, false, true)
+					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
 				else
-					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y, false, true)
+					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_UP_ROT, false, true)
 				end
 			end
 			if offset == -2 then
 				if options.dealRoleCards then
 					if greyPlayer(player) then
-						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z, false, true)
+						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
 					else
-						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, flip_y_z, false, true)
+						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
 					end
 				else
 					local tmpGUID = player_decks[i].getVar('displayGuid')
@@ -2952,24 +2956,33 @@ function setupCoroutine()
 	-- Tell everyone their role
 	printToAll('--------------------------------------', {1,1,1})
 	for _, color in ipairs(players) do
-		if not inTable(GREY_PLAYABLE_COLORS, color) then
+		if greyPlayer(color) then
+			local playerObj = getPlayerObj(color)
+			if playerObj then
+				playerObj:print(tellRole(color))
+			end
+		else
 			Player[color]:print(tellRole(color))
 		end
 	end
 	printToAll('--------------------------------------', {1,1,1})
 
 	-- Move and tell first pres
-	giveObjectToPlayer(president, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 3}, no_rotation)
-	giveObjectToPlayer(chancelor, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 5.5}, no_rotation)
+	giveObjectToPlayer(president, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 3}, NO_ROT)
+	giveObjectToPlayer(chancelor, players[randomPlayer], {forward = 11, right = 0, up = 0, forceHeight = 5.5}, NO_ROT)
 	local hcol = stringColorToRGBExtra(players[randomPlayer])
 	printToAll(players[randomPlayer] .. ' is first president!', hcol)
 	printToAll('--------------------------------------', {1,1,1})
 	for _, color in ipairs(players) do
-		if not inTable(GREY_PLAYABLE_COLORS, color) then
+		if greyPlayer(color) then
+			local playerObj = getPlayerObj(color)
+			if playerObj then
+				playerObj:print(chatHelp(playerObj.admin))
+			end
+		else
 			Player[color]:print(chatHelp(Player[color].admin))
 		end
 	end
-	--fixme print chatHelp to grey players that are playing
 
 	-- Cleanup custom pieces
 	for _, v in pairs(all_deck_guids) do
@@ -3195,7 +3208,7 @@ function createInspectButtons(pres)
 				card.setPosition({0, 30 + (i * 0.25), 0})
 				card.setLock(false)
 				wait(5)
-				giveObjectToPlayer(card, playerColor, {forward = 16.5, right = 0, up = 0}, flip_y_z)
+				giveObjectToPlayer(card, playerColor, {forward = 16.5, right = 0, up = 0}, FACE_DOWN_ROT)
 			end
 		end
 	else
@@ -3217,8 +3230,11 @@ function playerInspected(clickedObject, inspectorColor, checkedColor)
 			roleColor = {0.1, 0.3, 1}
 		end
 		printToAll(inspectorColor .. ' inspected ' .. checkedColor, playerColor)
-		if inspectorColor == 'Maroon' or inspectorColor == 'Tan' then
-			clickedObject.broadcast(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
+		if greyPlayer(inspectorColor) then
+			local playerObj = getPlayerObj(inspectorColor)
+			if playerObj then
+				playerObj.broadcast(checkedColor .. ' is ' .. roleText .. '!', roleColor)
+			end
 		else
 			broadcastToColor(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
 		end
@@ -3303,9 +3319,9 @@ function giveRoleCards()
 				newCard.interactable = true
 				newCard.setLock(false)
 				if greyPlayer(player) then
-					forceObjectToPlayer(newCard, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, flip_y_z)
+					forceObjectToPlayer(newCard, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT)
 				else
-					forceObjectToPlayer(newCard, player, {forward = 0, right = -2, up = 0}, flip_y_z)
+					forceObjectToPlayer(newCard, player, {forward = 0, right = -2, up = 0}, FACE_DOWN_ROT)
 				end
 			end
 		end
@@ -3410,366 +3426,5 @@ function notateColor2ByObject(tableIn)
 				end
 			end
 		end
-	end
-end
-
-function shufflePosition(objects)
-	local positionA
-	local positionB
-
-	for i = 1, #objects * 5 do
-		local a = math.random(#objects)
-		local b = math.random(#objects)
-		positionA = objects[a].getPosition()
-		positionB = objects[b].getPosition()
-		objects[b].setPosition(positionA)
-		objects[a].setPosition(positionB)
-	end
-end
-
-function shuffleTable(objects)
-	for i = 1, #objects * 5 do
-		local a = math.random(#objects)
-		local b = math.random(#objects)
-		objects[a], objects[b] = objects[b], objects[a]
-	end
-end
-
-function isFaceUp(cardIn)
-	if cardIn then
-		local zrot=cardIn.getRotation()['z']
-		if zrot > -20 and zrot < 20 then
-			return true
-		else
-			return false
-		end
-	else
-		return nil
-	end
-end
-
-function getPositionByGUID(guidIn)
-	local tmpZone = getObjectFromGUID(guidIn)
-	return tmpZone.getPosition()
-end
-
-function getDeckFromZoneByGUID(guidIn)
-	local deck = nil
-	local deck_ct = 0
-	local zone = getObjectFromGUID(guidIn)
-	local object
-
-	if zone then
-		local inZone = zone.getObjects()
-		for _, object in ipairs(inZone) do
-			if object.tag == 'Card' then
-				deck_ct = 2
-			elseif object.tag == 'Deck' then
-				deck = object
-				deck_ct = deck_ct + 1
-			end
-		end
-	end
-	if deck_ct == 1 then
-		return deck
-	end
-	return nil
-end
-
-function moveObjectToPlayerByGUID(tableIn)
-	local object = getObjectFromGUID(tableIn.guid)
-	if object then
-		local playerColor = closestPlayer(object, players, tableIn.max)
-		if playerColor then
-			giveObjectToPlayer(object, playerColor, {forward = tableIn.forward, right = 0, up = 0, forceHeight = tableIn.height}, no_rotation, false, true)
-		end
-	end
-end
-
-function inTable(tableIn, valueIn)
-	local value
-	if tableIn then
-		for _, value in pairs(tableIn) do
-			if value == valueIn then
-				return true
-			end
-		end
-	end
-	return false
-end
-
-function smartTableInsert(tableIn, valueIn)
-	if not inTable(tableIn, valueIn) then
-		table.insert(tableIn, 1, valueIn)
-	end
-end
-
-function generateAvatarImageUrl(steamId)
-   return string.format("http://steam-tts.bclass.info/avatar/?i=%s&s=l", steamId)
-end
-
-function versionInfo()
-	local msg
-
-	msg = _VERSION -- Lua info
-	if mod_name then
-		msg = msg .. '\nmod_name = ' .. mod_name
-	else
-		msg = msg .. '\nmod_name = nil'
-	end
-	if update_version then
-		msg = msg .. '\nupdate_version = ' .. update_version
-	else
-		msg = msg .. '\nupdate_version = nil'
-	end
-	msg = msg .. '\nGlobal Lua length ' .. string.len(Global.getLuaScript())
-
-	return msg
-end
-
---UI
-
-function refreshUI()
-	if started then
-		local youHitler = ''
-		local youFas = ''
-		local youLib = ''
-		local youNotPlaying = 'Grey'
-		local hitWhite = ''
-		local hitBrown = ''
-		local hitRed = ''
-		local hitOrange = ''
-		local hitYellow = ''
-		local hitGreen = ''
-		local hitTeal = ''
-		local hitBlue = ''
-		local hitPurple = ''
-		local hitPink = ''
-		local hitTan = ''
-		local hitMaroon = ''
-		local fasWhite = ''
-		local fasBrown = ''
-		local fasRed = ''
-		local fasOrange = ''
-		local fasYellow = ''
-		local fasGreen = ''
-		local fasTeal = ''
-		local fasBlue = ''
-		local fasPurple = ''
-		local fasPink = ''
-		local fasTan = ''
-		local fasMaroon = ''
-
-		if options.zoneType == 6 then
-			youNotPlaying = ''
-			for _, playerColor in pairs(GREY_PLAYABLE_COLORS) do
-				if roles[playerColor] == 'hitler' then
-					UI.setAttribute('hit' .. playerColor, 'Text', playerColor .. ' is ' .. text.hitler .. '!')
-				elseif roles[playerColor] == 'fascist' then
-					UI.setAttribute('fas' .. playerColor, 'Text', playerColor .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
-				end
-			end
-		end
-
-		for _, playerColor in pairs(MAIN_PLAYABLE_COLORS) do
-			UI.setAttribute('player' .. playerColor, 'visibility', playerColor)
-			if roles[playerColor] == 'hitler' then
-				UI.setAttribute('hit' .. playerColor, 'Text', playerColor .. ' is ' .. text.hitler .. '!')
-				if youHitler == '' then
-					youHitler = playerColor
-				else
-					youHitler = youHitler .. '|' .. playerColor
-				end
-			elseif roles[playerColor] == 'fascist' then
-				UI.setAttribute('fas' .. playerColor, 'Text', playerColor .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
-				if youFas == '' then
-					youFas = playerColor
-				else
-					youFas = youFas .. '|' .. playerColor
-				end
-			elseif roles[playerColor] == 'liberal' then
-				if youLib == '' then
-					youLib = playerColor
-				else
-					youLib = youLib .. '|' .. playerColor
-				end
-			else
-				if youNotPlaying == '' then
-					youNotPlaying = playerColor
-				else
-					youNotPlaying = youNotPlaying .. '|' .. playerColor
-				end
-			end
-		end
-		hitWhite = hitVisibility('White')
-		hitBrown = hitVisibility('Brown')
-		hitRed = hitVisibility('Red')
-		hitOrange = hitVisibility('Orange')
-		hitYellow = hitVisibility('Yellow')
-		hitGreen = hitVisibility('Green')
-		hitTeal = hitVisibility('Teal')
-		hitBlue = hitVisibility('Blue')
-		hitPurple = hitVisibility('Purple')
-		hitPink = hitVisibility('Pink')
-		hitTan = hitVisibility('Tan')
-		hitMaroon = hitVisibility('Maroon')
-		fasWhite = fasVisibility('White')
-		fasBrown = fasVisibility('Brown')
-		fasRed = fasVisibility('Red')
-		fasOrange = fasVisibility('Orange')
-		fasYellow = fasVisibility('Yellow')
-		fasGreen = fasVisibility('Green')
-		fasTeal = fasVisibility('Teal')
-		fasBlue = fasVisibility('Blue')
-		fasPurple = fasVisibility('Purple')
-		fasPink = fasVisibility('Pink')
-		fasTan = fasVisibility('Tan')
-		fasMaroon = fasVisibility('Maroon')
-
-		UI.setAttribute('youLib', 'Text', 'You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!')
-		UI.setAttribute('youFas', 'Text', 'You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
-		UI.setAttribute('youHitler', 'Text', 'You are ' .. text.hitler .. '!')
-		UI.setAttribute('youLib', 'visibility', youLib)
-		UI.setAttribute('youFas', 'visibility', youFas)
-		UI.setAttribute('youHitler', 'visibility', youHitler)
-		UI.setAttribute('youNotPlaying', 'visibility', youNotPlaying)
-		UI.setAttribute('hitWhite', 'visibility', hitWhite)
-		UI.setAttribute('hitBrown', 'visibility', hitBrown)
-		UI.setAttribute('hitRed', 'visibility', hitRed)
-		UI.setAttribute('hitOrange', 'visibility', hitOrange)
-		UI.setAttribute('hitYellow', 'visibility', hitYellow)
-		UI.setAttribute('hitGreen', 'visibility', hitGreen)
-		UI.setAttribute('hitTeal', 'visibility', hitTeal)
-		UI.setAttribute('hitBlue', 'visibility', hitBlue)
-		UI.setAttribute('hitPurple', 'visibility', hitPurple)
-		UI.setAttribute('hitPink', 'visibility', hitPink)
-		UI.setAttribute('hitTan', 'visibility', hitTan)
-		UI.setAttribute('hitMaroon', 'visibility', hitMaroon)
-		UI.setAttribute('fasWhite', 'visibility', fasWhite)
-		UI.setAttribute('fasBrown', 'visibility', fasBrown)
-		UI.setAttribute('fasRed', 'visibility', fasRed)
-		UI.setAttribute('fasOrange', 'visibility', fasOrange)
-		UI.setAttribute('fasYellow', 'visibility', fasYellow)
-		UI.setAttribute('fasGreen', 'visibility', fasGreen)
-		UI.setAttribute('fasTeal', 'visibility', fasTeal)
-		UI.setAttribute('fasBlue', 'visibility', fasBlue)
-		UI.setAttribute('fasPurple', 'visibility', fasPurple)
-		UI.setAttribute('fasPink', 'visibility', fasPink)
-		UI.setAttribute('fasTan', 'visibility', fasTan)
-		UI.setAttribute('fasMaroon', 'visibility', fasMaroon)
-	end
-end
-
-function hitVisibility(colorIn)
-	local visList = ''
-
-	if inTable(hitler, colorIn) then
-		visList = 'Black'
-		for _, playerColor in pairs(fascists) do
-			if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
-				visList = visList .. '|' .. playerColor
-			end
-		end
-		if #players < 7 then
-			for _, playerColor in pairs(hitler) do
-				if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
-					visList = visList .. '|' .. playerColor
-				end
-			end
-		end
-	end
-
-	return visList
-end
-
-function fasVisibility(colorIn)
-	local visList = ''
-
-	if inTable(fascists, colorIn) then
-		visList = 'Black'
-		for _, playerColor in pairs(fascists) do
-			if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
-				visList = visList .. '|' .. playerColor
-			end
-		end
-		if #players < 7 then
-			for _, playerColor in pairs(hitler) do
-				if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
-					visList = visList .. '|' .. playerColor
-				end
-			end
-		end
-	end
-
-	return visList
-end
-
-function sitMaroon(player, value, id)
-	sitColorGrey(player, 'Maroon')
-end
-
-function sitTan(player, value, id)
-	sitColorGrey(player, 'Tan')
-end
-
-function sitColorGrey(player, color)
-	if inTable(greyPlayerSteamIds, player.steam_id) then
-   	player.print('You are already sitting.')
-      return
-	end
-	printToAll(player.steam_name .. ' is color ' .. color .. '.', GREY_PLAYABLE_COLORS_RGB[color])
-	local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[color])
-	textObj.TextTool.setValue(player.steam_name)
-	greyPlayerSteamIds[color] = player.steam_id
-	local objParam = {
-		type = "Custom_Model",
-		position = GREY_AVATAR_POS[color],
-		rotation = {0, 0, 0},
-		scale = {2.5, 2.5, 1},
-		callback = 'greyAvatarCallback',
-		sound = false
-	}
-	local avatar = spawnObject(objParam)
-	avatar.setLock(true)
-	avatar.setDescription(color .. ' Avatar')
-	avatar.interactable = false
-	local customParam = {
-		diffuse = generateAvatarImageUrl(player.steam_id),
-		mesh = 'http://cloud-3.steamusercontent.com/ugc/933813375177509684/900B7683E01C43C394C408BC38E034B305F1B3AA/',
-		collider = 'http://cloud-3.steamusercontent.com/ugc/487893695356616224/E3E39A827C062914E4185D8757A81D4D14892B8B/',
-		type = 0,
-		material = 3
-	}
-	avatar.setCustomObject(customParam)
-end
-
-function leaveSeat(player, value, id)
-	local colorFound = nil
-
-	for testColor, steamId in pairs(greyPlayerSteamIds) do
-		if steamId == player.steam_id then
-			colorFound = testColor
-			break
-		end
-	end
-
-	if colorFound then
-		greyPlayerSteamIds[colorFound] = nil
-		destroyObjectByGUID(greyAvatarGuids[colorFound])
-		local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[colorFound])
-		if textObj then
-			textObj.TextTool.setValue(' ')
-		end
-	else
-		player.print('You are not sitting.')
-	end
-end
-
-function tellRoleButtonUI(player, value, id)
-	local colorFound = getGreyColor(player.steam_id)
-	if colorFound then
-   		bigBroadcast(tellRole(colorFound), player)
-	else
-		bigBroadcast(tellRole(player.color), player)
 	end
 end

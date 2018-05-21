@@ -1364,9 +1364,9 @@ function setPreviousPlacs(clickedObject, playerColor)
 	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if prevPresColor and prevChanColor then
 			local tmpPres = getObjectFromGUID(prev_president_guid)
-			if tmpPres then giveObjectToPlayer(tmpPres, prevPresColor, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, true) end
+			if tmpPres then giveObjectToPlayer(tmpPres, prevPresColor, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, NO_ROT, false, true) end
 			local tmpChan = getObjectFromGUID(prev_chancelor_guid)
-			if tmpChan then giveObjectToPlayer(tmpChan, prevChanColor, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, no_rotation, false, true) end
+			if tmpChan then giveObjectToPlayer(tmpChan, prevChanColor, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, NO_ROT, false, true) end
 		end
 	end
 end
@@ -1867,16 +1867,15 @@ function noteTakerNotesLine(lineIn, useColorIn)
 		stringOut = stringOut .. noteTakerNotes[lineIn].conflict .. ' '
 	end
 	if noteTakerNotes[lineIn].color1 ~= '' then
-		local haveName = nil
-		if greyPlayer(noteTakerNotes[lineIn].color1) then
-			--fixme get grey name here
-		else
-			local player = Player[noteTakerNotes[lineIn].color1]
-			haveName = player.steam_name
-		end
 		local text = noteTakerNotes[lineIn].color1
-		if haveName and useNames then
-			text = string.sub(haveName, 1, 7)
+		if useNames then
+			local playerObj = nil
+			if greyPlayer(noteTakerNotes[lineIn].color1) then
+				playerObj = getPlayerObj(noteTakerNotes[lineIn].color1)
+			else
+				playerObj = Player[noteTakerNotes[lineIn].color1]
+			end
+			if playerObj then	text = string.sub(playerObj.steam_name, 1, 7) end
 		end
 		if useColorIn then
 			text = '[' .. stringColorToHex(noteTakerNotes[lineIn].color1) .. ']' .. text .. '[-]'
@@ -1887,16 +1886,15 @@ function noteTakerNotesLine(lineIn, useColorIn)
 		stringOut = stringOut .. noteTakerNotes[lineIn].action .. ' '
 	end
 	if noteTakerNotes[lineIn].color2 ~= '' then
-		local haveName = nil
-		if greyPlayer(noteTakerNotes[lineIn].color2) then
-			--fixme get grey name here
-		else
-			local player = Player[noteTakerNotes[lineIn].color2]
-			haveName = player.steam_name
-		end
 		local text = noteTakerNotes[lineIn].color2
-		if haveName and useNames then
-			text = string.sub(haveName, 1, 7)
+		if useNames then
+			local playerObj = nil
+			if greyPlayer(noteTakerNotes[lineIn].color2) then
+				playerObj = getPlayerObj(noteTakerNotes[lineIn].color2)
+			else
+				playerObj = Player[noteTakerNotes[lineIn].color2]
+			end
+			if playerObj then	text = string.sub(playerObj.steam_name, 1, 7) end
 		end
 		if useColorIn then
 			text = '[' .. stringColorToHex(noteTakerNotes[lineIn].color2) .. ']' .. text .. '[-]'
