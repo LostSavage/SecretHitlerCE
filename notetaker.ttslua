@@ -1,8 +1,4 @@
 
---------------------------------------------------------------------------------
---Note Taker
---------------------------------------------------------------------------------
-
 useColor = true
 cooperative = false
 colorMatch = false
@@ -21,7 +17,6 @@ editMode = true -- true is right, false is left
 --CUT HERE
 model_list = {}
 image_list = {}
-no_button_list = {}
 
 menu_unicode = '☰'
 up_unicode = '▲'
@@ -38,13 +33,17 @@ cancelDestroy = false
 functionName = nil
 sharedHistory = false
 
--- Defaults (custom board)
-positionXscale = 1
-positionY = 0.6
-positionZscale = 1
-positionZoffset1 = 0
-positionZoffset2 = 0
-rotationZ = 0
+-- Defaults (Custom_Board)
+posXscale = 1
+posY = 0.6
+posZscale = 1
+posZoffsetMenu = 0
+posZoffsetPostRetrieve = 0
+posZoffsetColors = 0
+posZoffsetSettingsColors = 0
+posZoffsetCenterButtons = 0
+posZoffsetOther = 0
+rotZ = 0
 giveHeight = 0
 giveForward = -19
 buttonScale = 1
@@ -145,46 +144,76 @@ function initNoteTakerValues(boardName)
 	if type(boardName) == 'table' then
 		boardName = boardName[1]
 	end
+	local options = Global.getTable('options')
 
-	if boardName == 'Chess_Board' then
-		positionXscale = -1
-		positionY = -0.9
-		rotationZ = 180
+
+	if boardName == 'Custom_Board' then
+		if options.zoneType == 6 then
+			posZoffsetMenu = -0.25
+			posZoffsetCenterButtons = -0.25
+		end
+	elseif boardName == 'Chess_Board' then
+		posXscale = -1
+		posY = -0.9
+		rotZ = 180
+		if options.zoneType == 6 then
+			posZoffsetMenu = -0.25
+			posZoffsetCenterButtons = -0.25
+		end
 	elseif boardName == 'Checker_Board' then
-		positionXscale = -1
-		positionY = -0.1
-		rotationZ = 180
+		posXscale = -1
+		posY = -0.1
+		rotZ = 180
 		giveHeight = 1
+		if options.zoneType == 6 then
+			posZoffsetMenu = -0.25
+			posZoffsetCenterButtons = -0.25
+		end
 	elseif boardName == 'Go_Board' then
-		positionXscale = -1.1
-		positionY = -1.3
-		positionZscale = 1.1
-		rotationZ = 180
+		posXscale = -1.1
+		posY = -1.3
+		posZscale = 1.1
+		rotZ = 180
 		giveHeight = -1
 		buttonScale = 1.1
 		fontScale = 1.1
+		if options.zoneType == 6 then
+			posZoffsetMenu = -0.25
+			posZoffsetCenterButtons = -0.25
+		end
 	elseif boardName == 'reversi_board' then
-		positionXscale = -1.1
-		positionY = -1.5
-		positionZscale = 1.1
-		rotationZ = 180
+		posXscale = -1.1
+		posY = -1.5
+		posZscale = 1.1
+		rotZ = 180
 		giveHeight = -1
 		buttonScale = 1.1
 		fontScale = 1.1
+		if options.zoneType == 6 then
+			posZoffsetMenu = -0.25
+			posZoffsetCenterButtons = -0.25
+		end
 	elseif boardName == 'backgammon_board' then
-		positionXscale = -0.9
-		positionY = -0.1
-		positionZscale = 0.9
-		positionZoffset1 = 4.5
-		positionZoffset2 = 4.2
-		rotationZ = 180
+		posXscale = -0.9
+		posY = -0.1
+		posZscale = 0.9
+		posZoffsetMenu = -3.7
+		posZoffsetSettingsColors = 4.5
+		posZoffsetOther = 4.2
+		if options.zoneType == 6 then
+			posZoffsetColors = 4.5
+			posZoffsetCenterButtons = 4.25
+		else
+			posZoffsetColors = 4.5
+			posZoffsetCenterButtons = 4.5
+		end
+		rotZ = 180
 		giveHeight = 1
 		giveForward = -26
 		buttonScale = 0.9
 		fontScale = 0.9
 		maxLines = 10
 		textColorReplace = '000000]'
-
 		noteTakerSetNotes = function(stringIn)
 			local out = string.gsub(stringIn, stringColorToHex('White') .. ']', textColorReplace)
 			local screen = getObjectFromGUID(privateScreenGUID)
@@ -193,15 +222,23 @@ function initNoteTakerValues(boardName)
 			end
 		end
 	elseif boardName == 'Custom_Model' then
-		positionXscale = 1.5
-		positionZscale = 1.5
+		posXscale = 1.5
+		posZscale = 1.5
 		buttonScale = 1.5
 		fontScale = 1.5
+		if options.zoneType == 6 then
+			posZoffsetMenu = -0.25
+			posZoffsetCenterButtons = -0.25
+		end
 	end
 
-	local options = Global.getTable('options')
 	if options.scriptedVoting and boardName.name ~= 'backgammon_board' then
 		maxLines = 19
+	end
+
+	if options.zoneType == 6 then
+		rightOffset = {White = 0, Brown = 0, Red = 0, Orange = 0, Yellow = 0, Green = 0, Teal = 0, Blue = 0, Purple = 0, Pink = 0, Tan = 0, Maroon = 0}
+		colorOffset = {White = 10, Brown = 1, Red = 1, Orange = 1, Yellow = 4, Green = 4, Teal = 4, Blue = 7, Purple = 7, Pink = 7, Tan = 10, Maroon = 10}
 	end
 end
 
@@ -269,7 +306,7 @@ function menu(selfIn)
 	if selfIn.name == 'backgammon_board' then
 		local screen = getObjectFromGUID(privateScreenGUID)
 		if screen then
-			forceObjectToPlayer(screen, selfIn.getVar('playerNoteTaker'), {forward = giveForward + 12.5, right = rightOffset[selfIn.getVar('playerNoteTaker')], up = 0, forceHeight = 0.9}, {x = 0, y = 180 - rotationZ, z = 0})
+			forceObjectToPlayer(screen, selfIn.getVar('playerNoteTaker'), {forward = giveForward + 12.5, right = rightOffset[selfIn.getVar('playerNoteTaker')], up = 0, forceHeight = 0.9}, {x = 0, y = 180 - rotZ, z = 0})
 			screen.setLock(true)
 			startLuaCoroutine(selfIn, 'spawnFogCoroutine')
 		else
@@ -280,11 +317,8 @@ function menu(selfIn)
 			end
 		end
 	end
-	if no_button_list['menu'] then
-		positionY = -0.1
-	end
 
-	local buttonParam = {rotation = {0, 0, rotationZ}, font_size = 300 * fontScale}
+	local buttonParam = {rotation = {0, 0, rotZ}, font_size = 300 * fontScale}
 	if sharedHistory then
 		buttonParam.function_owner = Global
 	else
@@ -308,7 +342,7 @@ function menu(selfIn)
 	else
 		buttonParam.click_function = 'nullFunction'
 		buttonParam.label = 'Who is the note taker?'
-		buttonParam.position = {positionXscale * 0, positionY, (-8.3 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * 0, posY, (-7.3 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.height = 500 * buttonScale
 		buttonParam.width = 3500 * buttonScale
 		selfIn.createButton(buttonParam)
@@ -320,68 +354,68 @@ function menu(selfIn)
 	if not cooperative or Player[selfIn.getVar('playerNoteTaker')].admin then
 		buttonParam.click_function = 'setupWhite'
 		buttonParam.label = 'White'
-		buttonParam.position = {positionXscale * 4, positionY, (-2.25 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * 4, posY, (-1.25 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('White')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupBrown'
 		buttonParam.label = 'Brown'
-		buttonParam.position = {positionXscale * 0, positionY, (-2.25 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * 0, posY, (-1.25 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('Brown')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupRed'
 		buttonParam.label = 'Red'
-		buttonParam.position = {positionXscale * -4, positionY, (-2.25 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * -4, posY, (-1.25 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('Red')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupOrange'
 		buttonParam.label = 'Orange'
-		buttonParam.position = {positionXscale * -6, positionY, (-3.75 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * -6, posY, (-2.75 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('Orange')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupYellow'
 		buttonParam.label = 'Yellow'
-		buttonParam.position = {positionXscale * -6, positionY, (-5.25 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * -6, posY, (-4.25 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('Yellow')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupGreen'
 		buttonParam.label = 'Green'
-		buttonParam.position = {positionXscale * -4, positionY, (-6.75 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * -4, posY, (-5.75 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('Green')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupTeal'
 		buttonParam.label = 'Teal'
-		buttonParam.position = {positionXscale * 0, positionY, (-6.75 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * 0, posY, (-5.75 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('Teal')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupBlue'
 		buttonParam.label = 'Blue'
-		buttonParam.position = {positionXscale * 4, positionY, (-6.75 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * 4, posY, (-5.75 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('Blue')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupPurple'
 		buttonParam.label = 'Purple'
-		buttonParam.position = {positionXscale * 6, positionY, (-5.25 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * 6, posY, (-4.25 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('Purple')
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setupPink'
 		buttonParam.label = 'Pink'
-		buttonParam.position = {positionXscale * 6, positionY, (-3.75 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * 6, posY, (-2.75 * posZscale) + posZoffsetSettingsColors}
 		buttonParam.color = stringColorToRGB('Pink')
 		selfIn.createButton(buttonParam)
 	end
 
 	buttonParam.click_function = 'setupMe'
 	buttonParam.label = 'Me'
-	buttonParam.position = {positionXscale * 0, positionY, (-4.5 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 0, posY, (-3.5 * posZscale) + posZoffsetSettingsColors}
 	buttonParam.color = stringColorToRGB('White')
 	selfIn.createButton(buttonParam)
 
@@ -393,7 +427,7 @@ function menu(selfIn)
 end
 
 function menuBase(selfIn)
-	local buttonParam = {rotation = {0, 0, rotationZ}, font_size = 300 * fontScale}
+	local buttonParam = {rotation = {0, 0, rotZ}, font_size = 300 * fontScale}
 	local text = Global.getTable('text')
 
 	if sharedHistory then
@@ -404,24 +438,24 @@ function menuBase(selfIn)
 
 	buttonParam.click_function = 'flipUseNames'
 	if useNames then buttonParam.label = 'x' else buttonParam.label = '' end
-	buttonParam.position = {positionXscale * -7.5, positionY, (1.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -7.5, posY, (1.25 * posZscale) + posZoffsetOther}
 	buttonParam.width = 300 * buttonScale
 	buttonParam.height = 300 * buttonScale
 	selfIn.createButton(buttonParam)
 	buttonParam.label = 'Use player names'
-	buttonParam.position = {positionXscale * -4, positionY, (1.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -4, posY, (1.25 * posZscale) + posZoffsetOther}
 	buttonParam.width = 2700 * buttonScale
 	buttonParam.height = 700 * buttonScale
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'flipUseColor'
 	if useColor then buttonParam.label = 'x' else buttonParam.label = '' end
-	buttonParam.position = {positionXscale * -7.5, positionY, (2.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -7.5, posY, (2.75 * posZscale) + posZoffsetOther}
 	buttonParam.width = 300 * buttonScale
 	buttonParam.height = 300 * buttonScale
 	selfIn.createButton(buttonParam)
 	buttonParam.label = 'Use color'
-	buttonParam.position = {positionXscale * -4, positionY, (2.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -4, posY, (2.75 * posZscale) + posZoffsetOther}
 	buttonParam.width = 2700 * buttonScale
 	buttonParam.height = 700 * buttonScale
 	selfIn.createButton(buttonParam)
@@ -429,52 +463,50 @@ function menuBase(selfIn)
 	if selfIn.name ~= 'backgammon_board' or Player[selfIn.getVar('playerNoteTaker')].admin then
 		buttonParam.click_function = 'flipMoveTracker'
 		if moveTracker then buttonParam.label = 'x' else buttonParam.label = '' end
-		buttonParam.position = {positionXscale * -7.5, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -7.5, posY, (4.25 * posZscale) + posZoffsetOther}
 		buttonParam.width = 300 * buttonScale
 		buttonParam.height = 300 * buttonScale
 		selfIn.createButton(buttonParam)
 		buttonParam.label = 'Move tracker'
-		buttonParam.position = {positionXscale * -4, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -4, posY, (4.25 * posZscale) + posZoffsetOther}
 		buttonParam.width = 2700 * buttonScale
 		buttonParam.height = 700 * buttonScale
 		selfIn.createButton(buttonParam)
 	end
 
-	if not no_button_list['menu'] then
-		buttonParam.click_function = 'flipSwapLF'
-		if swapLF then buttonParam.label = 'x' else buttonParam.label = '' end
-		buttonParam.position = {positionXscale * -7.5, positionY, (5.75 * positionZscale) + positionZoffset2}
-		buttonParam.width = 300 * buttonScale
-		buttonParam.height = 300 * buttonScale
-		selfIn.createButton(buttonParam)
-		buttonParam.label = 'Swap ' .. text.liberalLetter .. ' and ' .. text.fascistLetter
-		buttonParam.position = {positionXscale * -4, positionY, (5.75 * positionZscale) + positionZoffset2}
-		buttonParam.width = 2700 * buttonScale
-		buttonParam.height = 700 * buttonScale
-		selfIn.createButton(buttonParam)
-	end
+	buttonParam.click_function = 'flipSwapLF'
+	if swapLF then buttonParam.label = 'x' else buttonParam.label = '' end
+	buttonParam.position = {posXscale * -7.5, posY, (5.75 * posZscale) + posZoffsetOther}
+	buttonParam.width = 300 * buttonScale
+	buttonParam.height = 300 * buttonScale
+	selfIn.createButton(buttonParam)
+	buttonParam.label = 'Swap ' .. text.liberalLetter .. ' and ' .. text.fascistLetter
+	buttonParam.position = {posXscale * -4, posY, (5.75 * posZscale) + posZoffsetOther}
+	buttonParam.width = 2700 * buttonScale
+	buttonParam.height = 700 * buttonScale
+	selfIn.createButton(buttonParam)
 
 	if selfIn.name == 'Checker_Board' or selfIn.name == 'Go_Board' then
 		buttonParam.click_function = 'flipColorMatch'
 		if colorMatch then buttonParam.label = 'x' else buttonParam.label = '' end
-		buttonParam.position = {positionXscale * -7.5, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -7.5, posY, (7.25 * posZscale) + posZoffsetOther}
 		buttonParam.width = 300 * buttonScale
 		buttonParam.height = 300 * buttonScale
 		selfIn.createButton(buttonParam)
 		buttonParam.label = 'Color match'
-		buttonParam.position = {positionXscale * -4, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -4, posY, (7.25 * posZscale) + posZoffsetOther}
 		buttonParam.width = 2700 * buttonScale
 		buttonParam.height = 700 * buttonScale
 		selfIn.createButton(buttonParam)
 	elseif selfIn.name == 'backgammon_board' and Player[selfIn.getVar('playerNoteTaker')].admin then
 		buttonParam.click_function = 'flipCooperative'
 		if cooperative then buttonParam.label = 'x' else buttonParam.label = '' end
-		buttonParam.position = {positionXscale * -7.5, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -7.5, posY, (7.25 * posZscale) + posZoffsetOther}
 		buttonParam.width = 300 * buttonScale
 		buttonParam.height = 300 * buttonScale
 		selfIn.createButton(buttonParam)
 		buttonParam.label = 'Cooperative'
-		buttonParam.position = {positionXscale * -4, positionY, (7.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -4, posY, (7.25 * posZscale) + posZoffsetOther}
 		buttonParam.width = 2700 * buttonScale
 		buttonParam.height = 700 * buttonScale
 		selfIn.createButton(buttonParam)
@@ -482,22 +514,22 @@ function menuBase(selfIn)
 
 	buttonParam.click_function = 'shuffleDrawDeckButton'
 	buttonParam.label = 'Shuffle'
-	buttonParam.position = {positionXscale * 4, positionY, 1.25  * positionZscale + positionZoffset2}
+	buttonParam.position = {posXscale * 4, posY, 1.25  * posZscale + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'disableSecurityButton'
 	buttonParam.label = 'Disable security'
-	buttonParam.position = {positionXscale * 4, positionY, 2.75 * positionZscale + positionZoffset2}
+	buttonParam.position = {posXscale * 4, posY, 2.75 * posZscale + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'giveRoleCardsButton'
 	buttonParam.label = 'Give role cards'
-	buttonParam.position = {positionXscale * 4, positionY, 4.25 * positionZscale + positionZoffset2}
+	buttonParam.position = {posXscale * 4, posY, 4.25 * posZscale + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'forceVotePass'
 	buttonParam.label = 'Vote Passed'
-	buttonParam.position = {positionXscale * 4, positionY, 5.75 * positionZscale + positionZoffset2}
+	buttonParam.position = {posXscale * 4, posY, 5.75 * posZscale + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 end
 
@@ -513,16 +545,13 @@ function setupBoard(selfIn)
 	end
 	local playerNT = selfIn.getVar('playerNoteTaker')
 	local imagename = setupBoardGetFunction(playerIn) .. colorOffset[playerNT]
-	if no_button_list[functionName] then
-		positionY = -0.1
-	end
 	if colorMatch then selfIn.setColorTint(stringColorToRGBExtra(playerNT)) end
-	forceObjectToPlayer(selfIn, playerNT, {forward = giveForward, right = rightOffset[playerNT], up = 0, forceHeight = giveHeight}, {x = rotationZ, y = 180 - rotationZ, z = 0})
+	forceObjectToPlayer(selfIn, playerNT, {forward = giveForward, right = rightOffset[playerNT], up = 0, forceHeight = giveHeight}, {x = rotZ, y = 180 - rotZ, z = 0})
 	selfIn.setLock(true)
 	if selfIn.name == 'backgammon_board' then
 		local screen = getObjectFromGUID(privateScreenGUID)
 		if screen then
-			forceObjectToPlayer(screen, playerNT, {forward = giveForward + 12.5, right = rightOffset[playerNT], up = 0, forceHeight = 0.9}, {x = 0, y = 180 - rotationZ, z = 0})
+			forceObjectToPlayer(screen, playerNT, {forward = giveForward + 12.5, right = rightOffset[playerNT], up = 0, forceHeight = 0.9}, {x = 0, y = 180 - rotZ, z = 0})
 			screen.setLock(true)
 			refreshNotes(selfIn)
 			startLuaCoroutine(selfIn, 'spawnFogCoroutine')
@@ -536,7 +565,10 @@ function setupBoard(selfIn)
 end
 
 function setupBoardGetFunction(playerIn)
-	if playerIn == 'Orange' or playerIn == 'Yellow' or playerIn == 'Purple' or playerIn == 'Pink' then
+	local options = Global.getTable('options')
+	if options.zoneType == 6 then
+		return 'init12Player'
+	elseif playerIn == 'Orange' or playerIn == 'Yellow' or playerIn == 'Purple' or playerIn == 'Pink' then
 		return 'initVertical'
 	else
 		return 'initHorizontal'
@@ -681,7 +713,7 @@ function forceVotePass(clickedObject, playerColor)
 end
 
 function initHorizontal(selfIn, offset)
-	local buttonParam = {rotation = {0, 0, rotationZ}, width = 1800 * buttonScale, height = 700 * buttonScale, font_size = 300 * fontScale}
+	local buttonParam = {rotation = {0, 0, rotZ}, width = 1800 * buttonScale, height = 700 * buttonScale, font_size = 300 * fontScale}
 
 	if sharedHistory then
 		buttonParam.function_owner = Global
@@ -694,7 +726,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 4, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 4, posY, (-2.25 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -702,7 +734,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 0, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 0, posY, (-2.25 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -710,7 +742,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * -4, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * -4, posY, (-2.25 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -718,7 +750,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * -6, positionY, (-3.75 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * -6, posY, (-3.75 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -726,7 +758,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * -6, positionY, (-5.25 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * -6, posY, (-5.25 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -734,7 +766,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * -4, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * -4, posY, (-6.75 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -742,7 +774,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 0, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 0, posY, (-6.75 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -750,7 +782,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 4, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 4, posY, (-6.75 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -758,7 +790,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 6, positionY, (-5.25 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 6, posY, (-5.25 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -766,7 +798,7 @@ function initHorizontal(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 6, positionY, (-3.75 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 6, posY, (-3.75 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -774,7 +806,7 @@ function initHorizontal(selfIn, offset)
 end
 
 function initVertical(selfIn, offset)
-	local buttonParam = {rotation = {0, 0, rotationZ}, width = 1800 * buttonScale, height = 700 * buttonScale, font_size = 300 * fontScale}
+	local buttonParam = {rotation = {0, 0, rotZ}, width = 1800 * buttonScale, height = 700 * buttonScale, font_size = 300 * fontScale}
 
 	if sharedHistory then
 		buttonParam.function_owner = Global
@@ -787,7 +819,7 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 6, positionY, (-6.0 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 6, posY, (-6.0 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -795,7 +827,7 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 6, positionY, (-4.5 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 6, posY, (-4.5 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -803,7 +835,7 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 6, positionY, (-3.0 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 6, posY, (-3.0 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -811,7 +843,7 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 2, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 2, posY, (-2.25 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -819,7 +851,7 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * -2, positionY, (-2.25 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * -2, posY, (-2.25 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -827,7 +859,7 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * -6, positionY, (-3.0 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * -6, posY, (-3.0 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -835,7 +867,7 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * -6, positionY, (-4.5 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * -6, posY, (-4.5 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -843,7 +875,7 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * -6, positionY, (-6.0 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * -6, posY, (-6.0 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -851,7 +883,7 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * -2, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * -2, posY, (-6.75 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
@@ -859,15 +891,124 @@ function initVertical(selfIn, offset)
 	if color > 10 then color = color - 10 end
 	buttonParam.click_function = MAIN_PLAYABLE_COLORS[color]
 	buttonParam.label = MAIN_PLAYABLE_COLORS[color]
-	buttonParam.position = {positionXscale * 2, positionY, (-6.75 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 2, posY, (-6.75 * posZscale) + posZoffsetColors}
 	buttonParam.color = stringColorToRGBExtra(MAIN_PLAYABLE_COLORS[color])
 	selfIn.createButton(buttonParam)
 
 	initCommon(selfIn)
 end
 
+function init12Player(selfIn, offset)
+	local buttonParam = {rotation = {0, 0, rotZ}, width = 1800 * buttonScale, height = 700 * buttonScale, font_size = 300 * fontScale}
+
+	if sharedHistory then
+		buttonParam.function_owner = Global
+	else
+		buttonParam.function_owner = self
+	end
+
+	-- Players
+	local color = offset + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * 4, posY, (-1.75 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * 0, posY, (-1.75 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * -4, posY, (-1.75 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * -6, posY, (-3.25 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * -6, posY, (-4.75 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * -6, posY, (-6.25 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * -4, posY, (-7.75 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * 0, posY, (-7.75 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * 4, posY, (-7.75 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * 6, posY, (-6.25 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * 6, posY, (-4.75 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	color = color + 1
+	if color > 12 then color = color - 12 end
+	buttonParam.click_function = ALL_PLAYABLE_COLORS[color]
+	buttonParam.label = ALL_PLAYABLE_COLORS[color]
+	buttonParam.position = {posXscale * 6, posY, (-3.25 * posZscale) + posZoffsetColors}
+	buttonParam.color = stringColorToRGBExtra(ALL_PLAYABLE_COLORS[color])
+	selfIn.createButton(buttonParam)
+
+	initCommon(selfIn)
+end
+
 function initCommon(selfIn)
-	local buttonParam = {rotation = {0, 0, rotationZ}, font_size = 300 * fontScale}
+	local buttonParam = {rotation = {0, 0, rotZ}, font_size = 300 * fontScale}
 	local bulletInfo = Global.getTable('bulletInfo')
 	local text = Global.getTable('text')
 
@@ -890,11 +1031,7 @@ function initCommon(selfIn)
 	buttonParam.label = menu_unicode
 	buttonParam.width = 600 * buttonScale
 	buttonParam.height = 500 * buttonScale
-	if selfIn.name == 'backgammon_board' then
-		buttonParam.position = {positionXscale * 7.4, positionY, (-16.3 * positionZscale) + positionZoffset2}
-	else
-		buttonParam.position = {positionXscale * 7.6, positionY, (-7.5 * positionZscale) + positionZoffset2}
-	end
+	buttonParam.position = {posXscale * 7.6, posY, (-7.5 * posZscale) + posZoffsetMenu}
 	selfIn.createButton(buttonParam)
 
 	-- Post/Retrieve
@@ -902,12 +1039,12 @@ function initCommon(selfIn)
 		buttonParam.click_function = 'postButton'
 		buttonParam.label = 'Post'
 		buttonParam.width = 1500 * buttonScale
-		buttonParam.position = {positionXscale * -6.25, positionY, (-16.3 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -6.25, posY, (-11.6 * posZscale) + posZoffsetPostRetrieve}
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'retrieveButton'
 		buttonParam.label = 'Retrieve'
-		buttonParam.position = {positionXscale * 5, positionY, (-16.3 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 5, posY, (-11.6 * posZscale) + posZoffsetPostRetrieve}
 		selfIn.createButton(buttonParam)
 	end
 
@@ -917,23 +1054,23 @@ function initCommon(selfIn)
 	buttonParam.height = 700 * buttonScale
 	if Player[selfIn.getVar('playerNoteTaker')].admin or selfIn.name ~= 'backgammon_board' then
 		buttonParam.width = 1800 * buttonScale
-		buttonParam.position = {positionXscale * -2, positionY, (-5.25 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * -2, posY, (-5.25 * posZscale) + posZoffsetCenterButtons}
 		selfIn.createButton(buttonParam)
 
 		buttonParam.click_function = 'setPreviousPlacs'
 		buttonParam.label = 'Move Prev'
-		buttonParam.position = {positionXscale * 2, positionY, (-5.25 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * 2, posY, (-5.25 * posZscale) + posZoffsetCenterButtons}
 		selfIn.createButton(buttonParam)
 	else
 		buttonParam.width = 3700 * buttonScale
-		buttonParam.position = {positionXscale * 0, positionY, (-5.25 * positionZscale) + positionZoffset1}
+		buttonParam.position = {posXscale * 0, posY, (-5.25 * posZscale) + posZoffsetCenterButtons}
 		selfIn.createButton(buttonParam)
 	end
 
 	buttonParam.click_function = 'downvotedButton'
 	buttonParam.label = 'Downvoted'
 	buttonParam.width = 3700 * buttonScale
-	buttonParam.position = {positionXscale * 0, positionY, (-3.75 * positionZscale) + positionZoffset1}
+	buttonParam.position = {posXscale * 0, posY, (-3.75 * posZscale) + posZoffsetCenterButtons}
 	selfIn.createButton(buttonParam)
 
 	-- Left
@@ -941,189 +1078,189 @@ function initCommon(selfIn)
 	buttonParam.label = 'Ex Deck'
 	buttonParam.width = 1500 * buttonScale
 	buttonParam.height = 700 * buttonScale
-	buttonParam.position = {positionXscale * -6.5, positionY, (-0.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -6.5, posY, (-0.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'conflictButton'
 	buttonParam.label = 'Conflict'
-	buttonParam.position = {positionXscale * -6.5, positionY, (1.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -6.5, posY, (1.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'reshuffleButton'
 	buttonParam.label = 'Reshuffle'
-	buttonParam.position = {positionXscale * -6.5, positionY, (2.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -6.5, posY, (2.75 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'hZoneButton'
 	buttonParam.label = string.sub(text.hitler, 1, 1) .. ' Zone'
-	buttonParam.position = {positionXscale * -6.5, positionY, (4.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -6.5, posY, (4.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'topdeckButton'
 	buttonParam.label = 'Topdeck'
-	buttonParam.position = {positionXscale * -6.5, positionY, (5.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -6.5, posY, (5.75 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'revisedButton'
 	buttonParam.label = 'Revised'
-	buttonParam.position = {positionXscale * -6.5, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -6.5, posY, (7.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	-- Right
 	buttonParam.click_function = 'deleteLineButton'
 	buttonParam.label = 'Delete Line'
-	buttonParam.position = {positionXscale * 6.5, positionY, (-0.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 6.5, posY, (-0.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'insertLineButton'
 	buttonParam.label = 'Insert Line'
-	buttonParam.position = {positionXscale * 6.5, positionY, (1.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 6.5, posY, (1.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'topButton'
 	buttonParam.label = 'Top'
-	buttonParam.position = {positionXscale * 6.5, positionY, (2.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 6.5, posY, (2.75 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'bottomButton'
 	buttonParam.label = 'Bottom'
-	buttonParam.position = {positionXscale * 6.5, positionY, (4.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 6.5, posY, (4.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'upButton'
 	buttonParam.label = up_unicode
 	buttonParam.width = 700 * buttonScale
-	buttonParam.position = {positionXscale * 5.75, positionY, (5.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 5.75, posY, (5.75 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'rightButton'
 	buttonParam.label = right_unicode
-	buttonParam.position = {positionXscale * 7.25, positionY, (6.5 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 7.25, posY, (6.5 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'downButton'
 	buttonParam.label = down_unicode
-	buttonParam.position = {positionXscale * 5.75, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 5.75, posY, (7.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'leftButton'
 	buttonParam.label = left_unicode
-	buttonParam.position = {positionXscale * 4.25, positionY, (6.5 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 4.25, posY, (6.5 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	-- Policy x3
 	buttonParam.click_function = 'QQQ'
 	buttonParam.label = '???'
-	buttonParam.position = {positionXscale * 3.8, positionY, (2.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 3.8, posY, (2.75 * posZscale) + posZoffsetOther}
 	buttonParam.width = 900 * buttonScale
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'FFF'
 	buttonParam.label = text.fascistLetter .. text.fascistLetter .. text.fascistLetter
 	if swapLF then
-		buttonParam.position = {positionXscale * -3.8, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -3.8, posY, (2.75 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position = {positionXscale * 1.9, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 1.9, posY, (2.75 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'FFL'
 	buttonParam.label = text.fascistLetter .. text.fascistLetter .. text.liberalLetter
 	if swapLF then
-		buttonParam.position = {positionXscale * -1.9, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -1.9, posY, (2.75 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position = {positionXscale * 0.0, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 0.0, posY, (2.75 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'FLL'
 	buttonParam.label = text.fascistLetter .. text.liberalLetter .. text.liberalLetter
 	if swapLF then
-		buttonParam.position = {positionXscale * 0.0, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 0.0, posY, (2.75 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position = {positionXscale * -1.9, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -1.9, posY, (2.75 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'LLL'
 	buttonParam.label = text.liberalLetter .. text.liberalLetter .. text.liberalLetter
 	if swapLF then
-		buttonParam.position = {positionXscale * 1.9, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 1.9, posY, (2.75 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position = {positionXscale * -3.8, positionY, (2.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -3.8, posY, (2.75 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	-- Policy x2
 	buttonParam.click_function = 'QQ'
 	buttonParam.label = '??'
-	buttonParam.position = {positionXscale * 2.85, positionY, (4.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 2.85, posY, (4.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'FF'
 	buttonParam.label = text.fascistLetter .. text.fascistLetter
 	if swapLF then
-		buttonParam.position = {positionXscale * -2.85, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -2.85, posY, (4.25 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position = {positionXscale * 0.95, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 0.95, posY, (4.25 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	-- same if swapLF
 	buttonParam.click_function = 'FL'
 	buttonParam.label = text.fascistLetter .. text.liberalLetter
-	buttonParam.position = {positionXscale * -0.95, positionY, (4.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -0.95, posY, (4.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'LL'
 	buttonParam.label = text.liberalLetter .. text.liberalLetter
 	if swapLF then
-		buttonParam.position = {positionXscale * 0.95, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 0.95, posY, (4.25 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position = {positionXscale * -2.85, positionY, (4.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -2.85, posY, (4.25 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	-- Policy final
 	buttonParam.click_function = 'vetoButton'
 	buttonParam.label = 'Veto'
-	buttonParam.position = {positionXscale * 1.9, positionY, (5.75 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 1.9, posY, (5.75 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'F'
 	buttonParam.label = text.fascistLetter
 	if swapLF then
-		buttonParam.position = {positionXscale * -1.9, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -1.9, posY, (5.75 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position =  {positionXscale * 0.0, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position =  {posXscale * 0.0, posY, (5.75 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'L'
 	buttonParam.label = text.liberalLetter
 	if swapLF then
-		buttonParam.position = {positionXscale * 0.0, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 0.0, posY, (5.75 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position = {positionXscale * -1.9, positionY, (5.75 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -1.9, posY, (5.75 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	-- Power buttons
 	buttonParam.click_function = 'investigate'
 	buttonParam.label = 'Investigates'
-	buttonParam.position = {positionXscale * -2.9, positionY, (-0.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -2.9, posY, (-0.25 * posZscale) + posZoffsetOther}
 	buttonParam.width = 1800 * buttonScale
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'givesTo'
 	buttonParam.label = 'Gives to'
-	buttonParam.position = {positionXscale * 0.5, positionY, (-0.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 0.5, posY, (-0.25 * posZscale) + posZoffsetOther}
 	buttonParam.width = 1400 * buttonScale
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'shoots'
 	buttonParam.label = bulletInfo.action
-	buttonParam.position = {positionXscale * 3.4, positionY, (-0.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 3.4, posY, (-0.25 * posZscale) + posZoffsetOther}
 	buttonParam.width = 1300 * buttonScale
 	selfIn.createButton(buttonParam)
 
@@ -1131,42 +1268,42 @@ function initCommon(selfIn)
 	buttonParam.label = text.liberalAbbr
 	buttonParam.width = 1500 * buttonScale
 	if swapLF then
-		buttonParam.position = {positionXscale * 0.0, positionY, (1.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 0.0, posY, (1.25 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position = {positionXscale * -3.2, positionY, (1.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -3.2, posY, (1.25 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'fascist'
 	buttonParam.label = text.fascistAbbr
 	if swapLF then
-		buttonParam.position = {positionXscale * -3.2, positionY, (1.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * -3.2, posY, (1.25 * posZscale) + posZoffsetOther}
 	else
-		buttonParam.position = {positionXscale * 0.0, positionY, (1.25 * positionZscale) + positionZoffset2}
+		buttonParam.position = {posXscale * 0.0, posY, (1.25 * posZscale) + posZoffsetOther}
 	end
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'noComment'
 	buttonParam.label = 'Nothing'
-	buttonParam.position = {positionXscale * 3.20, positionY, (1.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 3.20, posY, (1.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	-- Bottom
 	buttonParam.click_function = 'exDiscardButton'
 	buttonParam.label = 'Ex Discard'
 	buttonParam.width = 1300 * buttonScale
-	buttonParam.position = {positionXscale * -3.4, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -3.4, posY, (7.25 * posZscale) + posZoffsetOther}
 	buttonParam.font_size = 250
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'discardsButton'
 	buttonParam.label = 'Discards'
-	buttonParam.position = {positionXscale * -0.65, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * -0.65, posY, (7.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'addsButton'
 	buttonParam.label = 'Adds to\nDeck'
-	buttonParam.position = {positionXscale * 2.1, positionY, (7.25 * positionZscale) + positionZoffset2}
+	buttonParam.position = {posXscale * 2.1, posY, (7.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 end
@@ -1336,6 +1473,14 @@ end
 
 function Pink(clickedObject, playerColor)
 	buttonColor(clickedObject, playerColor, 'Pink')
+end
+
+function Tan(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Tan')
+end
+
+function Maroon(clickedObject, playerColor)
+	buttonColor(clickedObject, playerColor, 'Maroon')
 end
 
 -- Top

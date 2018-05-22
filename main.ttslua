@@ -2647,16 +2647,16 @@ function setupCoroutine()
 	local params = {position = {-100, 100, -100}, sound = false}
 	if options.noteType == 1 then
 		params.type = 'Chess_Board'
-		params.scale = {1.54999959, 1.54999959, 1.54999959}
+		params.scale = {1.55, 1.55, 1.55}
 	elseif options.noteType == 2 then
 		params.type = 'Go_Board'
-		params.scale = {1.44999969, 1.44999969, 1.44999969}
+		params.scale = {1.45, 1.45, 1.45}
 	elseif options.noteType == 3 then
 		params.type = 'Checker_Board'
-		params.scale = {1.54999959, 1.54999959, 1.54999959}
+		params.scale = {1.55, 1.55, 1.55}
 	elseif options.noteType == 4 then
 		params.type = 'reversi_board'
-		params.scale = {1.44999969, 1.44999969, 1.44999969}
+		params.scale = {1.45, 1.45, 1.45}
 	elseif options.noteType == 5 then
 		params.type = 'Custom_Board'
 		params.scale = {1, 1, 1}
@@ -2665,7 +2665,7 @@ function setupCoroutine()
 		params.scale = {1.05, 1.05, 1.05}
 	elseif options.noteType > 6 then
 		params.type = 'backgammon_board'
-		params.scale = {1.79999948, 1.79999948, 1.79999948}
+		params.scale = {1.8, 1.8, 1.8}
 	end
 	for _, player in pairs(players) do
 		if not inTable(GREY_PLAYABLE_COLORS, player) then
