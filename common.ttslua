@@ -415,3 +415,74 @@ function isFaceUp(cardIn)
 		return nil
 	end
 end
+
+function string:tokenize(sep)
+    local sep, fields = sep or ':', {}
+    local pattern = string.format('([^%s]+)', sep)
+    self:gsub(pattern, function(c) fields[#fields+1] = c end)
+    return fields
+end
+
+function topLines(stringIn, maxLinesIn)
+	local linesFound = 0
+	local newLinePos = string.find(stringIn, '\n')
+	local oldLinePos = nil
+
+	while newLinePos do
+		linesFound = linesFound + 1
+		oldLinePos = newLinePos
+		if maxLinesIn == linesFound then break end
+		newLinePos = string.find(stringIn, '\n', newLinePos + 1)
+	end
+
+	if not newLinePos then
+		oldLinePos = string.len(stringIn)
+	end
+
+	return string.sub(stringIn, 1, oldLinePos)
+end
+
+function bigBroadcast(msgIn, playerObjIn)
+	local messageTable = string.tokenize(msgIn, '\n')
+
+	for i=#messageTable, 1, -1 do
+		playerObjIn:broadcast(messageTable[i])
+	end
+end
+
+function getPlayerByName(playerName, playerList)
+   local amountOfPlayersFound = 0
+   local playerToReturn = nil
+
+	if playerName then
+	   for index, name in pairs(playerList) do
+	   	if string.match(string.lower(playerList[index].steam_name), string.lower(playerName)) then
+	         playerToReturn = playerList[index]
+				amountOfPlayersFound = amountOfPlayersFound + 1
+			end
+		end
+
+	   if amountOfPlayersFound == 1 then
+			return playerToReturn
+		end
+	end
+
+	return nil
+end
+
+function getPlayerByNameSteamID(playerNameSteamID, playerList)
+	if playerNameSteamID then
+		local playerFound = getPlayerByName(playerNameSteamID, playerList)
+		if playerFound then
+			return playerFound
+		else
+			for _, p in pairs(playerList) do
+				if p.steam_id == playerNameSteamID then
+					return p
+				end
+			end
+		end
+	end
+
+	return nil
+end

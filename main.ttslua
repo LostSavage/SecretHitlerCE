@@ -325,7 +325,7 @@ function refreshHiddenZones()
 		end
 	end
 	if options.zoneType == 6 then
-		broadcastToAll('Not even close to finished... reload the table to go back.', {1,1,1})
+		broadcastToAll('Alpha release ... still work in progress.', {1,1,1})
 		local params = {type = 'Custom_Model', sound = false}
 		local tableExt = {}
 		local custom = {
@@ -711,8 +711,9 @@ function init()
 end
 
 function onChat(messageIn, player)
-	local message = string.lower(string.gsub(messageIn, '%s+', ' '))
+	local message = string.gsub(messageIn, '%s+', ' ')
 	local messageTable = string.tokenize(message, ' ')
+	messageTable[1] = string.lower(messageTable[1])
 
 	if messageTable[1] == 'r' then
 		if started then
@@ -751,15 +752,11 @@ function onChat(messageIn, player)
 		return false
 	elseif messageTable[1] == 'black' and (player.admin or inTable(trusted_players, player.steam_id)) then
 		if messageTable[2] then
-			local playerFound = getPlayerByName(messageTable[2])
+			local playerFound = getPlayerByNameSteamID(messageTable[2], Player.getPlayers())
 			if playerFound then
 				playerFound:changeColor('Black')
 			else
-				for _, p in pairs(Player.getPlayers()) do
-					if p.steam_id == messageTable[2] then
-						p:changeColor('Black')
-					end
-				end
+				player:print(messageTable[2] .. ' not found.', {1, 0, 0})
 			end
 		else
 			player:changeColor('Black')
@@ -767,15 +764,11 @@ function onChat(messageIn, player)
 		return false
 	elseif messageTable[1] == 'grey' and (player.admin or inTable(trusted_players, player.steam_id)) then
 		if messageTable[2] then
-			local playerFound = getPlayerByName(messageTable[2])
+			local playerFound = getPlayerByNameSteamID(messageTable[2], Player.getPlayers())
 			if playerFound then
 				playerFound:changeColor('Grey')
 			else
-				for _, p in pairs(Player.getPlayers()) do
-					if p.steam_id == messageTable[2] then
-						p:changeColor('Grey')
-					end
-				end
+				player:print(messageTable[2] .. ' not found.', {1, 0, 0})
 			end
 		else
 			player:changeColor('Grey')
@@ -783,15 +776,11 @@ function onChat(messageIn, player)
 		return false
 	elseif messageTable[1] == 'promote' and (player.admin or inTable(trusted_players, player.steam_id)) then
 		if messageTable[2] then
-			local playerFound = getPlayerByName(messageTable[2])
+			local playerFound = getPlayerByNameSteamID(messageTable[2], Player.getPlayers())
 			if playerFound then
 				playerFound.promote()
 			else
-				for _, p in pairs(Player.getPlayers()) do
-					if p.steam_id == messageTable[2] then
-						p.promote()
-					end
-				end
+				player:print(messageTable[2] .. ' not found.', {1, 0, 0})
 			end
 		else
 			player.promote()
@@ -799,15 +788,11 @@ function onChat(messageIn, player)
 		return false
 	elseif messageTable[1] == 'kick' and (player.admin or inTable(trusted_players, player.steam_id)) then
 		if messageTable[2] then
-			local playerFound = getPlayerByName(messageTable[2])
+			local playerFound = getPlayerByNameSteamID(messageTable[2], Player.getPlayers())
 			if playerFound then
 				playerFound.kick()
 			else
-				for _, p in pairs(Player.getPlayers()) do
-					if p.steam_id == messageTable[2] then
-						p.kick()
-					end
-				end
+				player:print(messageTable[2] .. ' not found.', {1, 0, 0})
 			end
 		end
 		return false
@@ -819,59 +804,6 @@ function onChat(messageIn, player)
 	elseif messageTable[1] == 'help' then
 		player:print(chatHelp(player.admin))
 		return false
-	end
-end
-
-function getPlayerByName(playerName)
-   local thePlayers = Player.getPlayers()
-   local amountOfPlayersFound = 0
-   local playerToReturn = nil
-
-   for index, name in pairs(thePlayers) do
-   	if string.match(string.lower(thePlayers[index].steam_name), string.lower(playerName)) then
-         playerToReturn = thePlayers[index]
-			amountOfPlayersFound = amountOfPlayersFound + 1
-		end
-	end
-
-   if amountOfPlayersFound == 1 then
-		return playerToReturn
-	end
-
-	return nil
-end
-
-function string:tokenize(sep)
-    local sep, fields = sep or ':', {}
-    local pattern = string.format('([^%s]+)', sep)
-    self:gsub(pattern, function(c) fields[#fields+1] = c end)
-    return fields
-end
-
-function topLines(stringIn, maxLinesIn)
-	local linesFound = 0
-	local newLinePos = string.find(stringIn, '\n')
-	local oldLinePos = nil
-
-	while newLinePos do
-		linesFound = linesFound + 1
-		oldLinePos = newLinePos
-		if maxLinesIn == linesFound then break end
-		newLinePos = string.find(stringIn, '\n', newLinePos + 1)
-	end
-
-	if not newLinePos then
-		oldLinePos = string.len(stringIn)
-	end
-
-	return string.sub(stringIn, 1, oldLinePos)
-end
-
-function bigBroadcast(msgIn, playerObjIn)
-	local messageTable = string.tokenize(msgIn, '\n')
-
-	for i=#messageTable, 1, -1 do
-		playerObjIn:broadcast(messageTable[i])
 	end
 end
 
@@ -2336,9 +2268,9 @@ function drawCards(amount, playerColor)
 				lastChan = getChan()
 			end
 			if greyPlayer(playerColor) then
-				dealToColor12P(amount, playerColor)
+				deal12P(amount, playerColor)
 			else
-				drawDeck.dealToColor(amount, playerColor)
+				drawDeck.deal(amount, playerColor)
 			end
 			if amount == 1 then
 				broadcastToAll('Dealing 1 card to ' .. playerColor .. '.', stringColorToRGBExtra(playerColor))
@@ -2365,6 +2297,7 @@ end
 
 function onPlayerChangedColor(color)
 	if started then
+		refreshUI()
 		if not (color == 'Grey') and not (color == 'Black') then
 			printToColor('--------------------------------------',color, {1, 1, 1})
 			printToColor('Welcome! ' .. Player[color].steam_name,color, {1, 1, 1})
@@ -2407,7 +2340,6 @@ function onPlayerChangedColor(color)
 				break
 			end
 		end
-
 		if colorFound then
 			greyPlayerSteamIds[colorFound] = nil
 			destroyObjectByGUID(greyAvatarGuids[colorFound])

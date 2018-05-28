@@ -155,7 +155,7 @@ function UIDrawCards(player, value, id)
 	end
 end
 
-function dealToColor12P(amount, playerColor)
+function deal12P(amount, playerColor)
 	function deal12PCoroutine()
 		local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
 		local handDeck

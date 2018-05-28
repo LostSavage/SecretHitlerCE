@@ -1,152 +1,158 @@
 
+-- Not saved
 UIActionTable = {}
 UITargetColorTable = {}
+UIPlayerNameTable = {}
 
 function refreshUI()
 	if started then
-		local youHitler = ''
-		local youFas = ''
-		local youLib = ''
-		local youNotPlaying = 'Grey'
-		local hitWhite = ''
-		local hitBrown = ''
-		local hitRed = ''
-		local hitOrange = ''
-		local hitYellow = ''
-		local hitGreen = ''
-		local hitTeal = ''
-		local hitBlue = ''
-		local hitPurple = ''
-		local hitPink = ''
-		local hitTan = ''
-		local hitMaroon = ''
-		local fasWhite = ''
-		local fasBrown = ''
-		local fasRed = ''
-		local fasOrange = ''
-		local fasYellow = ''
-		local fasGreen = ''
-		local fasTeal = ''
-		local fasBlue = ''
-		local fasPurple = ''
-		local fasPink = ''
-		local fasTan = ''
-		local fasMaroon = ''
+		local youHitler = ""
+		local youFas = ""
+		local youLib = ""
+		local youNotPlaying = "Grey"
+		local hitWhite = ""
+		local hitBrown = ""
+		local hitRed = ""
+		local hitOrange = ""
+		local hitYellow = ""
+		local hitGreen = ""
+		local hitTeal = ""
+		local hitBlue = ""
+		local hitPurple = ""
+		local hitPink = ""
+		local hitTan = ""
+		local hitMaroon = ""
+		local fasWhite = ""
+		local fasBrown = ""
+		local fasRed = ""
+		local fasOrange = ""
+		local fasYellow = ""
+		local fasGreen = ""
+		local fasTeal = ""
+		local fasBlue = ""
+		local fasPurple = ""
+		local fasPink = ""
+		local fasTan = ""
+		local fasMaroon = ""
 
 		if options.zoneType == 6 then
-			youNotPlaying = ''
+			youNotPlaying = ""
 			for _, playerColor in pairs(GREY_PLAYABLE_COLORS) do
-				if roles[playerColor] == 'hitler' then
-					UI.setAttribute('hit' .. playerColor, 'Text', playerColor .. ' is ' .. text.hitler .. '!')
-				elseif roles[playerColor] == 'fascist' then
-					UI.setAttribute('fas' .. playerColor, 'Text', playerColor .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
+				if roles[playerColor] == "hitler" then
+					UI.setAttribute("hit" .. playerColor, "Text", playerColor .. " is " .. text.hitler .. "!")
+				elseif roles[playerColor] == "fascist" then
+					UI.setAttribute("fas" .. playerColor, "Text", playerColor .. " is " .. text.fascistArticle .. " " .. text.fascist .. "!")
 				end
 			end
+			UI.setAttribute("greyCommands", "visibility", "Grey")
+			UI.setAttribute("greyPolicy", "visibility", "Grey")
+			UI.setAttribute("greyVote", "visibility", "Grey")
+			UI.setAttribute("adminButton", "active", "true")
 		end
 
 		for _, playerColor in pairs(MAIN_PLAYABLE_COLORS) do
-			UI.setAttribute('player' .. playerColor, 'visibility', playerColor)
-			if roles[playerColor] == 'hitler' then
-				UI.setAttribute('hit' .. playerColor, 'Text', playerColor .. ' is ' .. text.hitler .. '!')
-				if youHitler == '' then
+			UI.setAttribute("player" .. playerColor, "visibility", playerColor)
+			if roles[playerColor] == "hitler" then
+				UI.setAttribute("hit" .. playerColor, "Text", playerColor .. " is " .. text.hitler .. "!")
+				if youHitler == "" then
 					youHitler = playerColor
 				else
-					youHitler = youHitler .. '|' .. playerColor
+					youHitler = youHitler .. "|" .. playerColor
 				end
-			elseif roles[playerColor] == 'fascist' then
-				UI.setAttribute('fas' .. playerColor, 'Text', playerColor .. ' is ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
-				if youFas == '' then
+			elseif roles[playerColor] == "fascist" then
+				UI.setAttribute("fas" .. playerColor, "Text", playerColor .. " is " .. text.fascistArticle .. " " .. text.fascist .. "!")
+				if youFas == "" then
 					youFas = playerColor
 				else
-					youFas = youFas .. '|' .. playerColor
+					youFas = youFas .. "|" .. playerColor
 				end
-			elseif roles[playerColor] == 'liberal' then
-				if youLib == '' then
+			elseif roles[playerColor] == "liberal" then
+				if youLib == "" then
 					youLib = playerColor
 				else
-					youLib = youLib .. '|' .. playerColor
+					youLib = youLib .. "|" .. playerColor
 				end
 			else
-				if youNotPlaying == '' then
+				if youNotPlaying == "" then
 					youNotPlaying = playerColor
 				else
-					youNotPlaying = youNotPlaying .. '|' .. playerColor
+					youNotPlaying = youNotPlaying .. "|" .. playerColor
 				end
 			end
 		end
-		hitWhite = hitVisibility('White')
-		hitBrown = hitVisibility('Brown')
-		hitRed = hitVisibility('Red')
-		hitOrange = hitVisibility('Orange')
-		hitYellow = hitVisibility('Yellow')
-		hitGreen = hitVisibility('Green')
-		hitTeal = hitVisibility('Teal')
-		hitBlue = hitVisibility('Blue')
-		hitPurple = hitVisibility('Purple')
-		hitPink = hitVisibility('Pink')
-		hitTan = hitVisibility('Tan')
-		hitMaroon = hitVisibility('Maroon')
-		fasWhite = fasVisibility('White')
-		fasBrown = fasVisibility('Brown')
-		fasRed = fasVisibility('Red')
-		fasOrange = fasVisibility('Orange')
-		fasYellow = fasVisibility('Yellow')
-		fasGreen = fasVisibility('Green')
-		fasTeal = fasVisibility('Teal')
-		fasBlue = fasVisibility('Blue')
-		fasPurple = fasVisibility('Purple')
-		fasPink = fasVisibility('Pink')
-		fasTan = fasVisibility('Tan')
-		fasMaroon = fasVisibility('Maroon')
+		hitWhite = hitVisibility("White")
+		hitBrown = hitVisibility("Brown")
+		hitRed = hitVisibility("Red")
+		hitOrange = hitVisibility("Orange")
+		hitYellow = hitVisibility("Yellow")
+		hitGreen = hitVisibility("Green")
+		hitTeal = hitVisibility("Teal")
+		hitBlue = hitVisibility("Blue")
+		hitPurple = hitVisibility("Purple")
+		hitPink = hitVisibility("Pink")
+		hitTan = hitVisibility("Tan")
+		hitMaroon = hitVisibility("Maroon")
+		fasWhite = fasVisibility("White")
+		fasBrown = fasVisibility("Brown")
+		fasRed = fasVisibility("Red")
+		fasOrange = fasVisibility("Orange")
+		fasYellow = fasVisibility("Yellow")
+		fasGreen = fasVisibility("Green")
+		fasTeal = fasVisibility("Teal")
+		fasBlue = fasVisibility("Blue")
+		fasPurple = fasVisibility("Purple")
+		fasPink = fasVisibility("Pink")
+		fasTan = fasVisibility("Tan")
+		fasMaroon = fasVisibility("Maroon")
 
-		UI.setAttribute('youLib', 'Text', 'You are ' .. text.liberalArticle .. ' ' .. text.liberal .. '!')
-		UI.setAttribute('youFas', 'Text', 'You are ' .. text.fascistArticle .. ' ' .. text.fascist .. '!')
-		UI.setAttribute('youHitler', 'Text', 'You are ' .. text.hitler .. '!')
-		UI.setAttribute('youLib', 'visibility', youLib)
-		UI.setAttribute('youFas', 'visibility', youFas)
-		UI.setAttribute('youHitler', 'visibility', youHitler)
-		UI.setAttribute('youNotPlaying', 'visibility', youNotPlaying)
-		UI.setAttribute('hitWhite', 'visibility', hitWhite)
-		UI.setAttribute('hitBrown', 'visibility', hitBrown)
-		UI.setAttribute('hitRed', 'visibility', hitRed)
-		UI.setAttribute('hitOrange', 'visibility', hitOrange)
-		UI.setAttribute('hitYellow', 'visibility', hitYellow)
-		UI.setAttribute('hitGreen', 'visibility', hitGreen)
-		UI.setAttribute('hitTeal', 'visibility', hitTeal)
-		UI.setAttribute('hitBlue', 'visibility', hitBlue)
-		UI.setAttribute('hitPurple', 'visibility', hitPurple)
-		UI.setAttribute('hitPink', 'visibility', hitPink)
-		UI.setAttribute('hitTan', 'visibility', hitTan)
-		UI.setAttribute('hitMaroon', 'visibility', hitMaroon)
-		UI.setAttribute('fasWhite', 'visibility', fasWhite)
-		UI.setAttribute('fasBrown', 'visibility', fasBrown)
-		UI.setAttribute('fasRed', 'visibility', fasRed)
-		UI.setAttribute('fasOrange', 'visibility', fasOrange)
-		UI.setAttribute('fasYellow', 'visibility', fasYellow)
-		UI.setAttribute('fasGreen', 'visibility', fasGreen)
-		UI.setAttribute('fasTeal', 'visibility', fasTeal)
-		UI.setAttribute('fasBlue', 'visibility', fasBlue)
-		UI.setAttribute('fasPurple', 'visibility', fasPurple)
-		UI.setAttribute('fasPink', 'visibility', fasPink)
-		UI.setAttribute('fasTan', 'visibility', fasTan)
-		UI.setAttribute('fasMaroon', 'visibility', fasMaroon)
+		UI.setAttribute("youLib", "Text", "You are " .. text.liberalArticle .. " " .. text.liberal .. "!")
+		UI.setAttribute("youFas", "Text", "You are " .. text.fascistArticle .. " " .. text.fascist .. "!")
+		UI.setAttribute("youHitler", "Text", "You are " .. text.hitler .. "!")
+		UI.setAttribute("youLib", "visibility", youLib)
+		UI.setAttribute("youFas", "visibility", youFas)
+		UI.setAttribute("youHitler", "visibility", youHitler)
+		UI.setAttribute("youNotPlaying", "visibility", youNotPlaying)
+		UI.setAttribute("hitWhite", "visibility", hitWhite)
+		UI.setAttribute("hitBrown", "visibility", hitBrown)
+		UI.setAttribute("hitRed", "visibility", hitRed)
+		UI.setAttribute("hitOrange", "visibility", hitOrange)
+		UI.setAttribute("hitYellow", "visibility", hitYellow)
+		UI.setAttribute("hitGreen", "visibility", hitGreen)
+		UI.setAttribute("hitTeal", "visibility", hitTeal)
+		UI.setAttribute("hitBlue", "visibility", hitBlue)
+		UI.setAttribute("hitPurple", "visibility", hitPurple)
+		UI.setAttribute("hitPink", "visibility", hitPink)
+		UI.setAttribute("hitTan", "visibility", hitTan)
+		UI.setAttribute("hitMaroon", "visibility", hitMaroon)
+		UI.setAttribute("fasWhite", "visibility", fasWhite)
+		UI.setAttribute("fasBrown", "visibility", fasBrown)
+		UI.setAttribute("fasRed", "visibility", fasRed)
+		UI.setAttribute("fasOrange", "visibility", fasOrange)
+		UI.setAttribute("fasYellow", "visibility", fasYellow)
+		UI.setAttribute("fasGreen", "visibility", fasGreen)
+		UI.setAttribute("fasTeal", "visibility", fasTeal)
+		UI.setAttribute("fasBlue", "visibility", fasBlue)
+		UI.setAttribute("fasPurple", "visibility", fasPurple)
+		UI.setAttribute("fasPink", "visibility", fasPink)
+		UI.setAttribute("fasTan", "visibility", fasTan)
+		UI.setAttribute("fasMaroon", "visibility", fasMaroon)
 	end
 end
 
 function hitVisibility(colorIn)
-	local visList = ''
+	local visList = ""
 
 	if inTable(hitler, colorIn) then
-		visList = 'Black'
+		visList = "Black"
 		for _, playerColor in pairs(fascists) do
 			if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
-				visList = visList .. '|' .. playerColor
+				visList = visList .. "|" .. playerColor
 			end
 		end
 		if #players < 7 then
 			for _, playerColor in pairs(hitler) do
 				if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
-					visList = visList .. '|' .. playerColor
+					visList = visList .. "|" .. playerColor
 				end
 			end
 		end
@@ -156,19 +162,19 @@ function hitVisibility(colorIn)
 end
 
 function fasVisibility(colorIn)
-	local visList = ''
+	local visList = ""
 
 	if inTable(fascists, colorIn) then
-		visList = 'Black'
+		visList = "Black"
 		for _, playerColor in pairs(fascists) do
 			if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
-				visList = visList .. '|' .. playerColor
+				visList = visList .. "|" .. playerColor
 			end
 		end
 		if #players < 7 then
 			for _, playerColor in pairs(hitler) do
 				if playerColor ~= colorIn and not inTable(GREY_PLAYABLE_COLORS, playerColor) then
-					visList = visList .. '|' .. playerColor
+					visList = visList .. "|" .. playerColor
 				end
 			end
 		end
@@ -177,29 +183,38 @@ function fasVisibility(colorIn)
 	return visList
 end
 
+function UIPlayerName(player, value, id)
+	UIPlayerNameTable[player.steam_id] = value
+end
+
 function sitMaroon(player, value, id)
-	sitColorGrey(player, 'Maroon')
+	sitColorGrey(player, "Maroon")
 end
 
 function sitTan(player, value, id)
-	sitColorGrey(player, 'Tan')
+	sitColorGrey(player, "Tan")
 end
 
 function sitColorGrey(player, color)
-	if inTable(greyPlayerSteamIds, player.steam_id) then
-   	player.print('You are already sitting.')
+	local sitPlayer = getPlayerByNameSteamID(UIPlayerNameTable[player.steam_id], Player.getSpectators())
+ 	if not sitPlayer then
+		player.broadcast(UIPlayerNameTable[sitPlayer.steam_id] .. " not found or is not grey.", {1, 0, 0})
+      return
+ 	end
+	if inTable(greyPlayerSteamIds, sitPlayer.steam_id) then
+   	player.broadcast(sitPlayer.steam_name .. " is already seated.", {1, 0, 0})
       return
 	end
-	printToAll(player.steam_name .. ' is color ' .. color .. '.', GREY_PLAYABLE_COLORS_RGB[color])
+	printToAll(sitPlayer.steam_name .. " is color " .. color .. ".", GREY_PLAYABLE_COLORS_RGB[color])
 	local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[color])
-	textObj.TextTool.setValue(player.steam_name)
-	greyPlayerSteamIds[color] = player.steam_id
+	textObj.TextTool.setValue(sitPlayer.steam_name)
+	greyPlayerSteamIds[color] = sitPlayer.steam_id
 	local objParam = {
 		type = "Custom_Model",
 		position = GREY_AVATAR_POS[color],
 		rotation = {0, 0, 0},
 		scale = {2.5, 2.5, 1},
-		callback = 'greyAvatarCallback',
+		callback = "greyAvatarCallback",
 		sound = false
 	}
 	if greyAvatarGuids[color] then
@@ -207,12 +222,12 @@ function sitColorGrey(player, color)
 	end
 	local avatar = spawnObject(objParam)
 	avatar.setLock(true)
-	avatar.setDescription(color .. ' Avatar')
+	avatar.setDescription(color .. " Avatar")
 	avatar.interactable = false
 	local customParam = {
-		diffuse = generateAvatarImageUrl(player.steam_id),
-		mesh = 'http://cloud-3.steamusercontent.com/ugc/933813375177509684/900B7683E01C43C394C408BC38E034B305F1B3AA/',
-		collider = 'http://cloud-3.steamusercontent.com/ugc/487893695356616224/E3E39A827C062914E4185D8757A81D4D14892B8B/',
+		diffuse = generateAvatarImageUrl(sitPlayer.steam_id),
+		mesh = "http://cloud-3.steamusercontent.com/ugc/933813375177509684/900B7683E01C43C394C408BC38E034B305F1B3AA/",
+		collider = "http://cloud-3.steamusercontent.com/ugc/487893695356616224/E3E39A827C062914E4185D8757A81D4D14892B8B/",
 		type = 0,
 		material = 3
 	}
@@ -220,36 +235,33 @@ function sitColorGrey(player, color)
 end
 
 function greyAvatarCallback(objIn, paramsIn)
-	local color = string.gsub(objIn.getDescription(), ' Avatar', '')
+	local color = string.gsub(objIn.getDescription(), " Avatar", "")
 	greyAvatarGuids[color] = objIn.getGUID()
 end
 
-function leaveSeat(player, value, id)
-	local colorFound = nil
-
-	for testColor, steamId in pairs(greyPlayerSteamIds) do
-		if steamId == player.steam_id then
-			colorFound = testColor
-			break
-		end
-	end
-
+function removeColorGrey(player, value, id)
+	local sitPlayer = getPlayerByNameSteamID(UIPlayerNameTable[player.steam_id], Player.getSpectators())
+ 	if not sitPlayer then
+		player.broadcast(UIPlayerNameTable[player.steam_id] .. " not found or is not grey.", {1, 0, 0})
+      return
+ 	end
+	local colorFound = getGreyColor(sitPlayer.steam_id)
 	if colorFound then
 		greyPlayerSteamIds[colorFound] = nil
 		destroyObjectByGUID(greyAvatarGuids[colorFound])
 		local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[colorFound])
 		if textObj then
-			textObj.TextTool.setValue(' ')
+			textObj.TextTool.setValue(" ")
 		end
 	else
-		player.print('You are not sitting.')
+		player.print(sitPlayer.steam_name .. " is not seated.")
 	end
 end
 
 function tellRoleButtonUI(player, value, id)
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-   		bigBroadcast(tellRole(colorFound), player)
+   	bigBroadcast(tellRole(colorFound), player)
 	else
 		bigBroadcast(tellRole(player.color), player)
 	end
@@ -257,66 +269,66 @@ end
 
 function UIvoteJa(player, value, id)
 	if not started then
-		player.print('Game has not started.')
+		player.print("Game has not started.")
 		return
 	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-		vote12P(colorFound, 'Ja')
+		vote12P(colorFound, "Ja")
 	else
-		player.print('You are not seated.')
+		player.print("You are not seated.")
 	end
 end
 
 function UIvoteNein(player, value, id)
 	if not started then
-		player.print('Game has not started.')
+		player.print("Game has not started.")
 		return
 	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-		vote12P(colorFound, 'Nein')
+		vote12P(colorFound, "Nein")
 	else
-		player.print('You are not seated.')
+		player.print("You are not seated.")
 	end
 end
 
 function UIDrawCards(player, value, id)
 	if not started then
-   	player.print('Game has not started.')
+   	player.print("Game has not started.")
 		return
 	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
 		drawThree(player, colorFound)
 	else
-		player.print('You are not seated.')
+		player.print("You are not seated.")
 	end
 end
 
 function UIDiscardF(player, value, id)
 	if not started then
-		player.print('Game has not started.')
+		player.print("Game has not started.")
 		return
 	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-   		discard12P('Fascist Policy', colorFound)
+   		discard12P("Fascist Policy", colorFound)
    	else
-   		player.print('You are not seated.')
+   		player.print("You are not seated.")
 	end
 end
 
 function UIDiscardL(player, value, id)
 	if not started then
-   		player.print('Game has not started.')
+   		player.print("Game has not started.")
 		return
    	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-   		discard12P('Liberal Policy', colorFound)
+   		discard12P("Liberal Policy", colorFound)
 	else
-   		player.print('You are not seated.')
+   		player.print("You are not seated.")
 	end
 end
 
@@ -325,20 +337,20 @@ function discard12P(policy, playerColor)
 	local player = getPlayerObj(playerColor)
 
 	if result == 1 then
-    	player.broadcast('You discarded a ' .. policy .. ' card.', {1,1,1})
+    	player.broadcast("You discarded a " .. policy .. " card.", {1, 1, 1})
 	end
 end
 
 function UICheckCards(player, value, id)
 	if not started then
-   		player.print('Game has not started.')
+   		player.print("Game has not started.")
 		return
 	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-   		printPolicyCards12P('Check', colorFound)
+   		printPolicyCards12P("Check", colorFound)
 	else
-   		player.print('You are not seated.')
+   		player.print("You are not seated.")
 	end
 end
 
@@ -352,20 +364,20 @@ end
 
 function UIStart(player, value, id)
 	if not started then
-		player.print('Game has not started.')
+		player.print("Game has not started.")
 		return
 	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
+		if UIActionTable[player.steam_id] == "Choose Chancellor" then
 			chooseChan12P(UITargetColorTable[player.steam_id], colorFound)
-		elseif UIActionTable[player.steam_id] == 'Inspect Player' then
+		elseif UIActionTable[player.steam_id] == "Inspect Player" then
 			playerInspected(nil, colorFound, UITargetColorTable[player.steam_id])
-		elseif UIActionTable[player.steam_id] == 'Give Presidency To' then
+		elseif UIActionTable[player.steam_id] == "Give Presidency To" then
 			givePres12P(UITargetColorTable[player.steam_id], colorFound)
 		end
  	else
-		player.print('You are not seated.')
+		player.print("You are not seated.")
 	end
 end
 
@@ -376,7 +388,7 @@ function chooseChan12P(targetColor, playerColor)
 		local tmpChan = getObjectFromGUID(chancelor_guid)
 		if tmpChan then giveObjectToPlayer(tmpChan, targetColor, {forward = 11, right = 0, up = 0, forceHeight = 2.8}, NO_ROT, false, false) end
 	else
-		player.print('You are not the current president.', {1,0,0})
+		player.print("You are not the current president.", {1,0,0})
 	end
 end
 
@@ -386,6 +398,16 @@ function givePres12P(targetColor, playerColor)
 	if currPres == playerColor then
 		movePlacards(targetColor, true)
 	else
-		player.print('You are not the current president.',{1,0,0})
+		player.print("You are not the current president.",{1,0,0})
 	end
+end
+
+function closeAdmin(player, value, id)
+	UI.setAttribute("admin", "active", false)
+	UI.setAttribute("adminButton", "active", true)
+end
+
+function showAdmin(player, value, id)
+	UI.setAttribute("admin", "active", true)
+	UI.setAttribute("adminButton", "active", false)
 end
