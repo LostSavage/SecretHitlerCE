@@ -1,127 +1,141 @@
 <Defaults>
-    <Button fontSize="22" colors="#C8C8C840|#FFFFFFFF|#C8C8C840|#C8C8C840" />
-    <Dropdown fontSize="16" colors="#C8C8C840|#FFFFFFFF|#C8C8C840|#C8C8C840" />
-    <Text color="White" outline="Black" fontSize="28" />
-    <InputField fontSize="16" colors="#C8C8C840|#FFFFFFFF|#C8C8C840|#C8C8C840" width = "0.1"/>
+   <Text class="outline" outline="Black" fontSize="28" visibility=""/>
+   <Panel class="window" allowDragging="true" returnToOriginalPositionWhenReleased="false" color="#EBEBEB" outline="#000000" outlineSize="1 -1" />
+   <Button class="window" fontSize="22" colors="#FFFFFF|#FFFFFF|#C8C8C8|#C8C8C880" />
+   <InputField class="window" fontSize="20" colors="#FFFFFF|#FFFFFF|#C8C8C8|#C8C8C880" />
+   <Text class="window" fontSize="28" />
+   <Button class="tp50" fontSize="22" colors="#FFFFFF80|#FFFFFF|#C8C8C880|#C8C8C840" />
+   <Dropdown class="tp50" fontSize="16" colors="#FFFFFF80|#FFFFFF|#C8C8C880|#C8C8C840" />
+   <InputField class="tp50" fontSize="16" colors="#FFFFFF80|#FFFFFF|#C8C8C880|#C8C8C840" width="0.1" />
 </Defaults>
 
 <VerticalLayout padding="0 0 100 0" width="30%" rectAlignment="UpperLeft" childAlignment="UpperCenter" childForceExpandHeight="false">
-    <Text id="playerWhite" color="#FFFFFF" visibility="">Player White:</Text>
-    <Text id="playerBrown" color="#703A16" visibility="">Player Brown:</Text>
-    <Text id="playerRed" color="#DA1917" visibility="">Player Red:</Text>
-    <Text id="playerOrange" color="#F3631C" visibility="">Player Orange:</Text>
-    <Text id="playerYellow" color="#E6E42B" visibility="">Player Yellow:</Text>
-    <Text id="playerGreen" color="#30B22A" visibility="">Player Green:</Text>
-    <Text id="playerTeal" color="#20B09A" visibility="">Player Teal:</Text>
-    <Text id="playerBlue" color="#1E87FF" visibility="">Player Blue:</Text>
-    <Text id="playerPurple" color="#9F1FEF" visibility="">Player Purple:</Text>
-    <Text id="playerPink" color="#F36FCD" visibility="">Player Pink:</Text>
-    <Text id="youLib" color="#0080F8" visibility="">ERROR: youLib</Text>
-    <Text id="youFas" color="#FF0000" visibility="">ERROR: youFas</Text>
-    <Text id="youHitler" color="#FF0000" visibility="">ERROR: youHitler</Text>
-    <Text id="youNotPlaying" color="#7F7F7F" visibility="">You are not playing!</Text>
-    <Text id="hitWhite" color="#FFFFFF" visibility="">ERROR: hitWhite</Text>
-    <Text id="hitBrown" color="#703A16" visibility="">ERROR: hitBrown</Text>
-    <Text id="hitRed" color="#DA1917" visibility="">ERROR: hitRed</Text>
-    <Text id="hitOrange" color="#F3631C" visibility="">ERROR: hitOrange</Text>
-    <Text id="hitYellow" color="#E6E42B" visibility="">ERROR: hitYellow</Text>
-    <Text id="hitGreen" color="#30B22A" visibility="">ERROR: hitGreen</Text>
-    <Text id="hitTeal" color="#20B09A" visibility="">ERROR: hitTeal</Text>
-    <Text id="hitBlue" color="#1E87FF" visibility="">ERROR: hitBlue</Text>
-    <Text id="hitPurple" color="#9F1FEF" visibility="">ERROR: hitPurple</Text>
-    <Text id="hitPink" color="#F36FCD" visibility="">ERROR: hitPink</Text>
-    <Text id="hitTan" color="#D2B48C" visibility="">ERROR: hitTan</Text>
-    <Text id="hitMaroon" color="#800000" visibility="">ERROR: hitMaroon</Text>
-    <Text id="fasWhite" color="#FFFFFF" visibility="">ERROR: fasWhite</Text>
-    <Text id="fasBrown" color="#703A16" visibility="">ERROR: fasBrown</Text>
-    <Text id="fasRed" color="#DA1917" visibility="">ERROR: fasRed</Text>
-    <Text id="fasOrange" color="#F3631C" visibility="">ERROR: fasOrange</Text>
-    <Text id="fasYellow" color="#E6E42B" visibility="">ERROR: fasYellow</Text>
-    <Text id="fasGreen" color="#30B22A" visibility="">ERROR: fasGreen</Text>
-    <Text id="fasTeal" color="#20B09A" visibility="">ERROR: fasTeal</Text>
-    <Text id="fasBlue" color="#1E87FF" visibility="">ERROR: fasBlue</Text>
-    <Text id="fasPurple" color="#9F1FEF" visibility="">ERROR: fasPurple</Text>
-    <Text id="fasPink" color="#F36FCD" visibility="">ERROR: fasPink</Text>
-    <Text id="fasTan" color="#D2B48C" visibility="">ERROR: fasTan</Text>
-    <Text id="fasMaroon" color="#800000" visibility="">ERROR: fasMaroon</Text>
+   <Text class="outline" id="playerWhite" color="#FFFFFF">Player White:</Text>
+   <Text class="outline" id="playerBrown" color="#703A16">Player Brown:</Text>
+   <Text class="outline" id="playerRed" color="#DA1917">Player Red:</Text>
+   <Text class="outline" id="playerOrange" color="#F3631C">Player Orange:</Text>
+   <Text class="outline" id="playerYellow" color="#E6E42B">Player Yellow:</Text>
+   <Text class="outline" id="playerGreen" color="#30B22A">Player Green:</Text>
+   <Text class="outline" id="playerTeal" color="#20B09A">Player Teal:</Text>
+   <Text class="outline" id="playerBlue" color="#1E87FF">Player Blue:</Text>
+   <Text class="outline" id="playerPurple" color="#9F1FEF">Player Purple:</Text>
+   <Text class="outline" id="playerPink" color="#F36FCD">Player Pink:</Text>
+   <Text class="outline" id="youLib" color="#0080F8">ERROR: youLib</Text>
+   <Text class="outline" id="youFas" color="#FF0000">ERROR: youFas</Text>
+   <Text class="outline" id="youHitler" color="#FF0000">ERROR: youHitler</Text>
+   <Text class="outline" id="youNotPlaying" color="#7F7F7F">You are not playing!</Text>
+   <Text class="outline" id="hitWhite" color="#FFFFFF">ERROR: hitWhite</Text>
+   <Text class="outline" id="hitBrown" color="#703A16">ERROR: hitBrown</Text>
+   <Text class="outline" id="hitRed" color="#DA1917">ERROR: hitRed</Text>
+   <Text class="outline" id="hitOrange" color="#F3631C">ERROR: hitOrange</Text>
+   <Text class="outline" id="hitYellow" color="#E6E42B">ERROR: hitYellow</Text>
+   <Text class="outline" id="hitGreen" color="#30B22A">ERROR: hitGreen</Text>
+   <Text class="outline" id="hitTeal" color="#20B09A">ERROR: hitTeal</Text>
+   <Text class="outline" id="hitBlue" color="#1E87FF">ERROR: hitBlue</Text>
+   <Text class="outline" id="hitPurple" color="#9F1FEF">ERROR: hitPurple</Text>
+   <Text class="outline" id="hitPink" color="#F36FCD">ERROR: hitPink</Text>
+   <Text class="outline" id="hitTan" color="#D2B48C">ERROR: hitTan</Text>
+   <Text class="outline" id="hitMaroon" color="#800000">ERROR: hitMaroon</Text>
+   <Text class="outline" id="fasWhite" color="#FFFFFF">ERROR: fasWhite</Text>
+   <Text class="outline" id="fasBrown" color="#703A16">ERROR: fasBrown</Text>
+   <Text class="outline" id="fasRed" color="#DA1917">ERROR: fasRed</Text>
+   <Text class="outline" id="fasOrange" color="#F3631C">ERROR: fasOrange</Text>
+   <Text class="outline" id="fasYellow" color="#E6E42B">ERROR: fasYellow</Text>
+   <Text class="outline" id="fasGreen" color="#30B22A">ERROR: fasGreen</Text>
+   <Text class="outline" id="fasTeal" color="#20B09A">ERROR: fasTeal</Text>
+   <Text class="outline" id="fasBlue" color="#1E87FF">ERROR: fasBlue</Text>
+   <Text class="outline" id="fasPurple" color="#9F1FEF">ERROR: fasPurple</Text>
+   <Text class="outline" id="fasPink" color="#F36FCD">ERROR: fasPink</Text>
+   <Text class="outline" id="fasTan" color="#D2B48C">ERROR: fasTan</Text>
+   <Text class="outline" id="fasMaroon" color="#800000">ERROR: fasMaroon</Text>
 </VerticalLayout>
 
-<HorizontalLayout id="admin" padding="110 0 0 0" height="6%" width="30%" rectAlignment="MiddleLeft" visibility="grey|black">
-    <Button id="sitMaroon" onClick="sitMaroon">Sit in Maroon</Button>
-    <Button id="sitTan" onClick="sitTan">Sit in Tan</Button>
-    <Button id="leaveSeat" onClick="leaveSeat">Leave Seat</Button>
+<Panel class="window" id="admin" width="680" height="140" rectAlignment="Center" active="false">
+   <Text class="window" alignment="UpperLeft" offsetXY="5 -5">GREY PLAYER ADMIN</Text>
+   <Button class="window" width="30" height="30" rectAlignment="UpperRight" offsetXY="-5 -5" fontSize="18" textColor="#B60808" onClick="closeAdmin">X</Button>
+   <VerticalLayout padding="5 5 40 5" spacing="5">
+      <InputField class="window" onValueChanged="UIPlayerName">Enter player name (partial allowed but must be distinct) or steam id</InputField>
+      <HorizontalLayout spacing="5">
+         <Button class="window" onClick="sitMaroon">Sit in Maroon</Button>
+         <Button class="window" onClick="sitTan">Sit in Tan</Button>
+         <Button class="window" onClick="removeColorGrey">Remove from Seat</Button>
+      </HorizontalLayout>
+   </VerticalLayout>
+</Panel>
+
+<Panel id="adminButton" width="128" height="58" rectAlignment="UpperCenter" offsetXY="260 -100" active="false">
+   <Button class="tp50" onClick="showAdmin">Grey Player Admin</Button>
+</Panel>
+
+<HorizontalLayout id="greyCommands" padding="110 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
+   <Dropdown class="tp50" onValueChanged="UIAction">
+      <Option selected="true" >Choose Action</Option>
+      <Option>Choose Chancellor</Option>
+      <Option>Inspect Player</Option>
+      <Option>Give Presidency To</Option>
+   </Dropdown>
+   <Dropdown class="tp50" onValueChanged="UIColor">
+      <Option selected="true">Choose Player</Option>
+      <Option>White</Option>
+      <Option>Brown</Option>
+      <Option>Red</Option>
+      <Option>Orange</Option>
+      <Option>Yellow</Option>
+      <Option>Green</Option>
+      <Option>Teal</Option>
+      <Option>Blue</Option>
+      <Option>Purple</Option>
+      <Option>Pink</Option>
+      <Option>Tan</Option>
+      <Option>Maroon</Option>
+   </Dropdown>
+   <Button class="tp50" onClick="UIStart">Start</Button>
 </HorizontalLayout>
 
-<VerticalLayout id="UIActionExp" padding="0 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
-    <HorizontalLayout padding="135 0 0 0">
-        <Dropdown id="action2" onValueChanged="UIAction">
-            <Option selected="true" >Choose Action</Option>
-            <Option>Choose Chancellor</Option>
-            <Option>Inspect Player</Option>
-            <Option>Give Presidency To</Option>
-            <Option>Discard Ability</Option>
-            <Option>Reveal Ability</Option>
-            <Option>Take Ability from Deck</Option>
-            <Option>Give Card to</Option>
-        </Dropdown>
-    </HorizontalLayout>
-
-    <HorizontalLayout padding="135 0 0 0">
-        <InputField onValueChanged="UIInputExp" width="5%">Enter Card Name</InputField>
-        <Dropdown id="color2" onValueChanged="UIColor">
-            <Option selected="true">Choose Player</Option>
-            <Option>White</Option>
-            <Option>Brown</Option>
-            <Option>Red</Option>
-            <Option>Orange</Option>
-            <Option>Yellow</Option>
-            <Option>Green</Option>
-            <Option>Teal</Option>
-            <Option>Blue</Option>
-            <Option>Purple</Option>
-            <Option>Pink</Option>
-            <Option>Tan</Option>
-            <Option>Maroon</Option>
-        </Dropdown>
-        <Button id="start2" onClick="UIStart2">Start</Button>
-    </HorizontalLayout>
+<VerticalLayout id="greyCommandsExp" padding="0 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
+   <HorizontalLayout padding="135 0 0 0">
+      <Dropdown class="tp50" onValueChanged="UIAction">
+         <Option selected="true">Choose Action</Option>
+         <Option>Choose Chancellor</Option>
+         <Option>Inspect Player</Option>
+         <Option>Give Presidency To</Option>
+         <Option>Discard Ability</Option>
+         <Option>Reveal Ability</Option>
+         <Option>Take from Ability Deck</Option>
+         <Option>Give Card to</Option>
+      </Dropdown>
+   </HorizontalLayout>
+   <HorizontalLayout padding="135 0 0 0">
+      <InputField class="tp50" onValueChanged="UIInput" width="5%">Enter Card Name</InputField>
+      <Dropdown class="tp50" onValueChanged="UIColor">
+         <Option selected="true">Choose Player</Option>
+         <Option>White</Option>
+         <Option>Brown</Option>
+         <Option>Red</Option>
+         <Option>Orange</Option>
+         <Option>Yellow</Option>
+         <Option>Green</Option>
+         <Option>Teal</Option>
+         <Option>Blue</Option>
+         <Option>Purple</Option>
+         <Option>Pink</Option>
+         <Option>Tan</Option>
+         <Option>Maroon</Option>
+      </Dropdown>
+      <Button class="tp50" onClick="UIStart">Start</Button>
+   </HorizontalLayout>
 </VerticalLayout>
 
-<HorizontalLayout id='UIActionNormal' padding="135 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="grey|black">
-    <Dropdown id="action2" onValueChanged="UIAction">
-        <Option selected="true" >Choose Action</Option>
-        <Option>Choose Chancellor</Option>
-        <Option>Inspect Player</Option>
-        <Option>Give Presidency To</Option>
-    </Dropdown>
-    <Dropdown id="color2" onValueChanged="UIColor">
-        <Option selected="true">Choose Player</Option>
-        <Option>White</Option>
-        <Option>Brown</Option>
-        <Option>Red</Option>
-        <Option>Orange</Option>
-        <Option>Yellow</Option>
-        <Option>Green</Option>
-        <Option>Teal</Option>
-        <Option>Blue</Option>
-        <Option>Purple</Option>
-        <Option>Pink</Option>
-        <Option>Tan</Option>
-        <Option>Maroon</Option>
-    </Dropdown>
-    <Button id="start" onClick="UIStart">Start</Button>
+<HorizontalLayout id="greyPolicy" height="8%" width="33%" rectAlignment="LowerCenter" visibility="">
+   <Button class="tp50" onClick="UIDrawCards">Draw Cards</Button>
+   <Button class="tp50" onClick="UIDiscardL">Discard L</Button>
+   <Button class="tp50" onClick="UIDiscardF">Discard F</Button>
+   <Button class="tp50" onClick="UICheckCards">Check Cards</Button>
 </HorizontalLayout>
 
-<HorizontalLayout height="8%" width="33%" rectAlignment="LowerCenter" visibility="grey|black">
-    <Button id="DrawCards" onClick="UIDrawCards">Draw Cards</Button>
-    <Button id="DiscardL" onClick="UIDiscardL">Discard L</Button>
-    <Button id="DiscardF" onClick="UIDiscardF">Discard F</Button>
-    <Button id="CheckCards" onClick="UICheckCards">Check Cards</Button>
-</HorizontalLayout>
-
-<HorizontalLayout padding="0 135 0 0" height="8%" width="33%" rectAlignment="LowerRight" visibility="grey|black">
-    <Button id="voteJa" onClick="UIvoteJa">Vote ja!</Button>
-    <Button id="voteNein" onClick="UIvoteNein">Vote nein</Button>
-    <Button id="voteRemove" onClick="UIvoteRemove">Remove vote</Button>
-    <Button onClick="tellRoleButtonUI">Role?</Button>
+<HorizontalLayout id="greyVote" padding="0 135 0 0" height="8%" width="33%" rectAlignment="LowerRight" visibility="">
+   <Button class="tp50" onClick="UIvoteJa">Vote ja!</Button>
+   <Button class="tp50" onClick="UIvoteNein">Vote nein</Button>
+   <Button class="tp50" onClick="UIvoteRemove">Remove vote</Button>
+   <Button class="tp50" onClick="tellRoleButtonUI">Role?</Button>
 </HorizontalLayout>

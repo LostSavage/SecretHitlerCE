@@ -8,6 +8,8 @@ TAN_HAND_ZONE_GUID = '409da9'
 MAROON_DRAW_POS = {-9, 1.5, -49}
 TAN_DRAW_POS = {20.30, 1.5, -49}
 DISCARD_POS = {20,1.6,-5.68}
+MAROON_ABILITY_POS = {12.60, 1.2, -41}
+TAN_ABILITY_POS = {37, 1.2, -41}
 
 
 function vote12P(playerColor, vote)
@@ -41,9 +43,9 @@ function vote12P(playerColor, vote)
 		sleep(0.1)
 
 		if vote == 'Ja' then
-			moveCardByDescription('Ja Card', votePos, FACE_DOWN_ROT, playerColor)
+			moveCard12P(nil, 'Ja Card', votePos, FACE_DOWN_ROT, playerColor)
 		else
-			moveCardByDescription('Nein Card', votePos, FACE_DOWN_ROT, playerColor)
+			moveCard12P(nil, 'Nein Card', votePos, FACE_DOWN_ROT, playerColor)
 		end
 
 		return 1
@@ -99,7 +101,7 @@ function getVoteCardGUIDs()
 	return GUIDTable
 end
 
-function moveCardByDescription(description, pos, rot, playerColor)
+function moveCard12P(name, description, pos, rot, playerColor)
 	local zoneObjs = {}
 	local player = getPlayerObj(playerColor)
 	local card, deck
@@ -114,10 +116,19 @@ function moveCardByDescription(description, pos, rot, playerColor)
 		player.broadcast('ERROR: No cards found in your hand.', {1,0,0})
 		return -1
 	end
-	for i = 1, #zoneObjs do
-		if string.match(zoneObjs[i].description, description) then
-			foundIndex = i
-			break
+	if name == nil then
+		for i = 1, #zoneObjs do
+			if string.match(zoneObjs[i].description, description) then
+				foundIndex = i
+				break
+			end
+		end
+	else
+		for i = 1, #zoneObjs do
+			if string.match(string.lower(zoneObjs[i].name), string.lower(name)) then
+				foundIndex = i
+				break
+			end
 		end
 	end
 	if foundIndex == nil then
@@ -139,7 +150,7 @@ function moveCardByDescription(description, pos, rot, playerColor)
 		deck.takeObject(takeParam)
 	end
 
-	return 1
+	return zoneObjs[foundIndex]
 end
 
 function UIDrawCards(player, value, id)
@@ -155,7 +166,7 @@ function UIDrawCards(player, value, id)
 	end
 end
 
-function dealToColor12P(amount, playerColor)
+function deal12P(amount, playerColor)
 	function deal12PCoroutine()
 		local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
 		local handDeck
@@ -218,14 +229,73 @@ end
 
 function discardAbility(cardName, playerColor)
 	local player = getPlayerObj(playerColor)
-	local zoneObjs = {}
+	local abilityDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	local pos = abilityDeck.getPosition()
+	local result = {}
+
+	result = moveCard12P(cardName, nil, pos, FACE_DOWN_ROT, playerColor)
+	if result ~= -1 then
+		player.broadcast('You discarded ' .. result.name, {1,1,1})
+	end
+end
+
+function revealAbility(cardName, playerColor)
+	local player = getPlayerObj(playerColor)
+	local abilityDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	local pos
+	local result = {}
 
 	if playerColor == 'Maroon' then
-		zoneObjs = getObjsFromZone(MAROON_HAND_ZONE_GUID)
+		pos = MAROON_ABILITY_POS
 	else
-		zoneObjs = getObjsFromZone(TAN_HAND_ZONE_GUID)
+		pos = TAN_ABILITY_POS
 	end
-	for k,v in pairs(zoneObjs) do
 
+	result = moveCard12P(cardName, nil, pos, FACE_UP_ROT, playerColor)
+	if result ~= -1 then
+		player.broadcast('You played ' .. result.name, {1,1,1})
+	end
+end
+
+function takeAbility(cardName, playerColor)
+	local player = getPlayerObj(playerColor)
+	local pos
+	local result = {}
+
+	if playerColor == 'Maroon' then
+		pos = MAROON_ZONE_POS
+	else
+		pos = TAN_ZONE_POS
+	end
+
+	result = moveCard12P(cardName, nil, pos, FACE_DOWN_ROT, playerColor)
+	if result ~= -1 then
+		player.broadcast('You drew ' .. result.name .. ' from the Ability deck.', {1,1,1})
+	end
+end
+
+function giveCardExp(cardName, targetColor, playerColor)
+	local player = getPlayerObj(playerColor)
+	local ph, pos, rot
+	local result = {}
+	if targetColor == 'Maroon' then
+		pos = MAROON_VOTE_POS
+		pos[1] = pos[1] + 5
+		rot = FACE_DOWN_ROT
+	elseif targetColor == 'Tan' then
+		pos = TAN_VOTE_POS
+		pos[1] = pos[1] + 5
+		rot = FACE_DOWN_ROT
+	else
+		local ph = Player[targetColor].getPlayerHand()
+		if ph then
+			pos = {x = ph['pos_x'], y = ph['pos_y'], z = ph['pos_z']}
+		end
+		rot = {x = ph['rot_x'], y = ph['rot_y'], z = ph['rot_z']}
+	end
+
+	result = moveCard12P(cardName, nil, pos, FACE_DOWN_ROT, playerColor)
+	if result ~= -1 then
+		player.broadcast('You gave ' .. targetColor .. ' the ' .. result.name .. ' card.', {1,1,1})
 	end
 end
