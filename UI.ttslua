@@ -1,6 +1,8 @@
 
 UIActionTable = {}
 UITargetColorTable = {}
+UIActionExpTable = {}
+UITargetColorExpTable = {}
 
 function refreshUI()
 	if started then
@@ -344,10 +346,12 @@ end
 
 function UIAction(player, value, id)
 	UIActionTable[player.steam_id] = value
+	print('a')
 end
 
 function UIColor(player, value, id)
 	UITargetColorTable[player.steam_id] = value
+	print('b')
 end
 
 function UIStart(player, value, id)
@@ -355,8 +359,12 @@ function UIStart(player, value, id)
 		player.print('Game has not started.')
 		return
 	end
+
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
+		player.print('hi')
+		player.print(UIActionTable[player.steam_id])
+		player.print(UITargetColorTable[player.steam_id)]
 		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
 			chooseChan12P(UITargetColorTable[player.steam_id], colorFound)
 		elseif UIActionTable[player.steam_id] == 'Inspect Player' then
@@ -368,6 +376,30 @@ function UIStart(player, value, id)
 		player.print('You are not seated.')
 	end
 end
+
+function UIStart2(player, value, id)
+	if not started then
+		player.print('Game has not started.')
+		return
+	end
+
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+		player.print('hi')
+		player.print(UIActionTable[player.steam_id])
+		player.print(UITargetColorTable[player.steam_id)]
+		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
+			chooseChan12P(UITargetColorTable[player.steam_id], colorFound)
+		elseif UIActionTable[player.steam_id] == 'Inspect Player' then
+			playerInspected(nil, colorFound, UITargetColorTable[player.steam_id])
+		elseif UIActionTable[player.steam_id] == 'Give Presidency To' then
+			givePres12P(UITargetColorTable[player.steam_id], colorFound)
+		end
+ 	else
+		player.print('You are not seated.')
+	end
+end
+
 
 function chooseChan12P(targetColor, playerColor)
 	local player = getPlayerObj(playerColor)
@@ -388,4 +420,12 @@ function givePres12P(targetColor, playerColor)
 	else
 		player.print('You are not the current president.',{1,0,0})
 	end
+end
+
+function UIAction(player, value, id)
+	UIActionExpTable[player.steam_id] = value
+end
+
+function UIColor(player, value, id)
+	UITargetColorExpTable[player.steam_id] = value
 end

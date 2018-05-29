@@ -187,6 +187,7 @@ function printPolicyCards12P(mode, playerColor)
 	local zoneObjs = {}
 	local player = getPlayerObj(playerColor)
 	local policyCardStr = ''
+	local expansionCardStr = 'Your other cards are:'
 
 	if playerColor == 'Maroon' then
 		zoneObjs = getObjsFromZone(MAROON_HAND_ZONE_GUID)
@@ -198,16 +199,33 @@ function printPolicyCards12P(mode, playerColor)
 			policyCardStr = policyCardStr .. '[0000FF]L[-]'
 		elseif v.description == 'Fascist Policy' then
 			policyCardStr = policyCardStr .. '[FF0000]F[-]'
+		elseif not (string.match(v.description, 'Ja Card') or string.match(v.description, 'Nein Card')) then
+			expansionCardStr = expansionCardStr .. '\n' .. v.name
 		end
-	end
-	if policyCardStr == '' then
-		player.broadcast('You have no policy cards.', {1,1,1})
-		return
 	end
 
 	if mode == 'Draw' then
 		player.broadcast('You drew ' .. policyCardStr .. '.', {1,1,1})
 	elseif mode == 'Check' then
-		player.broadcast('Your policy cards are ' .. policyCardStr .. '.', {1,1,1})
+		if policyCardStr == '' then
+			player.broadcast('You have no policy cards.', {1,1,1})
+		else
+			player.broadcast('Your policy cards are: ' .. policyCardStr, {1,1,1})
+		end
+	end
+	player.broadcast(expansionCardStr)
+end
+
+function discardAbility(cardName, playerColor)
+	local player = getPlayerObj(playerColor)
+	local zoneObjs = {}
+
+	if playerColor == 'Maroon' then
+		zoneObjs = getObjsFromZone(MAROON_HAND_ZONE_GUID)
+	else
+		zoneObjs = getObjsFromZone(TAN_HAND_ZONE_GUID)
+	end
+	for k,v in pairs(zoneObjs) do
+
 	end
 end
