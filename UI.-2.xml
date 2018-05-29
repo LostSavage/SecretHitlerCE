@@ -52,7 +52,7 @@
     <Button id="leaveSeat" onClick="leaveSeat">Leave Seat</Button>
 </HorizontalLayout>
 
-<VerticalLayout id="UIActionExp" padding="0 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="grey|black">
+<VerticalLayout id="UIActionExp" padding="0 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
     <HorizontalLayout padding="135 0 0 0">
         <Dropdown id="action2" onValueChanged="UIAction">
             <Option selected="true" >Choose Action</Option>
@@ -87,7 +87,7 @@
     </HorizontalLayout>
 </VerticalLayout>
 
-<HorizontalLayout id='UIActionNormal' padding="135 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
+<HorizontalLayout id='UIActionNormal' padding="135 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="grey|black">
     <Dropdown id="action2" onValueChanged="UIAction">
         <Option selected="true" >Choose Action</Option>
         <Option>Choose Chancellor</Option>

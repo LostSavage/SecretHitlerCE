@@ -364,7 +364,7 @@ function UIStart(player, value, id)
 	if colorFound then
 		player.print('hi')
 		player.print(UIActionTable[player.steam_id])
-		player.print(UITargetColorTable[player.steam_id)]
+		player.print(UITargetColorTable[player.steam_id])
 		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
 			chooseChan12P(UITargetColorTable[player.steam_id], colorFound)
 		elseif UIActionTable[player.steam_id] == 'Inspect Player' then
@@ -387,7 +387,7 @@ function UIStart2(player, value, id)
 	if colorFound then
 		player.print('hi')
 		player.print(UIActionTable[player.steam_id])
-		player.print(UITargetColorTable[player.steam_id)]
+		player.print(UITargetColorTable[player.steam_id])
 		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
 			chooseChan12P(UITargetColorTable[player.steam_id], colorFound)
 		elseif UIActionTable[player.steam_id] == 'Inspect Player' then
