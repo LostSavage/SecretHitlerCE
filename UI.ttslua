@@ -47,8 +47,10 @@ function refreshUI()
 			local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
 			if abilitiesDeck then
 				UI.setAttribute("greyCommandsExp", "visibility", "Grey")
+				UI.setAttribute("greyCommands", "visibility", "")
 			else
 				UI.setAttribute("greyCommands", "visibility", "Grey")
+				UI.setAttribute("greyCommandsExp", "visibility", "")
 			end
 			UI.setAttribute("greyPolicy", "visibility", "Grey")
 			UI.setAttribute("greyVote", "visibility", "Grey")
