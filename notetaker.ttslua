@@ -198,15 +198,14 @@ function initNoteTakerValues(boardName)
 		posY = -0.1
 		posZscale = 0.9
 		posZoffsetMenu = -3.7
+		posZoffsetColors = 4.5
 		posZoffsetSettingsColors = 4.5
-		posZoffsetOther = 4.2
 		if options.zoneType == 6 then
-			posZoffsetColors = 4.5
 			posZoffsetCenterButtons = 4.25
 		else
-			posZoffsetColors = 4.5
 			posZoffsetCenterButtons = 4.5
 		end
+		posZoffsetOther = 4.2
 		rotZ = 180
 		giveHeight = 1
 		giveForward = -26
