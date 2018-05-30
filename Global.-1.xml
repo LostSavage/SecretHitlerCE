@@ -4,8 +4,9 @@
    <Button class="window" fontSize="22" colors="#FFFFFF|#FFFFFF|#C8C8C8|#C8C8C880" />
    <InputField class="window" fontSize="20" colors="#FFFFFF|#FFFFFF|#C8C8C8|#C8C8C880" />
    <Text class="window" fontSize="28" />
-   <Button class="tp50" fontSize="22" colors="#FFFFFF80|#FFFFFF80|#C8C8C880|#C8C8C840" />
-   <Dropdown class="tp50" fontSize="16" colors="#FFFFFF80|#FFFFFF80|#C8C8C880|#C8C8C840" />
+   <Button class="tp50" fontSize="22" colors="#FFFFFF80|#FFFFFF|#C8C8C880|#C8C8C840" />
+   <Dropdown class="tp50" fontSize="16" colors="#FFFFFF80|#FFFFFF|#C8C8C880|#C8C8C840" />
+   <InputField class="tp50" fontSize="16" colors="#FFFFFF80|#FFFFFF|#C8C8C880|#C8C8C840" width="0.1" />
 </Defaults>
 
 <VerticalLayout padding="0 0 100 0" width="30%" rectAlignment="UpperLeft" childAlignment="UpperCenter" childForceExpandHeight="false">
