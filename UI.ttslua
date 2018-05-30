@@ -1,8 +1,8 @@
 
--- Not saved
 UIActionTable = {}
 UITargetColorTable = {}
 UIPlayerNameTable = {}
+UIInputTable = {}
 
 function refreshUI()
 	if started then
@@ -44,7 +44,14 @@ function refreshUI()
 					UI.setAttribute("fas" .. playerColor, "Text", playerColor .. " is " .. text.fascistArticle .. " " .. text.fascist .. "!")
 				end
 			end
-			UI.setAttribute("greyCommands", "visibility", "Grey")
+			local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+			if abilitiesDeck then
+				UI.setAttribute("greyCommandsExp", "visibility", "Grey")
+				UI.setAttribute("greyCommands", "visibility", "")
+			else
+				UI.setAttribute("greyCommands", "visibility", "Grey")
+				UI.setAttribute("greyCommandsExp", "visibility", "")
+			end
 			UI.setAttribute("greyPolicy", "visibility", "Grey")
 			UI.setAttribute("greyVote", "visibility", "Grey")
 			UI.setAttribute("adminButton", "active", "true")
@@ -333,10 +340,10 @@ function UIDiscardL(player, value, id)
 end
 
 function discard12P(policy, playerColor)
-	local result = moveCardByDescription(policy, DISCARD_POS, FACE_DOWN_ROT, playerColor)
+	local result = moveCard12P(nil, policy, DISCARD_POS, FACE_DOWN_ROT, playerColor)
 	local player = getPlayerObj(playerColor)
 
-	if result == 1 then
+	if result ~= -1 then
     	player.broadcast("You discarded a " .. policy .. " card.", {1, 1, 1})
 	end
 end
@@ -362,22 +369,36 @@ function UIColor(player, value, id)
 	UITargetColorTable[player.steam_id] = value
 end
 
+function UIInput(player, value, id)
+	UIInputTable[player.steam_id] = value
+end
 function UIStart(player, value, id)
 	if not started then
-		player.print("Game has not started.")
+		player.print('Game has not started.')
 		return
 	end
+
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-		if UIActionTable[player.steam_id] == "Choose Chancellor" then
+		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
 			chooseChan12P(UITargetColorTable[player.steam_id], colorFound)
-		elseif UIActionTable[player.steam_id] == "Inspect Player" then
+		elseif UIActionTable[player.steam_id] == 'Inspect Player' then
 			playerInspected(nil, colorFound, UITargetColorTable[player.steam_id])
-		elseif UIActionTable[player.steam_id] == "Give Presidency To" then
+		elseif UIActionTable[player.steam_id] == 'Give Presidency To' then
 			givePres12P(UITargetColorTable[player.steam_id], colorFound)
+		elseif UIActionTable[player.steam_id] == 'Discard Ability' then
+			discardAbility(UIInputTable[player.steam_id], colorFound)
+		elseif UIActionTable[player.steam_id] == 'Reveal Ability' then
+			revealAbility(UIInputTable[player.steam_id], colorFound)
+		elseif UIActionTable[player.steam_id] == 'Examine Ability Deck' then
+			examineAbilityDeck(colorFound)
+		elseif UIActionTable[player.steam_id] == 'Take from Ability Deck' then
+			takeAbility(UIInputTable[player.steam_id], colorFound)
+		elseif UIActionTable[player.steam_id] == 'Give Card to' then
+			giveCardExp(UIInputTable[player.steam_id], UITargetColorTable[player.steam_id], colorFound)
 		end
  	else
-		player.print("You are not seated.")
+		player.print('You are not seated.')
 	end
 end
 
