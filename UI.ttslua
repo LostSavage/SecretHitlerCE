@@ -390,6 +390,8 @@ function UIStart(player, value, id)
 			discardAbility(UIInputTable[player.steam_id], colorFound)
 		elseif UIActionTable[player.steam_id] == 'Reveal Ability' then
 			revealAbility(UIInputTable[player.steam_id], colorFound)
+		elseif UIActionTable[player.steam_id] == 'Examine Ability Deck' then
+			examineAbilityDeck(colorFound)
 		elseif UIActionTable[player.steam_id] == 'Take from Ability Deck' then
 			takeAbility(UIInputTable[player.steam_id], colorFound)
 		elseif UIActionTable[player.steam_id] == 'Give Card to' then

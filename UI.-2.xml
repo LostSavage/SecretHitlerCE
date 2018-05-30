@@ -92,7 +92,7 @@
    <Button class="tp50" onClick="UIStart">Start</Button>
 </HorizontalLayout>
 
-<VerticalLayout id="greyCommandsExp" padding="0 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
+<VerticalLayout id="greyCommandsExp" padding="0 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="grey">
    <HorizontalLayout padding="135 0 0 0">
       <Dropdown class="tp50" onValueChanged="UIAction">
          <Option selected="true">Choose Action</Option>
@@ -101,6 +101,7 @@
          <Option>Give Presidency To</Option>
          <Option>Discard Ability</Option>
          <Option>Reveal Ability</Option>
+         <Option>Examine Ability Deck</Option>
          <Option>Take from Ability Deck</Option>
          <Option>Give Card to</Option>
       </Dropdown>

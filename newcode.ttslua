@@ -255,12 +255,38 @@ function revealAbility(cardName, playerColor)
 	if result ~= -1 then
 		player.broadcast('You played ' .. result.name, {1,1,1})
 	end
+	broadcastToAll(playerColor .. ' has played ' .. result.name, {1,1,1})
+end
+
+function examineAbilityDeck(playerColor)
+	local player = getPlayerObj(playerColor)
+	local abilityDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	local deckString = ''
+	if abilityDeck == nil then
+		player.broadcast('ERROR: Ability deck not found.', {1,1,1})
+		return
+	end
+	local deckTable = abilityDeck.getObjects()
+	player.print('Cards in the ability deck:')
+	for k,v in pairs(deckTable) do
+		deckString = deckString .. v.nickname .. ' '
+	end
+	player.print(deckString)
+	broadcastToAll(playerColor .. ' examines the Ability deck.', {1,1,1})
 end
 
 function takeAbility(cardName, playerColor)
 	local player = getPlayerObj(playerColor)
 	local pos
+	local foundIndex = nil
 	local result = {}
+	local abilityDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	if abilityDeck == nil then
+		player.broadcast('ERROR: Ability deck not found.', {1,1,1})
+		return
+	end
+	local takeParams = {}
+	local deckTable = abilityDeck.getObjects()
 
 	if playerColor == 'Maroon' then
 		pos = MAROON_ZONE_POS
@@ -268,9 +294,19 @@ function takeAbility(cardName, playerColor)
 		pos = TAN_ZONE_POS
 	end
 
-	result = moveCard12P(cardName, nil, pos, FACE_DOWN_ROT, playerColor)
-	if result ~= -1 then
-		player.broadcast('You drew ' .. result.name .. ' from the Ability deck.', {1,1,1})
+	for k,v in pairs(deckTable) do
+		if string.match(string.lower(v.nickname), string.lower(cardName)) then
+			foundIndex = v.index
+		end
+	end
+	if foundIndex == nil then
+		player.broadcast('ERROR: Ability not found in deck.', {1,1,1})
+	else
+		takeParams.index = foundIndex
+		takeParams.position = pos
+		abilityDeck.takeObject(takeParams)
+		player.broadcast('You drew ' .. deckTable[foundIndex+1].nickname .. ' [FFFFFf]from the Ability deck.', {1,1,1})
+		broadcastToAll(playerColor .. ' takes an ability from the Ability deck', {1,1,1})
 	end
 end
 
