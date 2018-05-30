@@ -92,6 +92,41 @@
    <Button class="tp50" onClick="UIStart">Start</Button>
 </HorizontalLayout>
 
+<VerticalLayout id="greyCommandsExp" padding="0 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="grey">
+   <HorizontalLayout padding="135 0 0 0">
+      <Dropdown class="tp50" onValueChanged="UIAction">
+         <Option selected="true">Choose Action</Option>
+         <Option>Choose Chancellor</Option>
+         <Option>Inspect Player</Option>
+         <Option>Give Presidency To</Option>
+         <Option>Discard Ability</Option>
+         <Option>Reveal Ability</Option>
+         <Option>Examine Ability Deck</Option>
+         <Option>Take from Ability Deck</Option>
+         <Option>Give Card to</Option>
+      </Dropdown>
+   </HorizontalLayout>
+   <HorizontalLayout padding="135 0 0 0">
+      <InputField class="tp50" onValueChanged="UIInput" width="5%">Enter Card Name</InputField>
+      <Dropdown class="tp50" onValueChanged="UIColor">
+         <Option selected="true">Choose Player</Option>
+         <Option>White</Option>
+         <Option>Brown</Option>
+         <Option>Red</Option>
+         <Option>Orange</Option>
+         <Option>Yellow</Option>
+         <Option>Green</Option>
+         <Option>Teal</Option>
+         <Option>Blue</Option>
+         <Option>Purple</Option>
+         <Option>Pink</Option>
+         <Option>Tan</Option>
+         <Option>Maroon</Option>
+      </Dropdown>
+      <Button class="tp50" onClick="UIStart">Start</Button>
+   </HorizontalLayout>
+</VerticalLayout>
+
 <HorizontalLayout id="greyPolicy" height="8%" width="33%" rectAlignment="LowerCenter" visibility="">
    <Button class="tp50" onClick="UIDrawCards">Draw Cards</Button>
    <Button class="tp50" onClick="UIDiscardL">Discard L</Button>
