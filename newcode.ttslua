@@ -53,7 +53,7 @@ function vote12P(playerColor, vote)
 	startLuaCoroutine(Global, 'vote12PCoroutine')
 end
 
-function UIvoteRemove(player, value, id)
+function voteRemoveUIB(player, value, id)
 	local vcTable = getVoteCardGUIDs()
 	local maroonJa = getObjectFromGUID(vcTable.maroonJa)
 	local maroonNein = getObjectFromGUID(vcTable.maroonNein)
@@ -153,7 +153,7 @@ function moveCard12P(name, description, pos, rot, playerColor)
 	return zoneObjs[foundIndex]
 end
 
-function UIDrawCards(player, value, id)
+function drawCardsUIB(player, value, id)
 	if not started then
    		player.print('Game has not started.')
 		return
@@ -199,6 +199,7 @@ function printPolicyCards12P(mode, playerColor)
 	local player = getPlayerObj(playerColor)
 	local policyCardStr = ''
 	local expansionCardStr = 'Your other cards are:'
+	local outStr = ''
 
 	if playerColor == 'Maroon' then
 		zoneObjs = getObjsFromZone(MAROON_HAND_ZONE_GUID)
@@ -216,15 +217,15 @@ function printPolicyCards12P(mode, playerColor)
 	end
 
 	if mode == 'Draw' then
-		player.broadcast('You drew ' .. policyCardStr .. '.', {1,1,1})
+		outStr = 'You drew ' .. policyCardStr .. '.\n'
 	elseif mode == 'Check' then
 		if policyCardStr == '' then
-			player.broadcast('You have no policy cards.', {1,1,1})
+			outStr = 'You have no policy cards.\n'
 		else
-			player.broadcast('Your policy cards are: ' .. policyCardStr, {1,1,1})
+			outStr = 'Your policy cards are:' .. policyCardStr .. '\n'
 		end
 	end
-	player.broadcast(expansionCardStr)
+	bigBroadcast(outStr .. expansionCardStr, player)
 end
 
 function discardAbility(cardName, playerColor)
@@ -254,8 +255,8 @@ function revealAbility(cardName, playerColor)
 	result = moveCard12P(cardName, nil, pos, FACE_UP_ROT, playerColor)
 	if result ~= -1 then
 		player.broadcast('You played ' .. result.name, {1,1,1})
+		broadcastToAll(playerColor .. ' has played ' .. result.name, {1,1,1})
 	end
-	broadcastToAll(playerColor .. ' has played ' .. result.name, {1,1,1})
 end
 
 function examineAbilityDeck(playerColor)
@@ -271,7 +272,7 @@ function examineAbilityDeck(playerColor)
 	for k,v in pairs(deckTable) do
 		deckString = deckString .. v.nickname .. ' '
 	end
-	player.print(deckString)
+	bigBroadcast(deckString, player)
 	broadcastToAll(playerColor .. ' examines the Ability deck.', {1,1,1})
 end
 

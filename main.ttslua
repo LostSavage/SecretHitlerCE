@@ -56,6 +56,8 @@ abilitiesPile_zone_guid = 'eea120'
 effectsPile_zone_guid = '374a16'
 
 --Other
+COLOR_TABLE = {[1] = 'White', [2] = 'Brown', [3] = 'Red', [4] = 'Orange', [5] = 'Yellow', [6] = 'Green', [7] = 'Teal', [8] = 'Blue', [9] = 'Purple', [10] = 'Pink',
+ ['White'] = 1, ['Brown'] = 2, ['Red'] = 3, ['Orange'] = 4, ['Yellow'] = 5,['Green'] = 6, ['Teal'] = 7, ['Blue'] = 8, ['Purple'] = 9, ['Pink'] = 10}
 trusted_players = {'76561197992512677'}
 boardGreen_rgb = {14/255, 45/255, 18/255}
 boardBrown_rgb = {53/255, 27/255, 17/255}
@@ -123,9 +125,9 @@ options = {
 	dealPartyCards = false,
 	dealRoleCards = false,
 	expansionAmount = 2,
-	expansionOptionEnabled = 0, -- [1 SwapGov, 2 Reverse, 4 SwapPower, 8 Unused ...]
-	expansionOptionStatus = 0, -- [1 SwapGov, 2 Reverse, 4 Unused, 8 Unused ...]
-	expansionOptionText = {'Pres > Chan', 'Chan > Pres', 'Clockwise', 'Reversed'},
+	expansionOptionEnabled = 0, -- [1 SwapGov, 2 Reverse, 4 SwapPower, 8 Delay ...]
+	expansionOptionStatus = 0, -- [1 SwapGov, 2 Reverse, 4 Unused, 8 Delay ...]
+	expansionOptionText = {'Pres -> Chan', 'Chan -> Pres', 'Clockwise', 'Counterclockwise', 'Show Policies', 'Hide Policies'},
 	fascistCards = 11,
 	gameType = 0, -- [0 Original, 1 Extended, 2 Custom]
 	liberalCards = 6,
@@ -628,6 +630,7 @@ function refreshExpansionButtons()
 
 		button.click_function = 'expansionOptionStatusReverse'
 		button.position = {-12, 0.2, 6}
+		button.width = 2800
 		if bit32.band(options.expansionOptionStatus, 2) == 2 then
 			button.font_color = {0, 0, 0}
 			button.color =  stringColorToRGB('Orange')
@@ -638,6 +641,22 @@ function refreshExpansionButtons()
 			button.label = options.expansionOptionText[3]
 		end
 		if bit32.band(options.expansionOptionEnabled, 2) == 2 then
+			fasBoard.createButton(button)
+		end
+
+		button.click_function = 'expansionOptionStatusDelay'
+		button.position = {0, 0.2, 6}
+		button.width = 2600
+		if bit32.band(options.expansionOptionStatus, 8) == 8 then
+			button.font_color = {0, 0, 0}
+			button.color =  stringColorToRGB('Orange')
+			button.label = options.expansionOptionText[6]
+		else
+			button.font_color = stringColorToRGB('White')
+			button.color =  boardGreen_rgb
+			button.label = options.expansionOptionText[5]
+		end
+		if bit32.band(options.expansionOptionEnabled, 8) == 8 then
 			fasBoard.createButton(button)
 		end
 	end
@@ -896,6 +915,7 @@ function settingsPannelMakeButtons()
 			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 1) == 1, check_string, '', 'Swap Government', 'expansionOptionEnabledSwapGov', {startX, 0.2, startZ + offsetZ}, 4.7, true)
 			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 4) == 4, check_string, '', 'Swap Power', 'expansionOptionEnabledSwapPower', {startX + 1.3, 0.2, startZ + offsetZ * 2}, 3.3, bit32.band(options.expansionOptionEnabled, 1) == 1)
 			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 2) == 2, check_string, '', 'Reverse', 'expansionOptionEnabledReverse', {startX, 0.2, startZ + offsetZ * 3}, 2.4, true)
+			makeSquareButtonLabel(settingsPannel, bit32.band(options.expansionOptionEnabled, 8) == 8, check_string, '', 'Delay', 'expansionOptionEnabledDelay', {startX, 0.2, startZ + offsetZ * 4}, 2, true)
 		end
 
 		buttonParam = {
@@ -1162,6 +1182,18 @@ function expansionOptionEnabledSwapPower(clickedObject, playerColor)
 	end
 end
 
+function expansionOptionEnabledDelay(clickedObject, playerColor)
+    if Player[playerColor].admin then
+        if bit32.band(options.expansionOptionEnabled, 8) == 8 then
+            options.expansionOptionEnabled = options.expansionOptionEnabled - 8
+        else
+            options.expansionOptionEnabled = options.expansionOptionEnabled + 8
+        end
+        refreshExpansionButtons()
+        settingsPannelMakeButtons()
+    end
+end
+
 function expansionOptionStatusSwapGov(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		if bit32.band(options.expansionOptionStatus, 1) == 1 then
@@ -1182,6 +1214,17 @@ function expansionOptionStatusReverse(clickedObject, playerColor)
 		end
 		refreshExpansionButtons()
 	end
+end
+
+function expansionOptionStatusDelay(clickedObject, playerColor)
+    if Player[playerColor].admin then
+        if bit32.band(options.expansionOptionStatus, 8) == 8 then
+            options.expansionOptionStatus = options.expansionOptionStatus - 8
+        else
+            options.expansionOptionStatus = options.expansionOptionStatus + 8
+        end
+        refreshExpansionButtons()
+    end
 end
 
 function decLiberalCards(clickedObject, playerColor)
@@ -1319,65 +1362,69 @@ function displayBannerCard(card, offset, bannerGuidsOffset)
 end
 
 function boardCardHandler(card)
+	local powerHolder = lastPres
+	if bit32.band(options.expansionOptionStatus, 4) == 4 then
+		powerHolder = lastChan
+	end
 	if isBoardCardInspect(card) then
-		if lastPres then
+		if powerHolder then
 			--expansion
 			local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
 			if abilitiesDeck then
 				broadcastToAll('Delaying inspect 5 seconds...', {1,1,1})
 				sleep(5)
 			end
-			if not options.dealPartyCards then createInspectButtons(lastPres) end
+			if not options.dealPartyCards then createInspectButtons(powerHolder) end
 			if options.autoNotate then
-				notateInfo(lastPres, 'inspects', '', '', true)
+				notateInfo(powerHolder, 'inspects', '', '', true)
 			end
 		else
-			printToAll('ERROR: Last president not found.', {1,0,0})
+			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
 		end
 	elseif isBoardCardPickPres(card) then
-		if lastPres then
+		if powerHolder then
 			if options.autoNotate then
-				notateInfo(lastPres, 'gives pres to', '', '', true)
+				notateInfo(powerHolder, 'gives pres to', '', '', true)
 			end
 		else
-			printToAll('ERROR: Last president not found.', {1,0,0})
+			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
 		end
 	elseif isBoardCardBullet(card) then
-		if lastPres then
+		if powerHolder then
 			giveBullet(lastPres)
 			if options.autoNotate then
-				notateInfo(lastPres, string.lower(bulletInfo.action), '', '', true)
+				notateInfo(powerHolder, string.lower(bulletInfo.action), '', '', true)
 			end
 		else
-			printToAll('ERROR: Last president not found.', {1,0,0})
+			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
 		end
 	elseif isBoardCardTopCard(card) then
-		if lastPres then
-			broadcastToColor('Examine the top card from the deck and put it back in the draw pile.', lastPres, {1, 1, 1})
-			drawCards(1, lastPres)
+		if powerHolder then
+			broadcastToColor('Examine the top card from the deck and put it back in the draw pile.', powerHolder, {1, 1, 1})
+			drawCards(1, powerHolder)
 			if options.autoNotate then
-				notateInfo(lastPres, 'examines deck:', '', '', false)
+				notateInfo(powerHolder, 'examines deck:', '', '', false)
 			end
 		else
-			printToAll('ERROR: Last president not found.', {1,0,0})
+			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
 		end
 	elseif isBoardCardTopThree(card) then
-		if lastPres then
-			broadcastToColor('Examine the top three cards from the deck and put them back in the draw pile (right to left to keep the order).', lastPres, {1, 1, 1})
-			drawCards(3, lastPres)
+		if powerHolder then
+			broadcastToColor('Examine the top three cards from the deck and put them back in the draw pile (right to left to keep the order).', powerHolder, {1, 1, 1})
+			drawCards(3, powerHolder)
 			if options.autoNotate then
-				notateInfo(lastPres, 'examines deck:', '', '', false)
+				notateInfo(powerHolder, 'examines deck:', '', '', false)
 			end
 		else
-			printToAll('ERROR: Last president not found.', {1,0,0})
+			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
 		end
 	end
 
-	if lastPres then
+	if powerHolder and lastPres then
 		if isBoardCardPickPres(card) then
 			local saveForcePres = forcePres
 			forcePres = nil
-			movePlacards(lastPres, true)
+			movePlacards(powerHolder, true)
 			if saveForcePres then
 				forcePres = saveForcePres
 			else
@@ -1471,6 +1518,51 @@ function isBoardCardVeto(objIn)
 		return true
 	end
 	return false
+end
+
+function swapHandZone(playerIn1, playerIn2)
+    local handTransformP1 = Player[playerIn1].getHandTransform(1)
+    local handTransformP2 = Player[playerIn2].getHandTransform(1)
+
+    Player[playerIn1].setHandTransform(handTransformP2,1)
+    Player[playerIn2].setHandTransform(handTransformP1,1)
+end
+
+function swapHandContent(playerIn1, playerIn2)
+    local handList1 = {}
+    local handList2 = {}
+
+    for _, v in ipairs(Player[playerIn1].getHandObjects(1)) do
+        smartTableInsert(handList1, v)
+    end
+    for _, v in ipairs(Player[playerIn2].getHandObjects(1)) do
+        smartTableInsert(handList2, v)
+    end
+    for _, v in ipairs(handList1) do
+        v.deal(1, playerIn1)
+    end
+    for _, v in ipairs(handList2) do
+        v.deal(1, playerIn2)
+    end
+end
+
+function swapHiddenZone(playerIn1, playerIn2)
+    getObjectFromGUID(hidden_zone_guids[Player[playerIn1].color]).setValue(playerIn2)
+    getObjectFromGUID(hidden_zone_guids[Player[playerIn2].color]).setValue(playerIn1)
+
+    hidden_zone_guids[Player[playerIn1].color], hidden_zone_guids[Player[playerIn2].color] = hidden_zone_guids[Player[playerIn2].color], hidden_zone_guids[Player[playerIn1].color]
+
+    COLOR_TABLE[COLOR_TABLE[Player[playerIn1].color]],
+    COLOR_TABLE[COLOR_TABLE[Player[playerIn2].color]]
+    =
+    COLOR_TABLE[COLOR_TABLE[Player[playerIn2].color]],
+    COLOR_TABLE[COLOR_TABLE[Player[playerIn1].color]]
+
+    COLOR_TABLE[Player[playerIn1].color],
+    COLOR_TABLE[Player[playerIn2].color]
+    =
+    COLOR_TABLE[Player[playerIn2].color],
+    COLOR_TABLE[Player[playerIn1].color]
 end
 
 function nextPres(playerIn)
@@ -1669,15 +1761,15 @@ function policyCardCoroutine()
 	end
 	lastDrawCt = #cardLists.drawList
 
-	if started and #cardLists.fascistList > options.fascistCards then
+	if started and #cardLists.fascistList > options.fascistCards and not (bit32.band(options.expansionOptionStatus, 8) == 8) then
 		broadcastToAll('CHEATING DETECTED: Too many ' .. text.fascistAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
 	end
-	if started and #cardLists.liberalList > options.liberalCards then
+	if started and #cardLists.liberalList > options.liberalCards and not (bit32.band(options.expansionOptionStatus, 8) == 8) then
 		broadcastToAll('CHEATING DETECTED: Too many ' .. text.liberalAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
 	end
 
 	-- Location of all cards is known
-	if started and #cardLists.fascistList == options.fascistCards and #cardLists.liberalList == options.liberalCards and (#cardLists.discardDeckList == 0 or #cardLists.discardDeckList == 1) then
+	if started and ((#cardLists.fascistList == options.fascistCards and #cardLists.liberalList == options.liberalCards) or (bit32.band(options.expansionOptionStatus, 8) == 8 and options.fascistCards + options.liberalCards == #cardLists.liberalPlayedList + #cardLists.fascistPlayedList )) and (#cardLists.discardDeckList == 0 or #cardLists.discardDeckList == 1) then
 		-- Reshuffle
 		if #cardLists.drawList < 3 and #cardLists.discardDeckList == 1 and (#cardLists.drawDeckList == 0 or #cardLists.drawDeckList == 1) then
 			if cardLists.drawDeckList[1] then
@@ -1715,15 +1807,19 @@ function policyCardCoroutine()
 			tmpZone = getObjectFromGUID(bannerZoneGuid)
 			inZone = tmpZone.getObjects()
 			local liberalCardFound = false
+			local open = true
 			for i, j in ipairs(inZone) do
-				if isLiberalPolicyCard(j) then
-					if isFaceUp(j) then liberalCardFound = true end
+				if isLiberalPolicyCard(j) or (bit32.band(options.expansionOptionStatus, 8) == 8 and isFascistPolicyCard(j)) then
+					if not isFaceUp(j) then open = false end
+					if isFaceUp(j) or (bit32.band(options.expansionOptionStatus, 8) == 8 and not isFaceUp(j)) then liberalCardFound = true end
 				end
 			end
 			if liberalCardFound then
-				if options.autoNotate then
+				if options.autoNotate and open then
 					if topdeck then
 						notateInfo('', 'Topdeck:', '', '[0080F8]' .. text.liberalLetter .. '[-]', false)
+					elseif bit32.band(options.expansionOptionStatus, 1) == 1 then
+						notateInfo(lastChan, '>', lastPres, '[FF0000]' .. text.liberalLetter .. '[-]', false)
 					else
 						notateInfo(lastPres, '>', lastChan, '[0080F8]' .. text.liberalLetter .. '[-]', false)
 					end
@@ -1745,15 +1841,19 @@ function policyCardCoroutine()
 			tmpZone = getObjectFromGUID(bannerZoneGuid)
 			inZone = tmpZone.getObjects()
 			local fascistCardFound = false
+			local open = true
 			for i, j in ipairs(inZone) do
-				if isFascistPolicyCard(j) then
-					if isFaceUp(j) then fascistCardFound = true end
+				if isFascistPolicyCard(j) or (bit32.band(options.expansionOptionStatus, 8) == 8 and isLiberalPolicyCard(j)) then
+					if not isFaceUp(j) then open = false end
+					if isFaceUp(j) or (bit32.band(options.expansionOptionStatus, 8) == 8 and not isFaceUp(j)) then fascistCardFound = true end
 				end
 			end
 			if fascistCardFound then
-				if options.autoNotate then
+				if options.autoNotate and open then
 					if topdeck then
 						notateInfo('', 'Topdeck:', '', '[FF0000]' .. text.fascistLetter .. '[-]', false)
+					elseif bit32.band(options.expansionOptionStatus, 1) == 1 then
+						notateInfo(lastChan, '>', lastPres, '[FF0000]' .. text.fascistLetter .. '[-]', false)
 					else
 						notateInfo(lastPres, '>', lastChan, '[FF0000]' .. text.fascistLetter .. '[-]', false)
 					end
@@ -1873,6 +1973,9 @@ function getPolicyCardStatus(removeCards)
 					cardFound = true
 				elseif isPolicyNotUsedCard(j) and cardFound then
 					smartTableInsert(returnTable.liberalNotUsedList, j.guid)
+				elseif isFascistPolicyCard(j) and not isFaceUp(j) and bit32.band(options.expansionOptionStatus, 8) == 8 then
+					smartTableInsert(returnTable.liberalList, j.guid)
+					smartTableInsert(returnTable.liberalPlayedList, j.guid)
 				end
 			end
 		end
@@ -1889,6 +1992,9 @@ function getPolicyCardStatus(removeCards)
 					cardFound = true
 				elseif isPolicyNotUsedCard(j) and cardFound then
 					smartTableInsert(returnTable.fascistNotUsedList, j.guid)
+				elseif isLiberalPolicyCard(j) and not isFaceUp(j) and bit32.band(options.expansionOptionStatus, 8) == 8 then
+					smartTableInsert(returnTable.fascistList, j.guid)
+					smartTableInsert(returnTable.fascistPlayedList, j.guid)
 				end
 			end
 		end

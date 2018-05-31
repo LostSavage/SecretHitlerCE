@@ -190,15 +190,15 @@ function fasVisibility(colorIn)
 	return visList
 end
 
-function UIPlayerName(player, value, id)
+function playerNameUIIF(player, value, id)
 	UIPlayerNameTable[player.steam_id] = value
 end
 
-function sitMaroon(player, value, id)
+function sitMaroonUID(player, value, id)
 	sitColorGrey(player, "Maroon")
 end
 
-function sitTan(player, value, id)
+function sitTanUID(player, value, id)
 	sitColorGrey(player, "Tan")
 end
 
@@ -246,7 +246,7 @@ function greyAvatarCallback(objIn, paramsIn)
 	greyAvatarGuids[color] = objIn.getGUID()
 end
 
-function removeColorGrey(player, value, id)
+function removeColorGreyUID(player, value, id)
 	local sitPlayer = getPlayerByNameSteamID(UIPlayerNameTable[player.steam_id], Player.getSpectators())
  	if not sitPlayer then
 		player.broadcast(UIPlayerNameTable[player.steam_id] .. " not found or is not grey.", {1, 0, 0})
@@ -265,7 +265,7 @@ function removeColorGrey(player, value, id)
 	end
 end
 
-function tellRoleButtonUI(player, value, id)
+function tellRoleButtonUIB(player, value, id)
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
    	bigBroadcast(tellRole(colorFound), player)
@@ -274,7 +274,7 @@ function tellRoleButtonUI(player, value, id)
 	end
 end
 
-function UIvoteJa(player, value, id)
+function voteJaUIB(player, value, id)
 	if not started then
 		player.print("Game has not started.")
 		return
@@ -287,7 +287,7 @@ function UIvoteJa(player, value, id)
 	end
 end
 
-function UIvoteNein(player, value, id)
+function voteNeinUIB(player, value, id)
 	if not started then
 		player.print("Game has not started.")
 		return
@@ -313,7 +313,7 @@ function UIDrawCards(player, value, id)
 	end
 end
 
-function UIDiscardF(player, value, id)
+function discardFUIB(player, value, id)
 	if not started then
 		player.print("Game has not started.")
 		return
@@ -326,7 +326,7 @@ function UIDiscardF(player, value, id)
 	end
 end
 
-function UIDiscardL(player, value, id)
+function discardLUIB(player, value, id)
 	if not started then
    		player.print("Game has not started.")
 		return
@@ -348,7 +348,7 @@ function discard12P(policy, playerColor)
 	end
 end
 
-function UICheckCards(player, value, id)
+function checkCardsUIB(player, value, id)
 	if not started then
    		player.print("Game has not started.")
 		return
@@ -361,23 +361,22 @@ function UICheckCards(player, value, id)
 	end
 end
 
-function UIAction(player, value, id)
+function actionUID(player, value, id)
 	UIActionTable[player.steam_id] = value
 end
 
-function UIColor(player, value, id)
+function colorUID(player, value, id)
 	UITargetColorTable[player.steam_id] = value
 end
 
-function UIInput(player, value, id)
+function inputUIIF(player, value, id)
 	UIInputTable[player.steam_id] = value
 end
-function UIStart(player, value, id)
+function startUIB(player, value, id)
 	if not started then
 		player.print('Game has not started.')
 		return
 	end
-
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
 		if UIActionTable[player.steam_id] == 'Choose Chancellor' then
@@ -423,12 +422,12 @@ function givePres12P(targetColor, playerColor)
 	end
 end
 
-function closeAdmin(player, value, id)
+function closeAdminUID(player, value, id)
 	UI.setAttribute("admin", "active", false)
 	UI.setAttribute("adminButton", "active", true)
 end
 
-function showAdmin(player, value, id)
+function showAdminUID(player, value, id)
 	UI.setAttribute("admin", "active", true)
 	UI.setAttribute("adminButton", "active", false)
 end

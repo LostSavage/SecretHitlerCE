@@ -52,29 +52,29 @@
 
 <Panel class="window" id="admin" width="680" height="140" rectAlignment="Center" active="false">
    <Text class="window" alignment="UpperLeft" offsetXY="5 -5">GREY PLAYER ADMIN</Text>
-   <Button class="window" width="30" height="30" rectAlignment="UpperRight" offsetXY="-5 -5" fontSize="18" textColor="#B60808" onClick="closeAdmin">X</Button>
+   <Button class="window" width="30" height="30" rectAlignment="UpperRight" offsetXY="-5 -5" fontSize="18" textColor="#B60808" onClick="closeAdminUID">X</Button>
    <VerticalLayout padding="5 5 40 5" spacing="5">
-      <InputField class="window" onValueChanged="UIPlayerName">Enter player name (partial allowed but must be distinct) or steam id</InputField>
+      <InputField class="window" onValueChanged="playerNameUIIF">Enter player name (partial allowed but must be distinct) or steam id</InputField>
       <HorizontalLayout spacing="5">
-         <Button class="window" onClick="sitMaroon">Sit in Maroon</Button>
-         <Button class="window" onClick="sitTan">Sit in Tan</Button>
-         <Button class="window" onClick="removeColorGrey">Remove from Seat</Button>
+         <Button class="window" onClick="sitMaroonUID">Sit in Maroon</Button>
+         <Button class="window" onClick="sitTanUID">Sit in Tan</Button>
+         <Button class="window" onClick="removeColorGreyUID">Remove from Seat</Button>
       </HorizontalLayout>
    </VerticalLayout>
 </Panel>
 
 <Panel id="adminButton" width="128" height="58" rectAlignment="UpperCenter" offsetXY="260 -100" active="false">
-   <Button class="tp50" onClick="showAdmin">Grey Player Admin</Button>
+   <Button class="tp50" onClick="showAdminUID">Grey Player Admin</Button>
 </Panel>
 
 <HorizontalLayout id="greyCommands" padding="110 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
-   <Dropdown class="tp50" onValueChanged="UIAction">
+   <Dropdown class="tp50" onValueChanged="actionUID">
       <Option selected="true" >Choose Action</Option>
       <Option>Choose Chancellor</Option>
       <Option>Inspect Player</Option>
       <Option>Give Presidency To</Option>
    </Dropdown>
-   <Dropdown class="tp50" onValueChanged="UIColor">
+   <Dropdown class="tp50" onValueChanged="colorUID">
       <Option selected="true">Choose Player</Option>
       <Option>White</Option>
       <Option>Brown</Option>
@@ -89,12 +89,12 @@
       <Option>Tan</Option>
       <Option>Maroon</Option>
    </Dropdown>
-   <Button class="tp50" onClick="UIStart">Start</Button>
+   <Button class="tp50" onClick="startUIB">Start</Button>
 </HorizontalLayout>
 
-<VerticalLayout id="greyCommandsExp" padding="0 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="grey">
-   <HorizontalLayout padding="135 0 0 0">
-      <Dropdown class="tp50" onValueChanged="UIAction">
+<VerticalLayout id="greyCommandsExp" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
+   <HorizontalLayout padding="110 0 0 0">
+      <Dropdown class="tp50" onValueChanged="actionUID">
          <Option selected="true">Choose Action</Option>
          <Option>Choose Chancellor</Option>
          <Option>Inspect Player</Option>
@@ -106,9 +106,9 @@
          <Option>Give Card to</Option>
       </Dropdown>
    </HorizontalLayout>
-   <HorizontalLayout padding="135 0 0 0">
-      <InputField class="tp50" onValueChanged="UIInput" width="5%">Enter Card Name</InputField>
-      <Dropdown class="tp50" onValueChanged="UIColor">
+   <HorizontalLayout padding="110 0 0 0">
+      <InputField class="tp50" onValueChanged="inputUIIF" width="5%">Enter Card Name</InputField>
+      <Dropdown class="tp50" onValueChanged="colorUID">
          <Option selected="true">Choose Player</Option>
          <Option>White</Option>
          <Option>Brown</Option>
@@ -123,20 +123,24 @@
          <Option>Tan</Option>
          <Option>Maroon</Option>
       </Dropdown>
-      <Button class="tp50" onClick="UIStart">Start</Button>
+      <Button class="tp50" onClick="startUIB">Start</Button>
    </HorizontalLayout>
 </VerticalLayout>
 
 <HorizontalLayout id="greyPolicy" height="8%" width="33%" rectAlignment="LowerCenter" visibility="">
-   <Button class="tp50" onClick="UIDrawCards">Draw Cards</Button>
-   <Button class="tp50" onClick="UIDiscardL">Discard L</Button>
-   <Button class="tp50" onClick="UIDiscardF">Discard F</Button>
-   <Button class="tp50" onClick="UICheckCards">Check Cards</Button>
+   <Button class="tp50" onClick="drawCardsUIB">Draw Cards</Button>
+   <Button class="tp50" onClick="discardLUIB">Discard L</Button>
+   <Button class="tp50" onClick="discardFUIB">Discard F</Button>
+   <Button class="tp50" onClick="checkCardsUIB">Check Cards</Button>
 </HorizontalLayout>
 
-<HorizontalLayout id="greyVote" padding="0 135 0 0" height="8%" width="33%" rectAlignment="LowerRight" visibility="">
-   <Button class="tp50" onClick="UIvoteJa">Vote ja!</Button>
-   <Button class="tp50" onClick="UIvoteNein">Vote nein</Button>
-   <Button class="tp50" onClick="UIvoteRemove">Remove vote</Button>
-   <Button class="tp50" onClick="tellRoleButtonUI">Role?</Button>
+<HorizontalLayout id="greyVote" padding="0 110 0 0" height="8%" width="33%" rectAlignment="LowerRight" visibility="">
+   <Button class="tp50" onClick="voteJaUIB">Vote ja!</Button>
+   <Button class="tp50" onClick="voteNeinUIB">Vote nein</Button>
+   <Button class="tp50" onClick="voteRemoveUIB">Remove vote</Button>
+   <Button class="tp50" onClick="tellRoleButtonUIB">Role?</Button>
+</HorizontalLayout>
+
+<HorizontalLayout padding="0 110 0 0" height="8%" width="14%" rectAlignment="LowerRight" visibility="White|Brown|Red|Orange|Yellow|Green|Teal|Blue|Purple|Pink|Black">
+   <Button class="tp50" onClick="tellRoleButtonUIB">Role?</Button>
 </HorizontalLayout>
