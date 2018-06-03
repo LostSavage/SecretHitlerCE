@@ -50,21 +50,21 @@
    <Text class="outline" id="fasMaroon" color="#800000">ERROR: fasMaroon</Text>
 </VerticalLayout>
 
-<Panel class="window" id="admin" width="680" height="140" rectAlignment="Center" active="false">
+<Panel class="window" id="admin" width="680" height="140" rectAlignment="Center" active="false" visibility="">
    <Text class="window" alignment="UpperLeft" offsetXY="5 -5">GREY PLAYER ADMIN</Text>
-   <Button class="window" width="30" height="30" rectAlignment="UpperRight" offsetXY="-5 -5" fontSize="18" textColor="#B60808" onClick="closeAdminUID">X</Button>
+   <Button class="window" width="30" height="30" rectAlignment="UpperRight" offsetXY="-5 -5" fontSize="18" textColor="#B60808" onClick="closeAdminUIB">X</Button>
    <VerticalLayout padding="5 5 40 5" spacing="5">
       <InputField class="window" onValueChanged="playerNameUIIF">Enter player name (partial allowed but must be distinct) or steam id</InputField>
       <HorizontalLayout spacing="5">
-         <Button class="window" onClick="sitMaroonUID">Sit in Maroon</Button>
-         <Button class="window" onClick="sitTanUID">Sit in Tan</Button>
-         <Button class="window" onClick="removeColorGreyUID">Remove from Seat</Button>
+         <Button class="window" onClick="sitMaroonUIB">Sit in Maroon</Button>
+         <Button class="window" onClick="sitTanUIB">Sit in Tan</Button>
+         <Button class="window" onClick="removeColorGreyUIB">Remove from Seat</Button>
       </HorizontalLayout>
    </VerticalLayout>
 </Panel>
 
-<Panel id="adminButton" width="128" height="58" rectAlignment="UpperCenter" offsetXY="260 -100" active="false">
-   <Button class="tp50" onClick="showAdminUID">Grey Player Admin</Button>
+<Panel id="adminButton" width="128" height="58" rectAlignment="UpperCenter" offsetXY="260 -100" active="false" visibility="">
+   <Button class="tp50" onClick="showAdminUIB">Grey Player Admin</Button>
 </Panel>
 
 <HorizontalLayout id="greyCommands" padding="110 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">

@@ -56,8 +56,6 @@ abilitiesPile_zone_guid = 'eea120'
 effectsPile_zone_guid = '374a16'
 
 --Other
-COLOR_TABLE = {[1] = 'White', [2] = 'Brown', [3] = 'Red', [4] = 'Orange', [5] = 'Yellow', [6] = 'Green', [7] = 'Teal', [8] = 'Blue', [9] = 'Purple', [10] = 'Pink',
- ['White'] = 1, ['Brown'] = 2, ['Red'] = 3, ['Orange'] = 4, ['Yellow'] = 5,['Green'] = 6, ['Teal'] = 7, ['Blue'] = 8, ['Purple'] = 9, ['Pink'] = 10}
 trusted_players = {'76561197992512677'}
 boardGreen_rgb = {14/255, 45/255, 18/255}
 boardBrown_rgb = {53/255, 27/255, 17/255}
@@ -371,6 +369,7 @@ function refreshHiddenZones()
 		end
 		playerHands[1].setPosition({29.3, 3.5, -49.4}) -- Tan
 		playerHands[2].setPosition({0, 3.5, -49.4}) -- Maroon
+		refreshUI()
 	end
 end
 
@@ -746,22 +745,13 @@ function onChat(messageIn, player)
 		return false
 	elseif messageTable[1] == 'h' then
 		if options.voteHistory then
-			local msg = voteNotebook
-			if messageTable[2] and tonumber(messageTable[2]) then
-				msg = topLines(msg, tonumber(messageTable[2]))
-			end
-			player:print(string.gsub(msg, '\n$', ''))
-
+			player:print(string.gsub(voteNotebook, '\n$', ''))
 		else
 			player:print('[FF0000]ERROR: Full vote history is not enabled.[-]')
 		end
 		return false
 	elseif messageTable[1] == 'n' then
-		local msg = noteTakerNotesString(100, false, true)
-		if messageTable[2] and tonumber(messageTable[2]) then
-			msg = topLines(msg, tonumber(messageTable[2]))
-		end
-		player:print(string.gsub(msg, '\n$', ''))
+		player:print(string.gsub(noteTakerNotesString(100, false, true), '\n$', ''))
 		return false
 	elseif messageTable[1] == 'o' then
 		player:print(string.gsub(tableToString(options), '\n$', ''))
@@ -830,8 +820,8 @@ function chatHelp(admin)
 	local msg = 'chat commands:\n' ..
 					'   r - All the role information you can know\n' ..
 					'   l - Shows the last vote\n' ..
-					'   h [lines] - Vote history\n' ..
-					'   n [lines] - All of the notes\n' ..
+					'   h - Vote history\n' ..
+					'   n - All of the notes\n' ..
 					'   o - current options\n' ..
 					'   v - Version info\n' ..
 					'   help - This message'
@@ -1363,11 +1353,12 @@ end
 
 function boardCardHandler(card)
 	local powerHolder = lastPres
+	--fixme this is not used
 	if bit32.band(options.expansionOptionStatus, 4) == 4 then
 		powerHolder = lastChan
 	end
-	if isBoardCardInspect(card) then
-		if powerHolder then
+	if powerHolder then
+		if isBoardCardInspect(card) then
 			--expansion
 			local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
 			if abilitiesDeck then
@@ -1378,46 +1369,30 @@ function boardCardHandler(card)
 			if options.autoNotate then
 				notateInfo(powerHolder, 'inspects', '', '', true)
 			end
-		else
-			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
-		end
-	elseif isBoardCardPickPres(card) then
-		if powerHolder then
+		elseif isBoardCardPickPres(card) then
 			if options.autoNotate then
 				notateInfo(powerHolder, 'gives pres to', '', '', true)
 			end
-		else
-			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
-		end
-	elseif isBoardCardBullet(card) then
-		if powerHolder then
+		elseif isBoardCardBullet(card) then
 			giveBullet(lastPres)
 			if options.autoNotate then
 				notateInfo(powerHolder, string.lower(bulletInfo.action), '', '', true)
 			end
-		else
-			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
-		end
-	elseif isBoardCardTopCard(card) then
-		if powerHolder then
-			broadcastToColor('Examine the top card from the deck and put it back in the draw pile.', powerHolder, {1, 1, 1})
+		elseif isBoardCardTopCard(card) then
+			smartBroadcastToColor('Examine the top card from the deck and put it back in the draw pile.', powerHolder, {1, 1, 1})
 			drawCards(1, powerHolder)
 			if options.autoNotate then
 				notateInfo(powerHolder, 'examines deck:', '', '', false)
 			end
-		else
-			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
-		end
-	elseif isBoardCardTopThree(card) then
-		if powerHolder then
-			broadcastToColor('Examine the top three cards from the deck and put them back in the draw pile (right to left to keep the order).', powerHolder, {1, 1, 1})
+		elseif isBoardCardTopThree(card) then
+			smartBroadcastToColor('Examine the top three cards from the deck and put them back in the draw pile (right to left to keep the order).', powerHolder, {1, 1, 1})
 			drawCards(3, powerHolder)
 			if options.autoNotate then
 				notateInfo(powerHolder, 'examines deck:', '', '', false)
 			end
-		else
-			printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
 		end
+	else
+		printToAll('ERROR: Player ' .. powerHolder .. ' not found.', {1,0,0})
 	end
 
 	if powerHolder and lastPres then
@@ -1518,51 +1493,6 @@ function isBoardCardVeto(objIn)
 		return true
 	end
 	return false
-end
-
-function swapHandZone(playerIn1, playerIn2)
-    local handTransformP1 = Player[playerIn1].getHandTransform(1)
-    local handTransformP2 = Player[playerIn2].getHandTransform(1)
-
-    Player[playerIn1].setHandTransform(handTransformP2,1)
-    Player[playerIn2].setHandTransform(handTransformP1,1)
-end
-
-function swapHandContent(playerIn1, playerIn2)
-    local handList1 = {}
-    local handList2 = {}
-
-    for _, v in ipairs(Player[playerIn1].getHandObjects(1)) do
-        smartTableInsert(handList1, v)
-    end
-    for _, v in ipairs(Player[playerIn2].getHandObjects(1)) do
-        smartTableInsert(handList2, v)
-    end
-    for _, v in ipairs(handList1) do
-        v.deal(1, playerIn1)
-    end
-    for _, v in ipairs(handList2) do
-        v.deal(1, playerIn2)
-    end
-end
-
-function swapHiddenZone(playerIn1, playerIn2)
-    getObjectFromGUID(hidden_zone_guids[Player[playerIn1].color]).setValue(playerIn2)
-    getObjectFromGUID(hidden_zone_guids[Player[playerIn2].color]).setValue(playerIn1)
-
-    hidden_zone_guids[Player[playerIn1].color], hidden_zone_guids[Player[playerIn2].color] = hidden_zone_guids[Player[playerIn2].color], hidden_zone_guids[Player[playerIn1].color]
-
-    COLOR_TABLE[COLOR_TABLE[Player[playerIn1].color]],
-    COLOR_TABLE[COLOR_TABLE[Player[playerIn2].color]]
-    =
-    COLOR_TABLE[COLOR_TABLE[Player[playerIn2].color]],
-    COLOR_TABLE[COLOR_TABLE[Player[playerIn1].color]]
-
-    COLOR_TABLE[Player[playerIn1].color],
-    COLOR_TABLE[Player[playerIn2].color]
-    =
-    COLOR_TABLE[Player[playerIn2].color],
-    COLOR_TABLE[Player[playerIn1].color]
 end
 
 function nextPres(playerIn)
@@ -2294,67 +2224,28 @@ end
 
 function drawThree(clickedObject, playerColor)
 	if started then
+		local drawPlayer = getPres()
+		local drawPlayerText = 'president'
 		if bit32.band(options.expansionOptionStatus, 1) == 1 then
-			if playerColor == getChan() then
-				if blockDraw then
-					if greyPlayer(playerColor) then
-						clickedObject.broadcast('ERROR: You can only draw once (move the Chancellor placard to reset).', {1, 0, 0})
-					else
-						broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
-					end
-				else
-					if not options.scriptedVoting or votePassed then
-						blockDraw = true
-						drawCards(3, playerColor)
-					else
-						if greyPlayer(playerColor) then
-							clickedObject.broadcast('ERROR: Vote did not pass.', {1, 0, 0})
-						else
-							broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
-						end
-					end
-				end
+			local drawPlayer = getChan()
+			local drawPlayerText = 'chancellor'
+		end
+		if playerColor == drawPlayer then
+			if blockDraw then
+				smartBroadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
 			else
-				if greyPlayer(playerColor) then
-					clickedObject.broadcast('ERROR: You are not the chancellor.', {1, 0, 0})
+				if not options.scriptedVoting or votePassed then
+					blockDraw = true
+					drawCards(3, playerColor)
 				else
-					broadcastToColor('ERROR: You are not the chancellor.', playerColor, {1, 0, 0})
+					smartBroadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
 				end
 			end
 		else
-			if playerColor == getPres() then
-				if blockDraw then
-					if greyPlayer(playerColor) then
-						clickedObject.broadcast('ERROR: You can only draw once (move the Chancellor placard to reset).', {1, 0, 0})
-					else
-						broadcastToColor('ERROR: You can only draw once (move the Chancellor placard to reset).', playerColor, {1, 0, 0})
-					end
-				else
-					if not options.scriptedVoting or votePassed then
-						blockDraw = true
-						drawCards(3, playerColor)
-					else
-						if greyPlayer(playerColor) then
-							clickedObject.broadcast('ERROR: Vote did not pass.', {1, 0, 0})
-						else
-							broadcastToColor('ERROR: Vote did not pass.', playerColor, {1, 0, 0})
-						end
-					end
-				end
-			else
-				if greyPlayer(playerColor) then
-					clickedObject.broadcast('ERROR: You are not the president.', {1, 0, 0})
-				else
-					broadcastToColor('ERROR: You are not the president.', playerColor, {1, 0, 0})
-				end
-			end
+			smartBroadcastToColor('ERROR: You are not the ' .. drawPlayerText .. '.', playerColor, {1, 0, 0})
 		end
 	else
-		if greyPlayer(playerColor) then
-			clickedObject.broadcast('ERROR: Game not started.', {1, 0, 0})
-		else
-			broadcastToColor('ERROR: Game not started.', playerColor, {1, 0, 0})
-		end
+		smartBroadcastToColor('ERROR: Game not started.', playerColor, {1, 0, 0})
 	end
 end
 
@@ -2402,8 +2293,8 @@ function getChan()
 end
 
 function onPlayerChangedColor(color)
+	refreshUI()
 	if started then
-		refreshUI()
 		if not (color == 'Grey') and not (color == 'Black') then
 			printToColor('--------------------------------------',color, {1, 1, 1})
 			printToColor('Welcome! ' .. Player[color].steam_name,color, {1, 1, 1})
@@ -3199,7 +3090,11 @@ function createInspectButtons(pres)
 	local membershipCard = getObjectFromGUID(fakeMembership_card_guid)
 
 	if membershipCard then
-		broadcastToColor('Click on the party membership card of the person you want to inspect.', pres, {1, 1, 1})
+		if greyPlayer(pres) then
+			smartBroadcastToColor('Use the UI to inspect a player.', pres, {1, 1, 1})
+		else
+			broadcastToColor('Click on the party membership card of the person you want to inspect.', pres, {1, 1, 1})
+		end
 		for i, playerColor in ipairs(players) do
 			if playerColor ~= pres and not inTable(inspected, playerColor) and not (_G.playerStatus[playerColor] > 4) then
 				local params = {rotation = {0, 0, 180}, sound = false}
@@ -3256,14 +3151,7 @@ function playerInspected(clickedObject, inspectorColor, checkedColor)
 			roleColor = {0.1, 0.3, 1}
 		end
 		printToAll(inspectorColor .. ' inspected ' .. checkedColor, playerColor)
-		if greyPlayer(inspectorColor) then
-			local playerObj = getPlayerObj(inspectorColor)
-			if playerObj then
-				playerObj.broadcast(checkedColor .. ' is ' .. roleText .. '!', roleColor)
-			end
-		else
-			broadcastToColor(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
-		end
+		smartBroadcastToColor(checkedColor .. ' is ' .. roleText .. '!', inspectorColor, roleColor)
 		table.insert(inspected, 1, checkedColor)
 		removeInspect()
 		if options.autoNotate and notate.line and notate.action == 'inspects' then

@@ -253,7 +253,7 @@ end
 
 function smartTableInsert(tableIn, valueIn)
 	if not inTable(tableIn, valueIn) then
-		table.insert(tableIn, 1, valueIn)
+		table.insert(tableIn, valueIn)
 	end
 end
 
@@ -423,25 +423,6 @@ function string:tokenize(sep)
     return fields
 end
 
-function topLines(stringIn, maxLinesIn)
-	local linesFound = 0
-	local newLinePos = string.find(stringIn, '\n')
-	local oldLinePos = nil
-
-	while newLinePos do
-		linesFound = linesFound + 1
-		oldLinePos = newLinePos
-		if maxLinesIn == linesFound then break end
-		newLinePos = string.find(stringIn, '\n', newLinePos + 1)
-	end
-
-	if not newLinePos then
-		oldLinePos = string.len(stringIn)
-	end
-
-	return string.sub(stringIn, 1, oldLinePos)
-end
-
 function bigBroadcast(msgIn, playerObjIn)
 	local messageTable = string.tokenize(msgIn, '\n')
 
@@ -485,4 +466,30 @@ function getPlayerByNameSteamID(playerNameSteamID, playerList)
 	end
 
 	return nil
+end
+
+function getAdminPlayers()
+	local adminList = {}
+	local playerList = Player.getPlayers()
+	for _, player in ipairs(playerList) do
+		if player.admin then
+	    	table.insert(adminList, player)
+		end
+	end
+	playerList = Player.getSpectators()
+	for _, player in ipairs(playerList) do
+		if player.admin then
+			table.insert(adminList, player)
+		end
+	end
+	return adminList
+end
+
+function smartBroadcastToColor(msg, playerColor, msgColor)
+	if greyPlayer(playerColor) then
+		local player = getPlayerObj(playerColor)
+		player.broadcast(msg, msgColor)
+	else
+		broadcastToColor(msg, playerColor, msgColor)
+	end
 end

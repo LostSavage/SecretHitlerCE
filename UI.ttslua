@@ -5,6 +5,41 @@ UIPlayerNameTable = {}
 UIInputTable = {}
 
 function refreshUI()
+	if options.zoneType == 6 then
+		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+		if abilitiesDeck then
+			UI.setAttribute("greyCommandsExp", "visibility", "Grey")
+			UI.setAttribute("greyCommands", "visibility", "")
+		else
+			UI.setAttribute("greyCommands", "visibility", "Grey")
+			UI.setAttribute("greyCommandsExp", "visibility", "")
+		end
+		UI.setAttribute("greyPolicy", "visibility", "Grey")
+		UI.setAttribute("greyVote", "visibility", "Grey")
+		local adminList = ''
+		local greyAdded = false
+		for _, player in ipairs(getAdminPlayers()) do
+			if player.color == "Grey" then
+				if not greyAdded then
+					if adminList == "" then
+						adminList = player.color
+					else
+						adminList = adminList .. "|" .. player.color
+					end
+					greyAdded = true
+				end
+			else
+				if adminList == "" then
+					adminList = player.color
+				else
+					adminList = adminList .. "|" .. player.color
+				end
+			end
+		end
+		UI.setAttribute("adminButton", "visibility", adminList)
+		UI.setAttribute("admin", "visibility", adminList)
+		UI.setAttribute("adminButton", "active", "true")
+	end
 	if started then
 		local youHitler = ""
 		local youFas = ""
@@ -44,19 +79,7 @@ function refreshUI()
 					UI.setAttribute("fas" .. playerColor, "Text", playerColor .. " is " .. text.fascistArticle .. " " .. text.fascist .. "!")
 				end
 			end
-			local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
-			if abilitiesDeck then
-				UI.setAttribute("greyCommandsExp", "visibility", "Grey")
-				UI.setAttribute("greyCommands", "visibility", "")
-			else
-				UI.setAttribute("greyCommands", "visibility", "Grey")
-				UI.setAttribute("greyCommandsExp", "visibility", "")
-			end
-			UI.setAttribute("greyPolicy", "visibility", "Grey")
-			UI.setAttribute("greyVote", "visibility", "Grey")
-			UI.setAttribute("adminButton", "active", "true")
 		end
-
 		for _, playerColor in pairs(MAIN_PLAYABLE_COLORS) do
 			UI.setAttribute("player" .. playerColor, "visibility", playerColor)
 			if roles[playerColor] == "hitler" then
@@ -194,51 +217,57 @@ function playerNameUIIF(player, value, id)
 	UIPlayerNameTable[player.steam_id] = value
 end
 
-function sitMaroonUID(player, value, id)
-	sitColorGrey(player, "Maroon")
+function sitMaroonUIB(player, value, id)
+	if player.admin then
+		sitColorGrey(player, "Maroon")
+	end
 end
 
-function sitTanUID(player, value, id)
-	sitColorGrey(player, "Tan")
+function sitTanUIB(player, value, id)
+	if player.admin then
+		sitColorGrey(player, "Tan")
+	end
 end
 
 function sitColorGrey(player, color)
-	local sitPlayer = getPlayerByNameSteamID(UIPlayerNameTable[player.steam_id], Player.getSpectators())
- 	if not sitPlayer then
-		player.broadcast(UIPlayerNameTable[sitPlayer.steam_id] .. " not found or is not grey.", {1, 0, 0})
-      return
- 	end
-	if inTable(greyPlayerSteamIds, sitPlayer.steam_id) then
-   	player.broadcast(sitPlayer.steam_name .. " is already seated.", {1, 0, 0})
-      return
+	if UIPlayerNameTable[player.steam_id] then
+		local sitPlayer = getPlayerByNameSteamID(UIPlayerNameTable[player.steam_id], Player.getSpectators())
+	 	if not sitPlayer then
+			player.broadcast(UIPlayerNameTable[sitPlayer.steam_id] .. " not found or is not grey.", {1, 0, 0})
+	      return
+	 	end
+		if inTable(greyPlayerSteamIds, sitPlayer.steam_id) then
+	   	player.broadcast(sitPlayer.steam_name .. " is already seated.", {1, 0, 0})
+	      return
+		end
+		printToAll(sitPlayer.steam_name .. " is color " .. color .. ".", GREY_PLAYABLE_COLORS_RGB[color])
+		local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[color])
+		textObj.TextTool.setValue(sitPlayer.steam_name)
+		greyPlayerSteamIds[color] = sitPlayer.steam_id
+		local objParam = {
+			type = "Custom_Model",
+			position = GREY_AVATAR_POS[color],
+			rotation = {0, 0, 0},
+			scale = {2.5, 2.5, 1},
+			callback = "greyAvatarCallback",
+			sound = false
+		}
+		if greyAvatarGuids[color] then
+			destroyObjectByGUID(greyAvatarGuids[color])
+		end
+		local avatar = spawnObject(objParam)
+		avatar.setLock(true)
+		avatar.setDescription(color .. " Avatar")
+		avatar.interactable = false
+		local customParam = {
+			diffuse = generateAvatarImageUrl(sitPlayer.steam_id),
+			mesh = "http://cloud-3.steamusercontent.com/ugc/933813375177509684/900B7683E01C43C394C408BC38E034B305F1B3AA/",
+			collider = "http://cloud-3.steamusercontent.com/ugc/487893695356616224/E3E39A827C062914E4185D8757A81D4D14892B8B/",
+			type = 0,
+			material = 3
+		}
+		avatar.setCustomObject(customParam)
 	end
-	printToAll(sitPlayer.steam_name .. " is color " .. color .. ".", GREY_PLAYABLE_COLORS_RGB[color])
-	local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[color])
-	textObj.TextTool.setValue(sitPlayer.steam_name)
-	greyPlayerSteamIds[color] = sitPlayer.steam_id
-	local objParam = {
-		type = "Custom_Model",
-		position = GREY_AVATAR_POS[color],
-		rotation = {0, 0, 0},
-		scale = {2.5, 2.5, 1},
-		callback = "greyAvatarCallback",
-		sound = false
-	}
-	if greyAvatarGuids[color] then
-		destroyObjectByGUID(greyAvatarGuids[color])
-	end
-	local avatar = spawnObject(objParam)
-	avatar.setLock(true)
-	avatar.setDescription(color .. " Avatar")
-	avatar.interactable = false
-	local customParam = {
-		diffuse = generateAvatarImageUrl(sitPlayer.steam_id),
-		mesh = "http://cloud-3.steamusercontent.com/ugc/933813375177509684/900B7683E01C43C394C408BC38E034B305F1B3AA/",
-		collider = "http://cloud-3.steamusercontent.com/ugc/487893695356616224/E3E39A827C062914E4185D8757A81D4D14892B8B/",
-		type = 0,
-		material = 3
-	}
-	avatar.setCustomObject(customParam)
 end
 
 function greyAvatarCallback(objIn, paramsIn)
@@ -246,22 +275,24 @@ function greyAvatarCallback(objIn, paramsIn)
 	greyAvatarGuids[color] = objIn.getGUID()
 end
 
-function removeColorGreyUID(player, value, id)
-	local sitPlayer = getPlayerByNameSteamID(UIPlayerNameTable[player.steam_id], Player.getSpectators())
- 	if not sitPlayer then
-		player.broadcast(UIPlayerNameTable[player.steam_id] .. " not found or is not grey.", {1, 0, 0})
-      return
- 	end
-	local colorFound = getGreyColor(sitPlayer.steam_id)
-	if colorFound then
-		greyPlayerSteamIds[colorFound] = nil
-		destroyObjectByGUID(greyAvatarGuids[colorFound])
-		local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[colorFound])
-		if textObj then
-			textObj.TextTool.setValue(" ")
+function removeColorGreyUIB(player, value, id)
+	if player.admin then
+		local sitPlayer = getPlayerByNameSteamID(UIPlayerNameTable[player.steam_id], Player.getSpectators())
+	 	if not sitPlayer then
+			player.broadcast(UIPlayerNameTable[player.steam_id] .. " not found or is not grey.", {1, 0, 0})
+	      return
+	 	end
+		local colorFound = getGreyColor(sitPlayer.steam_id)
+		if colorFound then
+			greyPlayerSteamIds[colorFound] = nil
+			destroyObjectByGUID(greyAvatarGuids[colorFound])
+			local textObj = getObjectFromGUID(GREY_TEXT_GUIDS[colorFound])
+			if textObj then
+				textObj.TextTool.setValue(" ")
+			end
+		else
+			player.print(sitPlayer.steam_name .. " is not seated.")
 		end
-	else
-		player.print(sitPlayer.steam_name .. " is not seated.")
 	end
 end
 
@@ -307,7 +338,7 @@ function UIDrawCards(player, value, id)
 	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-		drawThree(player, colorFound)
+		drawThree(nil, colorFound)
 	else
 		player.print("You are not seated.")
 	end
@@ -372,6 +403,7 @@ end
 function inputUIIF(player, value, id)
 	UIInputTable[player.steam_id] = value
 end
+
 function startUIB(player, value, id)
 	if not started then
 		player.print('Game has not started.')
@@ -422,12 +454,16 @@ function givePres12P(targetColor, playerColor)
 	end
 end
 
-function closeAdminUID(player, value, id)
-	UI.setAttribute("admin", "active", false)
-	UI.setAttribute("adminButton", "active", true)
+function closeAdminUIB(player, value, id)
+	if player.admin then
+		UI.setAttribute("admin", "active", false)
+		UI.setAttribute("adminButton", "active", true)
+	end
 end
 
-function showAdminUID(player, value, id)
-	UI.setAttribute("admin", "active", true)
-	UI.setAttribute("adminButton", "active", false)
+function showAdminUIB(player, value, id)
+	if player.admin then
+		UI.setAttribute("admin", "active", true)
+		UI.setAttribute("adminButton", "active", false)
+	end
 end
