@@ -6,7 +6,9 @@ GREY_PLAYABLE_COLORS_RGB = {Tan = {r = 210/255, g = 180/255, b = 140/255}, Maroo
 GREY_TEXT_GUIDS = {Tan = '37d7b5', Maroon = '13f08c'}
 GREY_AVATAR_POS = {Tan = {29.30, 9.4, -54}, Maroon = {0, 9.4, -54}}
 GREY_CARD_FORWARD = 0
-GREY_CARD_RIGHT = 0
+GREY_POLICY_RIGHT = -9
+GREY_MAIN_RIGHT = 0
+GREY_EXPANSION_RIGHT = 9
 GREY_CARD_UP = 0.3
 hidden_zone_guids = {White = 'f13d0b', Brown = '90049b', Red = '134297', Orange = '344002', Yellow = '9b5558', Green = '7a8301', Teal = '568a75', Blue = 'dbd95e', Purple = 'cc1b94', Pink = 'd954ee'}
 president_guid = '4d3d8f'

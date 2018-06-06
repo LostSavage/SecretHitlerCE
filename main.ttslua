@@ -44,8 +44,8 @@ fascistMembership_card_guid = 'e4d489'
 liberalMembership_card_guid = 'a73564'
 
 --Scripting Zones
-draw_zone_guid = '6463d3'
-discard_zone_guid = 'b9bd6e'
+DRAW_ZONE_GUID = '6463d3'
+DISCARD_ZONE_GUID = 'b9bd6e'
 fascist_zone_guids = {'1f0149', '390247', '6c3840', '13e460', '441bbf', '6a906e', '488053'}
 liberal_zone_guids = {'12b8ce', '3cabfa', '6f02b7', '939e6d', '3f80ba', 'a6b76f'}
 topdeck_zone_guid = 'c0b577'
@@ -1353,8 +1353,7 @@ end
 
 function boardCardHandler(card)
 	local powerHolder = lastPres
-	--fixme this is not used
-	if bit32.band(options.expansionOptionStatus, 4) == 4 then
+	if bit32.band(options.expansionOptionEnabled, 4) == 4 and bit32.band(options.expansionOptionStatus, 1) == 1 then
 		powerHolder = lastChan
 	end
 	if powerHolder then
@@ -1655,8 +1654,8 @@ function policyCardCoroutine()
 		end
 	end
 
-	drawZone = getObjectFromGUID(draw_zone_guid)
-	discardZone = getObjectFromGUID(discard_zone_guid)
+	drawZone = getObjectFromGUID(DRAW_ZONE_GUID)
+	discardZone = getObjectFromGUID(DISCARD_ZONE_GUID)
 
 	if drawZone == nil or discardZone == nil then
 		return true
@@ -1706,14 +1705,14 @@ function policyCardCoroutine()
 				local tmpDeck = getObjectFromGUID(cardLists.drawDeckList[1])
 				pos = tmpDeck.getPosition()
 			else
-				pos = getPositionByGUID(draw_zone_guid)
+				pos = getPositionByGUID(DRAW_ZONE_GUID)
 			end
 			broadcastToAll('Starting reshuffle...', {1,1,1})
 			local discardDeck = getObjectFromGUID(cardLists.discardDeckList[1])
 			discardDeck.setPositionSmooth({pos['x'], 3, pos['z']}, false, true)
 			sleep(2)
 			local expectedCards = #cardLists.drawList + #cardLists.discardList
-			local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+			local drawDeck = getDeckFromZoneByGUID(DRAW_ZONE_GUID)
 			if drawDeck and #drawDeck.getObjects() == expectedCards then
 				lastDrawCt = expectedCards
 				drawDeck.shuffle()
@@ -1825,8 +1824,8 @@ function getPolicyCardStatus(removeCards)
 	local drawZone = nil
 	local discardZone = nil
 
-	drawZone = getObjectFromGUID(draw_zone_guid)
-	discardZone = getObjectFromGUID(discard_zone_guid)
+	drawZone = getObjectFromGUID(DRAW_ZONE_GUID)
+	discardZone = getObjectFromGUID(DISCARD_ZONE_GUID)
 
 	local inZone = drawZone.getObjects()
 	for i, j in ipairs(inZone) do
@@ -2095,8 +2094,8 @@ function returnVoteCardsToHand()
 			if greyPlayer(playerColor) then
 				jaCardRot = {x = 0, y = 180, z = 180, exactRot = true}
 				neinCardRot = {x = 0, y = 180, z = 180, exactRot = true}
-				giveObjectToPlayer(jaCard, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, jaCardRot, false, true)
-				giveObjectToPlayer(neinCard, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, jaCardRot, false, true)
+				giveObjectToPlayer(jaCard, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, jaCardRot, false, true)
+				giveObjectToPlayer(neinCard, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, jaCardRot, false, true)
 			else
 				giveObjectToPlayer(jaCard, playerColor, {forward = 0, right = 0, up = 0}, jaCardRot, false, true)
 				giveObjectToPlayer(neinCard, playerColor, {forward = 0, right = 0, up = 0}, neinCardRot, false, true)
@@ -2198,7 +2197,7 @@ end
 function topdeckCard(clickedObject, playerColor)
 	if started then
 		if playerColor == getPres() then
-			drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+			drawDeck = getDeckFromZoneByGUID(DRAW_ZONE_GUID)
 			if drawDeck then
 				lastPres = playerColor
 				topdeck = true
@@ -2253,17 +2252,12 @@ function drawCards(amount, playerColor)
 	local drawCt = 0
 	local drawDeck = nil
 
-	drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+	drawDeck = getDeckFromZoneByGUID(DRAW_ZONE_GUID)
 	if drawDeck then
 		drawCt = #drawDeck.getObjects()
 		if drawCt > (amount - 1) then
-			if bit32.band(options.expansionOptionEnabled, 4) == 4 and bit32.band(options.expansionOptionStatus, 1) == 1 then
-				lastPres = getChan()
-				lastChan = getPres()
-			else
-				lastPres = getPres()
-				lastChan = getChan()
-			end
+			lastPres = getPres()
+			lastChan = getChan()
 			if greyPlayer(playerColor) then
 				deal12P(amount, playerColor)
 			else
@@ -2548,7 +2542,7 @@ function setupCoroutine()
 					local params = {}
 					local card = abilitiesDeck.takeObject(params)
 					if card then
-						giveObjectToPlayer(card, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+						giveObjectToPlayer(card, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_EXPANSION_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
 					end
 				end
 			end
@@ -2710,7 +2704,7 @@ function setupCoroutine()
 				offset = -1
 				if options.dealPartyCards then
 					if greyPlayer(player) then
-						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
 					else
 						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
 					end
@@ -2743,7 +2737,7 @@ function setupCoroutine()
 				card.setScale({1.51, 1, 1.51})
 				offset = 1
 				if greyPlayer(player) then
-					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
 				else
 					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
 				end
@@ -2773,7 +2767,7 @@ function setupCoroutine()
 				card.setScale({1.51, 1, 1.51})
 				offset = 2
 				if greyPlayer(player) then
-					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
 				else
 					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_UP_ROT, false, true)
 				end
@@ -2781,7 +2775,7 @@ function setupCoroutine()
 			if offset == -2 then
 				if options.dealRoleCards then
 					if greyPlayer(player) then
-						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
 					else
 						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
 					end
@@ -2843,7 +2837,7 @@ function setupCoroutine()
 	-- Policy card setup
 	local params = {}
 	params.flip = false
-	local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+	local drawDeck = getDeckFromZoneByGUID(DRAW_ZONE_GUID)
 	if drawDeck then
 		local pos = drawDeck.getPosition()
 		local remove_fascistCt = 15 - options.fascistCards
@@ -3047,7 +3041,7 @@ function tellRole(player)
 end
 
 function shuffleDrawDeck()
-	local drawDeck = getDeckFromZoneByGUID(draw_zone_guid)
+	local drawDeck = getDeckFromZoneByGUID(DRAW_ZONE_GUID)
 	if drawDeck then
 		drawDeck.shuffle()
 		return true
@@ -3233,7 +3227,7 @@ function giveRoleCards()
 				newCard.interactable = true
 				newCard.setLock(false)
 				if greyPlayer(player) then
-					forceObjectToPlayer(newCard, player, {forward = GREY_CARD_FORWARD, right = GREY_CARD_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT)
+					forceObjectToPlayer(newCard, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT)
 				else
 					forceObjectToPlayer(newCard, player, {forward = 0, right = -2, up = 0}, FACE_DOWN_ROT)
 				end
