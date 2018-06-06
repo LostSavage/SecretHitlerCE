@@ -1337,10 +1337,10 @@ end
 function spawnFogCoroutine()
 	local screen = getObjectFromGUID(privateScreenGUID)
 	if screen then
-		if privateFogGUID ~= hidden_zone_guids[playerNoteTaker] then
+		if privateFogGUID ~= HIDDEN_ZONE_GUIDS[playerNoteTaker] then
 			destroyObjectByGUID(privateFogGUID)
 		end
-		local secretZone = getObjectFromGUID(hidden_zone_guids[playerNoteTaker])
+		local secretZone = getObjectFromGUID(HIDDEN_ZONE_GUIDS[playerNoteTaker])
 		local params = {position = {-100, 100, -100}, sound = false}
 		local fog
 		if secretZone then
@@ -1485,9 +1485,9 @@ end
 -- Top
 function autoButton(clickedObject, playerColor)
 	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		local tempObj = getObjectFromGUID(president_guid)
+		local tempObj = getObjectFromGUID(PRESIDENT_GUID)
 		local pres = closestPlayer(tempObj, MAIN_PLAYABLE_COLORS, 1000)
-		tempObj = getObjectFromGUID(chancelor_guid)
+		tempObj = getObjectFromGUID(CHANCELOR_GUID)
 		local chan = closestPlayer(tempObj, MAIN_PLAYABLE_COLORS, 1000)
 
 		if pres then
@@ -1507,9 +1507,9 @@ end
 function setPreviousPlacs(clickedObject, playerColor)
 	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if prevPresColor and prevChanColor then
-			local tmpPres = getObjectFromGUID(prev_president_guid)
+			local tmpPres = getObjectFromGUID(PREV_PRESIDENT_GUID)
 			if tmpPres then giveObjectToPlayer(tmpPres, prevPresColor, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, NO_ROT, false, true) end
-			local tmpChan = getObjectFromGUID(prev_chancelor_guid)
+			local tmpChan = getObjectFromGUID(PREV_CHANCELOR_GUID)
 			if tmpChan then giveObjectToPlayer(tmpChan, prevChanColor, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, NO_ROT, false, true) end
 		end
 	end
@@ -1949,14 +1949,14 @@ function addsButton(clickedObject, playerColor)
 end
 
 function incTracker()
-	local tracker = getObjectFromGUID(election_tracker_guid)
+	local tracker = getObjectFromGUID(ELECTION_TRACKER_GUID)
 	if moveTracker and tracker then
 		tracker.translate({electionTrackerMoveX, 0, 0})
 	end
 end
 
 function resetTracker()
-	local tracker = getObjectFromGUID(election_tracker_guid)
+	local tracker = getObjectFromGUID(ELECTION_TRACKER_GUID)
 	if moveTracker and tracker then
 		tracker.setPositionSmooth(electionTrackerOrgPos)
 		tracker.setRotationSmooth({0, 315, 0})

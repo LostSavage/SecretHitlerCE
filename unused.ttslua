@@ -1,13 +1,13 @@
 function topLines(stringIn, maxLinesIn)
 	local linesFound = 0
-	local newLinePos = string.find(stringIn, '\n')
+	local newLinePos = string.find(stringIn, "\n")
 	local oldLinePos = nil
 
 	while newLinePos do
 		linesFound = linesFound + 1
 		oldLinePos = newLinePos
 		if maxLinesIn == linesFound then break end
-		newLinePos = string.find(stringIn, '\n', newLinePos + 1)
+		newLinePos = string.find(stringIn, "\n", newLinePos + 1)
 	end
 
 	if not newLinePos then
@@ -17,8 +17,8 @@ function topLines(stringIn, maxLinesIn)
 	return string.sub(stringIn, 1, oldLinePos)
 end
 
-COLOR_TABLE = {[1] = 'White', [2] = 'Brown', [3] = 'Red', [4] = 'Orange', [5] = 'Yellow', [6] = 'Green', [7] = 'Teal', [8] = 'Blue', [9] = 'Purple', [10] = 'Pink',
- ['White'] = 1, ['Brown'] = 2, ['Red'] = 3, ['Orange'] = 4, ['Yellow'] = 5,['Green'] = 6, ['Teal'] = 7, ['Blue'] = 8, ['Purple'] = 9, ['Pink'] = 10}
+COLOR_TABLE = {[1] = "White", [2] = "Brown", [3] = "Red", [4] = "Orange", [5] = "Yellow", [6] = "Green", [7] = "Teal", [8] = "Blue", [9] = "Purple", [10] = "Pink",
+ ["White"] = 1, ["Brown"] = 2, ["Red"] = 3, ["Orange"] = 4, ["Yellow"] = 5,["Green"] = 6, ["Teal"] = 7, ["Blue"] = 8, ["Purple"] = 9, ["Pink"] = 10}
 
  function swapHandZone(playerIn1, playerIn2)
      local handTransformP1 = Player[playerIn1].getHandTransform(1)

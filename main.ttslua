@@ -1,8 +1,4 @@
-
--- Static Global Variables
-mod_name = 'Secret Hitler: CE'
-update_version = 102
-add_on_version = 5
+--Static
 
 --Boards and Buttons
 settingsPannel_guid = '39d283'
@@ -42,20 +38,30 @@ extraRole_card_guids = {'675a6f', '16e480', '0a5960', '02b664', '328440', '05df4
 fakeMembership_card_guid = '55d1c3'
 fascistMembership_card_guid = 'e4d489'
 liberalMembership_card_guid = 'a73564'
+GREY_POLICY_RIGHT = -9
+GREY_EXPANSION_RIGHT = 9
+
+--Placards and Tracker
+PRESIDENT_GUID = "4d3d8f"
+PREV_PRESIDENT_GUID = "780217"
+PREV_PRESIDENT_POS = {x = -8.0, y = 1.06, z = 14.0}
+CHANCELOR_GUID = "7dba7e"
+PREV_CHANCELOR_GUID = "448483"
+PREV_CHANCELOR_POS = {x = 8.0, y = 1.06, z = 14.0}
+ELECTION_TRACKER_GUID = "dd57c4"
 
 --Scripting Zones
 DRAW_ZONE_GUID = '6463d3'
 DISCARD_ZONE_GUID = 'b9bd6e'
+ABILITIESPILE_ZONE_GUID = 'eea120'
+EFFECTSPILE_ZONE_GUID = '374a16'
 fascist_zone_guids = {'1f0149', '390247', '6c3840', '13e460', '441bbf', '6a906e', '488053'}
 liberal_zone_guids = {'12b8ce', '3cabfa', '6f02b7', '939e6d', '3f80ba', 'a6b76f'}
 topdeck_zone_guid = 'c0b577'
 policySafety_zone_guids = {White = 'e99663', Brown = '13b335', Red = 'd7774a', Orange = 'f601b1', Yellow = '620e09', Green = 'b7c2d8', Teal = '162d55', Blue = '0aa61b', Purple = 'fdc17a', Pink = 'c4d8e8'}
 
---Expansion
-abilitiesPile_zone_guid = 'eea120'
-effectsPile_zone_guid = '374a16'
-
 --Other
+HIDDEN_ZONE_GUIDS = {White = "f13d0b", Brown = "90049b", Red = "134297", Orange = "344002", Yellow = "9b5558", Green = "7a8301", Teal = "568a75", Blue = "dbd95e", Purple = "cc1b94", Pink = "d954ee"}
 trusted_players = {'76561197992512677'}
 boardGreen_rgb = {14/255, 45/255, 18/255}
 boardBrown_rgb = {53/255, 27/255, 17/255}
@@ -63,7 +69,7 @@ lastVote_guids = {'88c953', 'ba4919', 'b7dcde', '4598da'}
 -- @{100, 100, 100+} hidden zones
 -- @{-100, 100, -100} is used to delete/spawn objects
 
--- Global Variables (non-static)
+--Variable
 customOnly = nil
 bannerZoneGuid = nil
 topdeck = false
@@ -75,7 +81,7 @@ disableVote = false
 votePassed = false
 blockDraw = false
 
--- Saved data
+--Saved data
 bannerGuids = {}
 bulletInfo = {
 	type = 'Custom_Model',
@@ -209,7 +215,7 @@ function onLoad(saveString)
 	alwaysInit()
 	if not started then
 		mainNotes = '[FFFF00]Secret Hitler: Consolidator Edition\n' ..
-						'Version ' ..  update_version .. ' (' .. string.len(Global.getLuaScript()) .. ')\n' ..
+						'Version ' ..  UPDATE_VERSION .. ' (' .. string.len(Global.getLuaScript()) .. ')\n' ..
 						'\n[-]Based on the board game:\n\n[FF0000]Secret Hitler[-]\ndesigned by\n[0080F8]Max Temkin[-],\n[0080F8]Mike Boxleiter[-],\n[0080F8]Tommy Maranges[-]\nand Illustrated by\n[0080F8]Mackenzie Schubert.[-]\n\n' ..
 						'Check the notebook for additional\ninformation and subscribe on the\nworkshop to make sure you have the\nlatest version.\n\n' ..
 						'Only the president can draw cards.\n\nTo topdeck a card move the election tracker\nto the \34REVEAL & PASS TOP POLICY\34 circle.\n\n'
@@ -269,19 +275,19 @@ function refreshHiddenZones()
 	for _, player in pairs(MAIN_PLAYABLE_COLORS) do
 		if options.zoneType == 1 then
 			--Hide the hidden zone so we can still use it later
-			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj = getObjectFromGUID(HIDDEN_ZONE_GUIDS[player])
 			tmpObj.setScale({0.01, 0.01, 0.01})
 			local colorToNumber = {White = 1, Brown = 2, Red = 3, Orange = 4, Yellow = 5, Green = 6, Teal = 7, Blue = 8, Purple = 9, Pink = 10}
 			tmpObj.setPosition({100, 100, 100 + colorToNumber[player] * 2})
 		elseif options.zoneType == 2 then
-			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj = getObjectFromGUID(HIDDEN_ZONE_GUIDS[player])
 			tmpObj.setScale({15.3268776, 5.1, 6.35014629})
 			forceObjectToPlayer(tmpObj, player, {forward = 0, right = 0, up = 0, forceHeight = 3.51}, NO_ROT)
 		elseif options.zoneType == 3 then
 			local pos = {White = {29.65, 3.51, -32.75}, Brown = {0, 3.51, -32.75}, Red = {-29.65, 3.51, -32.75}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 32.75}, Teal = {0, 3.51, 32.75}, Blue = {29.65, 3.51, 32.75}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
 			local scale = {White = {28.4, 5.1, 10.1}, Brown = {28.4, 5.1, 10.1}, Red = {28.4, 5.1, 10.1}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 10.1}, Teal = {28.4, 5.1, 10.1}, Blue = {28.4, 5.1, 10.1}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
 
-			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj = getObjectFromGUID(HIDDEN_ZONE_GUIDS[player])
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
 			tmpObj.setRotation(NO_ROT)
@@ -289,7 +295,7 @@ function refreshHiddenZones()
 			local pos = {White = {29.65, 3.51, -31.9}, Brown = {0, 3.51, -31.9}, Red = {-29.65, 3.51, -31.9}, Orange = {-50.2, 3.51, -19.25}, Yellow = {-50.2, 3.51, 19.25}, Green = {-29.65, 3.51, 31.9}, Teal = {0, 3.51, 31.9}, Blue = {29.65, 3.51, 31.9}, Purple = {50.2, 3.51, 19.25}, Pink = {50.2, 3.51, -19.25}}
 			local scale = {White = {28.4, 5.1, 11.8}, Brown = {28.4, 5.1, 11.8}, Red = {28.4, 5.1, 11.8}, Orange = {9.55, 5.1, 37.25}, Yellow = {9.55, 5.1, 37.25}, Green = {28.4, 5.1, 11.8}, Teal = {28.4, 5.1, 11.8}, Blue = {28.4, 5.1, 11.8}, Purple = {9.55, 5.1, 37.25}, Pink = {9.55, 5.1, 37.25}}
 
-			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj = getObjectFromGUID(HIDDEN_ZONE_GUIDS[player])
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
 			tmpObj.setRotation(NO_ROT)
@@ -297,7 +303,7 @@ function refreshHiddenZones()
 			local pos = {White = {29.3, 3.51, -31.9}, Brown = {0, 3.51, -31.9}, Red = {-29.3, 3.51, -31.9}, Orange = {-49.4, 3.51, -19}, Yellow = {-49.4, 3.51, 19}, Green = {-29.3, 3.51, 31.9}, Teal = {0, 3.51, 31.9}, Blue = {29.3, 3.51, 31.9}, Purple = {49.4, 3.51, 19}, Pink = {49.4, 3.51, -19}}
 			local scale = {White = {29.3, 5.1, 11.8}, Brown = {29.3, 5.1, 11.8}, Red = {29.3, 5.1, 11.8}, Orange = {10.8, 5.1, 38.0}, Yellow = {10.8, 5.1, 38.0}, Green = {29.3, 5.1, 11.8}, Teal = {29.3, 5.1, 11.8}, Blue = {29.3, 5.1, 11.8}, Purple = {10.8, 5.1, 38.0}, Pink = {10.8, 5.1, 38.0}}
 
-			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj = getObjectFromGUID(HIDDEN_ZONE_GUIDS[player])
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
 			tmpObj.setRotation(NO_ROT)
@@ -305,7 +311,7 @@ function refreshHiddenZones()
 			local pos = {White = {-29.3, 3.51, -49.4}, Brown = {-49.4, 3.51, -29.3}, Red = {-49.4, 3.51, 0}, Orange = {-49.4, 3.51, 29.3}, Yellow = {-29.3, 3.51, 49.4}, Green = {0, 3.51, 49.4}, Teal = {29.3, 3.51, 49.4}, Blue = {49.4, 3.51, 29.3}, Purple = {49.4, 3.51, 0}, Pink = {49.4, 3.51, -29.3}}
 			local scale = {White = {28.4, 5.1, 10.8}, Brown = {10.8, 5.1, 28.4}, Red = {10.8, 5.1, 28.4}, Orange = {10.8, 5.1, 28.4}, Yellow = {28.4, 5.1, 10.8}, Green = {28.4, 5.1, 10.8}, Teal = {28.4, 5.1, 10.8}, Blue = {10.8, 5.1, 28.4}, Purple = {10.8, 5.1, 28.4}, Pink = {10.8, 5.1, 28.4}}
 
-			tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+			tmpObj = getObjectFromGUID(HIDDEN_ZONE_GUIDS[player])
 			tmpObj.setPosition(pos[player])
 			tmpObj.setScale(scale[player])
 			tmpObj.setRotation(NO_ROT)
@@ -490,7 +496,7 @@ end
 
 function onObjectEnterScriptingZone(zone, enterObject)
 	if enterObject then
-		if zone.guid == topdeck_zone_guid and enterObject.guid == election_tracker_guid then
+		if zone.guid == topdeck_zone_guid and enterObject.guid == ELECTION_TRACKER_GUID then
 			editButtonByLabel(drawPileBoard_guid, 'Draw 3', 'Topdeck', 'topdeckCard')
 		end
 	end
@@ -498,7 +504,7 @@ end
 
 function onObjectLeaveScriptingZone(zone, leaveObject)
 	if leaveObject then
-		if zone.guid == topdeck_zone_guid and leaveObject.guid == election_tracker_guid then
+		if zone.guid == topdeck_zone_guid and leaveObject.guid == ELECTION_TRACKER_GUID then
 			editButtonByLabel(drawPileBoard_guid, 'Topdeck', 'Draw 3', 'drawThree')
 		elseif options.policySafety then
 			if inTable(policySafety_zone_guids, zone.guid) and leaveObject.tag == 'Card' and
@@ -695,34 +701,34 @@ function init()
 	if tmpObj == nil then error('Policy Deck') end
 	tmpObj.interactable = false
 
-	tmpObj = getObjectFromGUID(president_guid)
+	tmpObj = getObjectFromGUID(PRESIDENT_GUID)
 	if tmpObj == nil then error('President') end
 	tmpObj.interactable = false
 	tmpObj.setLock(true)
-	tmpObj = getObjectFromGUID(chancelor_guid)
+	tmpObj = getObjectFromGUID(CHANCELOR_GUID)
 	if tmpObj == nil then error('Chancellor') end
 	tmpObj.interactable = false
 	tmpObj.setLock(true)
-	tmpObj = getObjectFromGUID(prev_president_guid)
+	tmpObj = getObjectFromGUID(PREV_PRESIDENT_GUID)
 	if tmpObj == nil then error('Prev President') end
 	tmpObj.setLock(true)
-	tmpObj = getObjectFromGUID(prev_chancelor_guid)
+	tmpObj = getObjectFromGUID(PREV_CHANCELOR_GUID)
 	if tmpObj == nil then error('Prev Chancellor') end
 	tmpObj.setLock(true)
 
-	tmpObj = getObjectFromGUID(election_tracker_guid)
+	tmpObj = getObjectFromGUID(ELECTION_TRACKER_GUID)
 	if tmpObj == nil then error('Election Tracker') end
 	tmpObj.setLock(true)
 
 	for i, player in ipairs(MAIN_PLAYABLE_COLORS) do
-		tmpObj = getObjectFromGUID(hidden_zone_guids[player])
+		tmpObj = getObjectFromGUID(HIDDEN_ZONE_GUIDS[player])
 		if tmpObj == nil then error(player .. ' Hidden Zone') end
 	end
 
 	--Expansion
-	tmpObj = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	tmpObj = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 	if tmpObj then	tmpObj.interactable = false end
-	tmpObj = getDeckFromZoneByGUID(effectsPile_zone_guid)
+	tmpObj = getDeckFromZoneByGUID(EFFECTSPILE_ZONE_GUID)
 	if tmpObj then	tmpObj.interactable = false end
 
 	resetDecks()
@@ -895,7 +901,7 @@ function settingsPannelMakeButtons()
 		makeSquareButtonLabel(settingsPannel, options.shuffleHost, check_string, '', 'Shuffle host', 'shuffleHostFlip', {startX + 1.3, 0.2, startZ + offsetZ * 7}, 3.3, options.shufflePlayers)
 
 		--Expansion
-		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+		local abilitiesDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 		if abilitiesDeck then
 			startZ = 3.7
 			buttonParam.label = '[u]Expansion[/u]'
@@ -1359,7 +1365,7 @@ function boardCardHandler(card)
 	if powerHolder then
 		if isBoardCardInspect(card) then
 			--expansion
-			local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+			local abilitiesDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 			if abilitiesDeck then
 				broadcastToAll('Delaying inspect 5 seconds...', {1,1,1})
 				sleep(5)
@@ -1529,10 +1535,10 @@ function movePlacards(playerIn, returnVoteCards)
 		votePassed = false
 	end
 
-	local tmpPres = getObjectFromGUID(president_guid)
+	local tmpPres = getObjectFromGUID(PRESIDENT_GUID)
 	tmpPres.setVar('lastPres', moveToPlayer)
 	if tmpPres then giveObjectToPlayer(tmpPres, moveToPlayer, {forward = 11, right = 0, up = 0, forceHeight = 2.2}, NO_ROT, false, false) end
-	local tmpChan = getObjectFromGUID(chancelor_guid)
+	local tmpChan = getObjectFromGUID(CHANCELOR_GUID)
 	if tmpChan then giveObjectToPlayer(tmpChan, moveToPlayer, {forward = 11, right = 0, up = 0, forceHeight = 2.8}, NO_ROT, false, false) end
 end
 
@@ -1625,7 +1631,7 @@ function policyCardCoroutine()
 	local autoNotateReshuffle = false
 
 	local homeTracker = function()
-		local tracker = getObjectFromGUID(election_tracker_guid)
+		local tracker = getObjectFromGUID(ELECTION_TRACKER_GUID)
 		if tracker then
 			tracker.setPositionSmooth(electionTrackerOrgPos)
 			tracker.setRotationSmooth({0, 315, 0})
@@ -1634,23 +1640,23 @@ function policyCardCoroutine()
 
 	local movePrevPlacards = function()
 		if lastPres and lastChan then
-			local tmpPres = getObjectFromGUID(prev_president_guid)
+			local tmpPres = getObjectFromGUID(PREV_PRESIDENT_GUID)
 			if tmpPres then giveObjectToPlayer(tmpPres, lastPres, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, NO_ROT, false, false) end
-			local tmpChan = getObjectFromGUID(prev_chancelor_guid)
+			local tmpChan = getObjectFromGUID(PREV_CHANCELOR_GUID)
 			if tmpChan then giveObjectToPlayer(tmpChan, lastChan, {forward = 11, right = 0, up = 0, forceHeight = 1.1}, NO_ROT, false, false) end
 		end
 	end
 
 	local homePrevPlacards = function()
-		local tmpPres = getObjectFromGUID(prev_president_guid)
+		local tmpPres = getObjectFromGUID(PREV_PRESIDENT_GUID)
 		if tmpPres then
 			tmpPres.setRotationSmooth(FACE_UP_ROT, false, false)
-			tmpPres.setPositionSmooth(prev_president_pos, false, false)
+			tmpPres.setPositionSmooth(PREV_PRESIDENT_POS, false, false)
 		end
-		local tmpChan = getObjectFromGUID(prev_chancelor_guid)
+		local tmpChan = getObjectFromGUID(PREV_CHANCELOR_GUID)
 		if tmpChan then
 			tmpChan.setRotationSmooth(FACE_UP_ROT, false, false)
-			tmpChan.setPositionSmooth(prev_chancelor_pos, false, false)
+			tmpChan.setPositionSmooth(PREV_CHANCELOR_POS, false, false)
 		end
 	end
 
@@ -1679,9 +1685,9 @@ function policyCardCoroutine()
 	end
 
 	--Expansion
-	tmpObj = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	tmpObj = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 	if tmpObj then tmpObj.interactable = false end
-	tmpObj = getDeckFromZoneByGUID(effectsPile_zone_guid)
+	tmpObj = getDeckFromZoneByGUID(EFFECTSPILE_ZONE_GUID)
 	if tmpObj then tmpObj.interactable = false end
 
 	-- Msg if cards are added to the draw deck
@@ -2094,8 +2100,8 @@ function returnVoteCardsToHand()
 			if greyPlayer(playerColor) then
 				jaCardRot = {x = 0, y = 180, z = 180, exactRot = true}
 				neinCardRot = {x = 0, y = 180, z = 180, exactRot = true}
-				giveObjectToPlayer(jaCard, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, jaCardRot, false, true)
-				giveObjectToPlayer(neinCard, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, jaCardRot, false, true)
+				giveObjectToPlayer(jaCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, jaCardRot, false, true)
+				giveObjectToPlayer(neinCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, neinCardRot, false, true)
 			else
 				giveObjectToPlayer(jaCard, playerColor, {forward = 0, right = 0, up = 0}, jaCardRot, false, true)
 				giveObjectToPlayer(neinCard, playerColor, {forward = 0, right = 0, up = 0}, neinCardRot, false, true)
@@ -2145,7 +2151,7 @@ function getFinalVoteString()
 			noteTakerNotes[noteTakerCurrLine].result = '[222222]Downvoted[-]'
 			noteTakerCurrLine = lineSave
 			refreshNotes(nil)
-			local tracker = getObjectFromGUID(election_tracker_guid)
+			local tracker = getObjectFromGUID(ELECTION_TRACKER_GUID)
 			if tracker then
 				tracker.translate({electionTrackerMoveX, 0, 0})
 			end
@@ -2277,12 +2283,12 @@ function drawCards(amount, playerColor)
 end
 
 function getPres()
-	local tempObj = getObjectFromGUID(president_guid)
+	local tempObj = getObjectFromGUID(PRESIDENT_GUID)
 	return closestPlayer(tempObj, players, 1000)
 end
 
 function getChan()
-	local tempObj = getObjectFromGUID(chancelor_guid)
+	local tempObj = getObjectFromGUID(CHANCELOR_GUID)
 	return closestPlayer(tempObj, players, 1000)
 end
 
@@ -2475,7 +2481,7 @@ function setupCoroutine()
 	--Hidden zones and status buttons
 	for i, player in pairs(MAIN_PLAYABLE_COLORS) do
 		if not inTable(players, player) then
-			destroyObjectByGUID(hidden_zone_guids[player])
+			destroyObjectByGUID(HIDDEN_ZONE_GUIDS[player])
 		else
 			if options.zoneType == 1 then
 				local params = {
@@ -2531,7 +2537,7 @@ function setupCoroutine()
 	end
 
 	--Expansion
-	local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	local abilitiesDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 	if abilitiesDeck then
 		abilitiesDeck.randomize()
 		abilitiesDeck.deal(options.expansionAmount)
@@ -2542,13 +2548,13 @@ function setupCoroutine()
 					local params = {}
 					local card = abilitiesDeck.takeObject(params)
 					if card then
-						giveObjectToPlayer(card, playerColor, {forward = GREY_CARD_FORWARD, right = GREY_EXPANSION_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+						giveObjectToPlayer(card, playerColor, {forward = GREY_FORWARD, right = GREY_EXPANSION_RIGHT, up = GREY_UP}, FACE_DOWN_ROT, false, true)
 					end
 				end
 			end
 		end
 	else
-		local tmpZone = getObjectFromGUID(abilitiesPile_zone_guid)
+		local tmpZone = getObjectFromGUID(ABILITIESPILE_ZONE_GUID)
 		if tmpZone then
 			local inZone = tmpZone.getObjects()
 			for _, j in ipairs(inZone) do
@@ -2556,7 +2562,7 @@ function setupCoroutine()
 			end
 			destroyObject(tmpZone)
 		end
-		tmpZone = getObjectFromGUID(effectsPile_zone_guid)
+		tmpZone = getObjectFromGUID(EFFECTSPILE_ZONE_GUID)
 		if tmpZone then
 			inZone = tmpZone.getObjects()
 			for _, j in ipairs(inZone) do
@@ -2704,7 +2710,7 @@ function setupCoroutine()
 				offset = -1
 				if options.dealPartyCards then
 					if greyPlayer(player) then
-						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+						giveObjectToPlayer(card, player, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, FACE_DOWN_ROT, false, true)
 					else
 						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
 					end
@@ -2737,7 +2743,7 @@ function setupCoroutine()
 				card.setScale({1.51, 1, 1.51})
 				offset = 1
 				if greyPlayer(player) then
-					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+					giveObjectToPlayer(card, player, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, FACE_DOWN_ROT, false, true)
 				else
 					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
 				end
@@ -2767,7 +2773,7 @@ function setupCoroutine()
 				card.setScale({1.51, 1, 1.51})
 				offset = 2
 				if greyPlayer(player) then
-					giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+					giveObjectToPlayer(card, player, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, FACE_DOWN_ROT, false, true)
 				else
 					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_UP_ROT, false, true)
 				end
@@ -2775,7 +2781,7 @@ function setupCoroutine()
 			if offset == -2 then
 				if options.dealRoleCards then
 					if greyPlayer(player) then
-						giveObjectToPlayer(card, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT, false, true)
+						giveObjectToPlayer(card, player, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, FACE_DOWN_ROT, false, true)
 					else
 						giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
 					end
@@ -2826,11 +2832,11 @@ function setupCoroutine()
 
 	-- Pick a random first president
 	local randomPlayer = math.random(#players)
-	local president = getObjectFromGUID(president_guid)
+	local president = getObjectFromGUID(PRESIDENT_GUID)
 	local pos = president.getPosition()
 	president.setVar('lastPres', players[randomPlayer])
 	president.setPositionSmooth({0, pos['y']+7, 0})
-	local chancelor = getObjectFromGUID(chancelor_guid)
+	local chancelor = getObjectFromGUID(CHANCELOR_GUID)
 	pos = chancelor.getPosition()
 	chancelor.setPositionSmooth({0, pos['y']+14, 0})
 
@@ -2918,15 +2924,15 @@ function setupCoroutine()
 	president.interactable = true
 	chancelor.setLock(false)
 	chancelor.interactable = true
-	tmpObj = getObjectFromGUID(election_tracker_guid)
+	tmpObj = getObjectFromGUID(ELECTION_TRACKER_GUID)
 	tmpObj.setLock(false)
 	if #players == 5 then
-		destroyObjectByGUID(prev_president_guid)
+		destroyObjectByGUID(PREV_PRESIDENT_GUID)
 	else
-		tmpObj = getObjectFromGUID(prev_president_guid)
+		tmpObj = getObjectFromGUID(PREV_PRESIDENT_GUID)
 		tmpObj.setLock(false)
 	end
-	tmpObj = getObjectFromGUID(prev_chancelor_guid)
+	tmpObj = getObjectFromGUID(PREV_CHANCELOR_GUID)
 	tmpObj.setLock(false)
 
 	-- Lock placed board cards
@@ -2980,7 +2986,7 @@ function changePlayerStatus(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		local ownerColor = clickedObject.getName()
 		_G.playerStatus[ownerColor] = _G.playerStatus[ownerColor] + 1
-		local abilitiesDeck = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+		local abilitiesDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 		if not abilitiesDeck then
 			if _G.playerStatus[ownerColor] == 3 then
 				_G.playerStatus[ownerColor] = 5
@@ -3070,9 +3076,9 @@ function disableSecurityCoroutine()
 	sleep(30)
 
 	--Expansion
-	tmpObj = getDeckFromZoneByGUID(abilitiesPile_zone_guid)
+	tmpObj = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 	if tmpObj then tmpObj.interactable = false end
-	tmpObj = getDeckFromZoneByGUID(effectsPile_zone_guid)
+	tmpObj = getDeckFromZoneByGUID(EFFECTSPILE_ZONE_GUID)
 	if tmpObj then	tmpObj.interactable = false end
 
 	Global.setVar('hold', false)
@@ -3227,7 +3233,7 @@ function giveRoleCards()
 				newCard.interactable = true
 				newCard.setLock(false)
 				if greyPlayer(player) then
-					forceObjectToPlayer(newCard, player, {forward = GREY_CARD_FORWARD, right = GREY_MAIN_RIGHT, up = GREY_CARD_UP}, FACE_DOWN_ROT)
+					forceObjectToPlayer(newCard, player, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, FACE_DOWN_ROT)
 				else
 					forceObjectToPlayer(newCard, player, {forward = 0, right = -2, up = 0}, FACE_DOWN_ROT)
 				end

@@ -1,6 +1,9 @@
-zone_name = 'discard_zone_guid'
-timer_name = 'discardCountTimer'
-print_name = 'Discard Pile'
+--Static
+ZONE_NAME = "DISCARD_ZONE_GUID"
+TIMER_NAME = "discardCountTimer"
+PRINT_NAME = "Discard Pile"
+
+--Variable
 loadDone = false
 
 function onLoad()
@@ -9,14 +12,14 @@ end
 
 function onCollisionEnter(info)
 	if loadDone then
-		Global.call('createPolicyCardTimer')
+		Global.call("createPolicyCardTimer")
 		countCards(false)
 	end
 end
 
 function onCollisionExit(info)
 	if loadDone then
-		Global.call('createPolicyCardTimer')
+		Global.call("createPolicyCardTimer")
 		countCards(false)
 	end
 end
@@ -29,15 +32,15 @@ function countCards(secondCheck)
 	local deck = nil
 	local deck_ct = 0
 	local card_ct = 0
-	local zone = getObjectFromGUID(Global.getVar(zone_name))
+	local zone = getObjectFromGUID(Global.getVar(ZONE_NAME))
 	local object
 
 	if zone then
 		local inZone = zone.getObjects()
 		for _, object in ipairs(inZone) do
-			if object.tag == 'Card' then
+			if object.tag == "Card" then
 				card_ct = card_ct + 1
-			elseif object.tag == 'Deck' then
+			elseif object.tag == "Deck" then
 				deck = object
 				deck_ct = deck_ct + 1
 			end
@@ -50,14 +53,14 @@ function countCards(secondCheck)
 	elseif deck_ct == 1 and card_ct == 0 then
 		self.setName(#deck.getObjects())
 	else
-		self.setName('Unknown')
+		self.setName("Unknown")
 		if secondCheck then
-			broadcastToAll('WARNING: ' .. print_name .. ' is not a single deck.', {1, 0, 0})
+			broadcastToAll("WARNING: " .. PRINT_NAME .. " is not a single deck.", {1, 0, 0})
 		else
-			Timer.destroy(timer_name)
+			Timer.destroy(TIMER_NAME)
 			local parameters = {}
-			parameters.identifier = timer_name
-			parameters.function_name = 'secondCheck'
+			parameters.identifier = TIMER_NAME
+			parameters.function_name = "secondCheck"
 			parameters.function_owner = self
 			parameters.delay = 3
 			Timer.create(parameters)

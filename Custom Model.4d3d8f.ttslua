@@ -1,3 +1,4 @@
+--Variable
 lastPres = nil
 loadDone = false
 
