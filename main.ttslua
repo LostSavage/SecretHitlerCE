@@ -2046,7 +2046,7 @@ function expansionCounters()
 
 	for _, tmpObj in ipairs(allObjs) do
 		if tmpObj then
-			if tmpObj.tag == 'Counter' and string.match(tmpObj.getName(), 'Turns') then
+			if tmpObj.tag == 'Counter' and (string.match(tmpObj.getName(), 'Turns') or string.match(tmpObj.getName(), 'Rounds')) then
 				tmpObj.Counter.decrement()
 			end
 		end

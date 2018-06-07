@@ -6,7 +6,7 @@
 -- Scripts can be found on https://github.com/LostSavage/SecretHitlerCE
 MOD_NAME = "Secret Hitler: CE"
 UPDATE_VERSION = 102
-ADD_ON_VERSION = 5
+ADD_ON_VERSION = 6
 #include \SecretHitlerCE\main.ttslua
 #include \SecretHitlerCE\UI.ttslua
 #include \SecretHitlerCE\notetaker.ttslua

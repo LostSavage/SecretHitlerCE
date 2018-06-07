@@ -482,7 +482,9 @@ end
 function smartBroadcastToColor(msg, playerColor, msgColor)
 	if greyPlayer(playerColor) then
 		local player = getPlayerObj(playerColor)
-		player.broadcast(msg, msgColor)
+		if player then
+			player.broadcast(msg, msgColor)
+		end
 	else
 		broadcastToColor(msg, playerColor, msgColor)
 	end

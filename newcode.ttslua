@@ -3,141 +3,8 @@ MAROON_VOTE_POS = {0, 1.05, -35.50}
 TAN_VOTE_POS = {29.30, 1.05, -35.50}
 MAROON_ZONE_POS = {0, 1.3, -51.66}
 TAN_ZONE_POS = {29.30, 1.3, -51.66}
-
-MAROON_DRAW_POS = {-9, 1.5, -49}
-TAN_DRAW_POS = {20.30, 1.5, -49}
 MAROON_ABILITY_POS = {12.60, 1.2, -41}
 TAN_ABILITY_POS = {37, 1.2, -41}
-
-function moveCard12P(name, description, pos, rot, playerColor)
-	local zoneObjs = {}
-	local player = getPlayerObj(playerColor)
-	local card, deck
-	local foundIndex = nil
-
-	zoneObjs = getObjsFromZone(GREY_HAND_ZONE_GUIDS[playerColor])
-	if #zoneObjs == nil then
-		player.broadcast("ERROR: No cards found in your hand.", {1,0,0})
-		return -1
-	end
-	if name == nil then
-		for i = 1, #zoneObjs do
-			if string.match(zoneObjs[i].description, description) then
-				foundIndex = i
-				break
-			end
-		end
-	else
-		for i = 1, #zoneObjs do
-			if string.match(string.lower(zoneObjs[i].name), string.lower(name)) then
-				foundIndex = i
-				break
-			end
-		end
-	end
-	if foundIndex == nil then
-		player.broadcast("ERROR: Card not found.", {1,0,0})
-		return -1
-	end
-	if zoneObjs[foundIndex].deck_guid == nil then
-		card = getObjectFromGUID(zoneObjs[foundIndex].guid)
-		card.setPositionSmooth(pos)
-		card.setRotationSmooth(rot)
-	else
-		deck = getObjectFromGUID(zoneObjs[foundIndex].deck_guid)
-		takeParam =
-		{
-			position = pos,
-			rotation = rot,
-			index = zoneObjs[foundIndex].index
-		}
-		deck.takeObject(takeParam)
-	end
-
-	return zoneObjs[foundIndex]
-end
-
-function drawCardsUIB(player, value, id)
-	if not started then
-   		player.print("Game has not started.")
-		return
-	end
-	local colorFound = getGreyColor(player.steam_id)
-	if colorFound then
-		drawThree(player, colorFound)
-	else
-		player.print("You are not seated.")
-	end
-end
-
-function deal12P(amount, playerColor)
-	function deal12PCoroutine()
-		local drawDeck = getDeckFromZoneByGUID(DRAW_ZONE_GUID)
-		local handDeck
-		local takeParam = {}
-		local drawString = "You drew: "
-		local player = getPlayerObj(playerColor)
-
-		handZone = getObjectFromGUID(GREY_HAND_ZONE_GUIDS[playerColor])
-		if playerColor == "Maroon" then
-			takeParam.position = MAROON_DRAW_POS
-		elseif playerColor == "Tan" then
-			takeParam.position = TAN_DRAW_POS
-		end
-
-		for i = 1, amount do
-			drawDeck.takeObject(takeParam)
-			takeParam.position[2] = takeParam.position[2] + 0.01
-			sleep(0.1)
-		end
-		sleep(2)
-		printPolicyCards12P("Draw", playerColor)
-		return 1
-	end
-	startLuaCoroutine(Global, "deal12PCoroutine")
-end
-
-function printPolicyCards12P(mode, playerColor)
-	local zoneObjs = {}
-	local player = getPlayerObj(playerColor)
-	local policyCardStr = ""
-	local expansionCardStr = "Your other cards are:"
-	local outStr = ""
-
-	zoneObjs = getObjsFromZone(GREY_HAND_ZONE_GUIDS[playerColor])
-	for k,v in pairs(zoneObjs) do
-		if v.description == "Liberal Policy" then
-			policyCardStr = policyCardStr .. "[0000FF]L[-]"
-		elseif v.description == "Fascist Policy" then
-			policyCardStr = policyCardStr .. "[FF0000]F[-]"
-		elseif not (string.match(v.description, "Ja Card") or string.match(v.description, "Nein Card")) then
-			expansionCardStr = expansionCardStr .. "\n" .. v.name
-		end
-	end
-
-	if mode == "Draw" then
-		outStr = "You drew " .. policyCardStr .. ".\n"
-	elseif mode == "Check" then
-		if policyCardStr == "" then
-			outStr = "You have no policy cards.\n"
-		else
-			outStr = "Your policy cards are:" .. policyCardStr .. "\n"
-		end
-	end
-	bigBroadcast(outStr .. expansionCardStr, player)
-end
-
-function discardAbility(cardName, playerColor)
-	local player = getPlayerObj(playerColor)
-	local abilityDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
-	local pos = abilityDeck.getPosition()
-	local result = {}
-
-	result = moveCard12P(cardName, nil, pos, FACE_DOWN_ROT, playerColor)
-	if result ~= -1 then
-		player.broadcast("You discarded " .. result.name, {1,1,1})
-	end
-end
 
 function revealAbility(cardName, playerColor)
 	local player = getPlayerObj(playerColor)
@@ -205,7 +72,7 @@ function takeAbility(cardName, playerColor)
 		takeParams.index = foundIndex
 		takeParams.position = pos
 		abilityDeck.takeObject(takeParams)
-		player.broadcast("You drew " .. deckTable[foundIndex+1].nickname .. " [FFFFFf]from the Ability deck.", {1,1,1})
+		player.broadcast("You drew " .. deckTable[foundIndex+1].nickname .. " [FFFFFF]from the Ability deck.", {1,1,1})
 		broadcastToAll(playerColor .. " takes an ability from the Ability deck", {1,1,1})
 	end
 end

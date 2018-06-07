@@ -16,26 +16,7 @@ function refreshUI()
 		end
 		UI.setAttribute("greyPolicy", "visibility", "Grey")
 		UI.setAttribute("greyVote", "visibility", "Grey")
-		local adminList = ""
-		local greyAdded = false
-		for _, player in ipairs(getAdminPlayers()) do
-			if player.color == "Grey" then
-				if not greyAdded then
-					if adminList == "" then
-						adminList = player.color
-					else
-						adminList = adminList .. "|" .. player.color
-					end
-					greyAdded = true
-				end
-			else
-				if adminList == "" then
-					adminList = player.color
-				else
-					adminList = adminList .. "|" .. player.color
-				end
-			end
-		end
+		local adminList = adminVisibility()
 		UI.setAttribute("adminButton", "visibility", adminList)
 		UI.setAttribute("admin", "visibility", adminList)
 		UI.setAttribute("adminButton", "active", "true")
@@ -169,6 +150,32 @@ function refreshUI()
 	end
 end
 
+function adminVisibility()
+	local visList = ""
+
+	local greyAdded = false
+	for _, player in ipairs(getAdminPlayers()) do
+		if player.color == "Grey" then
+			if not greyAdded then
+				if visList == "" then
+					visList = player.color
+				else
+					visList = visList .. "|" .. player.color
+				end
+				greyAdded = true
+			end
+		else
+			if visList == "" then
+				visList = player.color
+			else
+				visList = visList .. "|" .. player.color
+			end
+		end
+	end
+
+	return visList
+end
+
 function hitVisibility(colorIn)
 	local visList = ""
 
@@ -211,6 +218,161 @@ function fasVisibility(colorIn)
 	end
 
 	return visList
+end
+
+function chooseChan12P(targetColor, playerColor)
+	local player = getPlayerObj(playerColor)
+	local currPres = getPres()
+	if currPres == playerColor then
+		local tmpChan = getObjectFromGUID(CHANCELOR_GUID)
+		if tmpChan then giveObjectToPlayer(tmpChan, targetColor, {forward = 11, right = 0, up = 0, forceHeight = 2.8}, NO_ROT, false, false) end
+	else
+		player.print("You are not the current president.", {1,0,0})
+	end
+end
+
+function deal12P(amount, playerColor)
+	function deal12PCoroutine()
+		local drawDeck = getDeckFromZoneByGUID(DRAW_ZONE_GUID)
+		local takeParam = {}
+
+		for i = 1, amount do
+			local card = drawDeck.takeObject(takeParam)
+			local cardRot = {x = 0, y = 180, z = 180, exactRot = true}
+			giveObjectToPlayer(card, playerColor, {forward = GREY_FORWARD, right = GREY_POLICY_RIGHT, up = GREY_UP}, cardRot, false, true)
+			sleep(0.1)
+		end
+		sleep(2)
+		printPolicyCards12P("Draw", playerColor)
+		return 1
+	end
+	startLuaCoroutine(Global, "deal12PCoroutine")
+end
+
+function discard12P(policy, playerColor)
+	local discardZone = getObjectFromGUID(DISCARD_ZONE_GUID)
+	if discardZone then
+		local pos = discardZone.getPosition()
+		pos = {pos['x'], 2.5, pos['z']}
+		local result = moveCard12P(nil, policy, pos, FACE_DOWN_ROT, playerColor)
+		if result ~= -1 then
+			smartBroadcastToColor("You discarded a " .. policy .. " card.", playerColor, {1, 1, 1})
+		end
+	else
+		broadcastToAll("ERROR: Discard zone not found", {1, 0, 0})
+	end
+end
+
+function givePres12P(targetColor, playerColor)
+	local player = getPlayerObj(playerColor)
+	local currPres = getPres()
+	if currPres == playerColor then
+		movePlacards(targetColor, true)
+	else
+		player.print("You are not the current president.",{1,0,0})
+	end
+end
+
+function moveCard12P(name, description, pos, rot, playerColor)
+	local foundIndex = nil
+
+	local zoneObjs = getObjsFromZone(GREY_HAND_ZONE_GUIDS[playerColor])
+	if #zoneObjs == nil then
+		smartBroadcastToColor("ERROR: No cards found in your hand.", playerColor, {1, 0, 0})
+		return -1
+	end
+	if name == nil then
+		for i = 1, #zoneObjs do
+			if string.match(zoneObjs[i].description, description) then
+				foundIndex = i
+				break
+			end
+		end
+	else
+		for i = 1, #zoneObjs do
+			if string.match(string.lower(zoneObjs[i].name), string.lower(name)) then
+				foundIndex = i
+				break
+			end
+		end
+	end
+	if foundIndex == nil then
+		smartBroadcastToColor("ERROR: Card not found.", playerColor, {1, 0, 0})
+		return -1
+	end
+	if zoneObjs[foundIndex].deck_guid == nil then
+		local card = getObjectFromGUID(zoneObjs[foundIndex].guid)
+		card.setPositionSmooth(pos)
+		card.setRotationSmooth(rot)
+	else
+		local deck = getObjectFromGUID(zoneObjs[foundIndex].deck_guid)
+		takeParam =
+		{
+			position = pos,
+			rotation = rot,
+			index = zoneObjs[foundIndex].index
+		}
+		deck.takeObject(takeParam)
+	end
+
+	return zoneObjs[foundIndex]
+end
+
+function printPolicyCards12P(mode, playerColor)
+	local zoneObjs = {}
+	local player = getPlayerObj(playerColor)
+	local policyCardStr = ""
+	local expansionCardStr = "Your other cards are:"
+	local outStr = ""
+
+	zoneObjs = getObjsFromZone(GREY_HAND_ZONE_GUIDS[playerColor])
+	for k, v in pairs(zoneObjs) do
+		if v.description == "Liberal Policy" then
+			policyCardStr = policyCardStr .. "[0000FF]L[-]"
+		elseif v.description == "Fascist Policy" then
+			policyCardStr = policyCardStr .. "[FF0000]F[-]"
+		elseif not (string.match(v.description, "Ja Card") or string.match(v.description, "Nein Card")) then
+			expansionCardStr = expansionCardStr .. "\n" .. v.name
+		end
+	end
+
+	if mode == "Draw" then
+		outStr = "You drew " .. policyCardStr .. ".\n"
+	elseif mode == "Check" then
+		if policyCardStr == "" then
+			outStr = "You have no policy cards.\n"
+		else
+			outStr = "Your policy cards are:" .. policyCardStr .. "\n"
+		end
+	end
+	if expansionCardStr == "Your other cards are:" or mode == "Draw" then
+		bigBroadcast(outStr, player)
+	else
+		bigBroadcast(outStr .. expansionCardStr, player)
+	end
+end
+
+function vote12P(playerColor, voteName)
+	function vote12PCoroutine()
+		local jaCard = getObjectFromGUID(jaCardGuids[playerColor])
+		local neinCard = getObjectFromGUID(neinCardGuids[playerColor])
+
+		-- move found cards back
+		if jaCard then
+			local jaCardRot = {x = 0, y = 180, z = 180, exactRot = true}
+			giveObjectToPlayer(jaCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, jaCardRot, false, true)
+		end
+		if neinCard then
+			local neinCardRot = {x = 0, y = 180, z = 180, exactRot = true}
+			giveObjectToPlayer(neinCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, neinCardRot, false, true)
+		end
+		sleep(0.1)
+		-- move vote out
+		moveCard12P(nil, voteName, GREY_VOTE_POS[playerColor], FACE_DOWN_ROT, playerColor)
+
+		return 1
+	end
+	startLuaCoroutine(Global, "vote12PCoroutine")
 end
 
 function playerNameUIIF(player, value, id)
@@ -329,29 +491,6 @@ function voteNeinUIB(player, value, id)
 	end
 end
 
-function vote12P(playerColor, voteName)
-	function vote12PCoroutine()
-		local jaCard = getObjectFromGUID(jaCardGuids[playerColor])
-		local neinCard = getObjectFromGUID(neinCardGuids[playerColor])
-
-		-- move found cards back
-		if jaCard then
-			local jaCardRot = {x = 0, y = 180, z = 180, exactRot = true}
-			giveObjectToPlayer(jaCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, jaCardRot, false, true)
-		end
-		if neinCard then
-			local neinCardRot = {x = 0, y = 180, z = 180, exactRot = true}
-			giveObjectToPlayer(neinCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, neinCardRot, false, true)
-		end
-		sleep(0.1)
-		-- move vote out
-		moveCard12P(nil, voteName, GREY_VOTE_POS[playerColor], FACE_DOWN_ROT, playerColor)
-
-		return 1
-	end
-	startLuaCoroutine(Global, "vote12PCoroutine")
-end
-
 function voteRemoveUIB(player, value, id)
 	if not started then
 		player.print('Game has not started.')
@@ -394,49 +533,35 @@ function discardFUIB(player, value, id)
 	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-   		discard12P("Fascist Policy", colorFound)
-   	else
-   		player.print("You are not seated.")
+		discard12P("Fascist Policy", colorFound)
+   else
+		player.print("You are not seated.")
 	end
 end
 
 function discardLUIB(player, value, id)
 	if not started then
-   		player.print("Game has not started.")
+   	player.print("Game has not started.")
 		return
-   	end
+   end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-   		discard12P("Liberal Policy", colorFound)
+   	discard12P("Liberal Policy", colorFound)
 	else
-   		player.print("You are not seated.")
-	end
-end
-
-function discard12P(policy, playerColor)
-	local discardZone = getObjectFromGUID(DISCARD_ZONE_GUID)
-	if discardZone then
-		local result = moveCard12P(nil, policy, discardZone.getPosition(), FACE_DOWN_ROT, playerColor)
-		local player = getPlayerObj(playerColor)
-
-		if result ~= -1 then
-	    	player.broadcast("You discarded a " .. policy .. " card.", {1, 1, 1})
-		end
-	else
-		broadcastToAll("ERROR: Discard zone not found", {1, 0, 0})
+   	player.print("You are not seated.")
 	end
 end
 
 function checkCardsUIB(player, value, id)
 	if not started then
-   		player.print("Game has not started.")
+		player.print("Game has not started.")
 		return
 	end
 	local colorFound = getGreyColor(player.steam_id)
 	if colorFound then
-   		printPolicyCards12P("Check", colorFound)
+		printPolicyCards12P("Check", colorFound)
 	else
-   		player.print("You are not seated.")
+		player.print("You are not seated.")
 	end
 end
 
@@ -481,26 +606,18 @@ function startUIB(player, value, id)
 	end
 end
 
-function chooseChan12P(targetColor, playerColor)
-	local player = getPlayerObj(playerColor)
-	local currPres = getPres()
-	if currPres == playerColor then
-		local tmpChan = getObjectFromGUID(CHANCELOR_GUID)
-		if tmpChan then giveObjectToPlayer(tmpChan, targetColor, {forward = 11, right = 0, up = 0, forceHeight = 2.8}, NO_ROT, false, false) end
-	else
-		player.print("You are not the current president.", {1,0,0})
+function discardAbility(cardName, playerColor)
+	local abilityDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
+	local pos = abilityDeck.getPosition()
+	local result = {}
+
+	result = moveCard12P(cardName, nil, pos, FACE_DOWN_ROT, playerColor)
+	if result ~= -1 then
+		smartBroadcastToColor("You discarded " .. result.name, playerColor, {1, 1, 1})
 	end
 end
 
-function givePres12P(targetColor, playerColor)
-	local player = getPlayerObj(playerColor)
-	local currPres = getPres()
-	if currPres == playerColor then
-		movePlacards(targetColor, true)
-	else
-		player.print("You are not the current president.",{1,0,0})
-	end
-end
+
 
 function closeAdminUIB(player, value, id)
 	if player.admin then
@@ -513,5 +630,18 @@ function showAdminUIB(player, value, id)
 	if player.admin then
 		UI.setAttribute("admin", "active", true)
 		UI.setAttribute("adminButton", "active", false)
+	end
+end
+
+function drawCardsUIB(player, value, id)
+	if not started then
+   		player.print("Game has not started.")
+		return
+	end
+	local colorFound = getGreyColor(player.steam_id)
+	if colorFound then
+		drawThree(player, colorFound)
+	else
+		player.print("You are not seated.")
 	end
 end
