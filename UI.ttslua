@@ -319,36 +319,37 @@ function moveCard12P(name, description, pos, rot, playerColor)
 end
 
 function printPolicyCards12P(mode, playerColor)
-	local zoneObjs = {}
 	local player = getPlayerObj(playerColor)
+	local zoneObjs = {}
 	local policyCardStr = ""
 	local expansionCardStr = "Your other cards are:"
 	local outStr = ""
 
-	zoneObjs = getObjsFromZone(GREY_HAND_ZONE_GUIDS[playerColor])
-	for k, v in pairs(zoneObjs) do
-		if v.description == "Liberal Policy" then
-			policyCardStr = policyCardStr .. "[0000FF]L[-]"
-		elseif v.description == "Fascist Policy" then
-			policyCardStr = policyCardStr .. "[FF0000]F[-]"
-		elseif not (string.match(v.description, "Ja Card") or string.match(v.description, "Nein Card")) then
-			expansionCardStr = expansionCardStr .. "\n" .. v.name
+	if player then
+		zoneObjs = getObjsFromZone(GREY_HAND_ZONE_GUIDS[playerColor])
+		for k, v in pairs(zoneObjs) do
+			if v.description == "Liberal Policy" then
+				policyCardStr = policyCardStr .. "[0000FF]L[-]"
+			elseif v.description == "Fascist Policy" then
+				policyCardStr = policyCardStr .. "[FF0000]F[-]"
+			elseif not (string.match(v.description, "Ja Card") or string.match(v.description, "Nein Card")) then
+				expansionCardStr = expansionCardStr .. "\n" .. v.name
+			end
 		end
-	end
-
-	if mode == "Draw" then
-		outStr = "You drew " .. policyCardStr .. ".\n"
-	elseif mode == "Check" then
-		if policyCardStr == "" then
-			outStr = "You have no policy cards.\n"
+		if mode == "Draw" then
+			outStr = "You drew " .. policyCardStr .. ".\n"
+		elseif mode == "Check" then
+			if policyCardStr == "" then
+				outStr = "You have no policy cards.\n"
+			else
+				outStr = "Your policy cards are:" .. policyCardStr .. "\n"
+			end
+		end
+		if expansionCardStr == "Your other cards are:" or mode == "Draw" then
+			bigBroadcast(outStr, player)
 		else
-			outStr = "Your policy cards are:" .. policyCardStr .. "\n"
+			bigBroadcast(outStr .. expansionCardStr, player)
 		end
-	end
-	if expansionCardStr == "Your other cards are:" or mode == "Draw" then
-		bigBroadcast(outStr, player)
-	else
-		bigBroadcast(outStr .. expansionCardStr, player)
 	end
 end
 
@@ -616,8 +617,6 @@ function discardAbility(cardName, playerColor)
 		smartBroadcastToColor("You discarded " .. result.name, playerColor, {1, 1, 1})
 	end
 end
-
-
 
 function closeAdminUIB(player, value, id)
 	if player.admin then

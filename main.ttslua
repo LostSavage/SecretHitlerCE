@@ -82,6 +82,7 @@ votePassed = false
 blockDraw = false
 
 --Saved data
+activePowerColor = nil
 bannerGuids = {}
 bulletInfo = {
 	type = 'Custom_Model',
@@ -181,6 +182,7 @@ voteNotebook = ''
 function onLoad(saveString)
 	if not (saveString == '') then
 		local save = JSON.decode(saveString)
+		activePowerColor = save['a']
 		bannerGuids = save['b']
 		bulletInfo = save['bi']
 		fascists = save['f']
@@ -236,6 +238,7 @@ end
 
 function onSave()
 	local save = {}
+	save['a'] = activePowerColor
 	save['b'] = bannerGuids
 	save['bi'] = bulletInfo
 	save['f'] = fascists
@@ -1379,7 +1382,7 @@ function boardCardHandler(card)
 				notateInfo(powerHolder, 'gives pres to', '', '', true)
 			end
 		elseif isBoardCardBullet(card) then
-			giveBullet(lastPres)
+			giveBullet(powerHolder)
 			if options.autoNotate then
 				notateInfo(powerHolder, string.lower(bulletInfo.action), '', '', true)
 			end
@@ -2232,8 +2235,8 @@ function drawThree(clickedObject, playerColor)
 		local drawPlayer = getPres()
 		local drawPlayerText = 'president'
 		if bit32.band(options.expansionOptionStatus, 1) == 1 then
-			local drawPlayer = getChan()
-			local drawPlayerText = 'chancellor'
+			drawPlayer = getChan()
+			drawPlayerText = 'chancellor'
 		end
 		if playerColor == drawPlayer then
 			if blockDraw then
@@ -3086,17 +3089,18 @@ function disableSecurityCoroutine()
 	return true
 end
 
-function createInspectButtons(pres)
+function createInspectButtons(powerHolder)
 	local membershipCard = getObjectFromGUID(fakeMembership_card_guid)
 
 	if membershipCard then
-		if greyPlayer(pres) then
-			smartBroadcastToColor('Use the UI to inspect a player.', pres, {1, 1, 1})
+		activePowerColor = powerHolder
+		if greyPlayer(powerHolder) then
+			smartBroadcastToColor('Use the UI to inspect a player.', powerHolder, {1, 1, 1})
 		else
-			broadcastToColor('Click on the party membership card of the person you want to inspect.', pres, {1, 1, 1})
+			broadcastToColor('Click on the party membership card of the person you want to inspect.', powerHolder, {1, 1, 1})
 		end
 		for i, playerColor in ipairs(players) do
-			if playerColor ~= pres and not inTable(inspected, playerColor) and not (_G.playerStatus[playerColor] > 4) then
+			if playerColor ~= powerHolder and not inTable(inspected, playerColor) and not (_G.playerStatus[playerColor] > 4) then
 				local params = {rotation = {0, 0, 180}, sound = false}
 				card = membershipCard.clone(params)
 				card.setDescription('Fake Party Card')
@@ -3138,7 +3142,7 @@ function createInspectButtons(pres)
 end
 
 function playerInspected(clickedObject, inspectorColor, checkedColor)
-	if inspectorColor == lastPres then
+	if inspectorColor == activePowerColor and needInspect() then
 		local role = roles[checkedColor]
 		local playerColor = stringColorToRGBExtra(checkedColor)
 		local roleText
@@ -3160,6 +3164,7 @@ function playerInspected(clickedObject, inspectorColor, checkedColor)
 			notate.line = nil
 			notate.action = ''
 		end
+		activePowerColor = nil
 	end
 end
 
@@ -3213,13 +3218,21 @@ end
 
 function removeInspect()
 	local allObjs = getAllObjects()
-	local object
-
 	for _, object in ipairs(allObjs) do
 		if object.tag == 'Card' and (object.getDescription() == 'Fake Party Card') then
 			destroyObject(object)
 		end
 	end
+end
+
+function needInspect()
+	local allObjs = getAllObjects()
+	for _, object in ipairs(allObjs) do
+		if object.tag == 'Card' and (object.getDescription() == 'Fake Party Card') then
+			return true
+		end
+	end
+	return false
 end
 
 function giveRoleCards()
