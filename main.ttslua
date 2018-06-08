@@ -3133,7 +3133,7 @@ function createInspectButtons(powerHolder)
 				card.setPosition({0, 30 + (i * 0.25), 0})
 				card.setLock(false)
 				wait(5)
-				giveObjectToPlayer(card, playerColor, {forward = 16.5, right = 0, up = 0}, FACE_DOWN_ROT)
+				giveObjectToPlayer(card, playerColor, {forward = 16.5, right = 0, up = 0}, FACE_DOWN_ROT, false, true)
 			end
 		end
 	else

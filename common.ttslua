@@ -7,7 +7,9 @@ GREY_PLAYABLE_COLORS_RGB = {Tan = {r = 210/255, g = 180/255, b = 140/255}, Maroo
 GREY_AVATAR_POS = {Tan = {29.30, 9.4, -54}, Maroon = {0, 9.4, -54}}
 GREY_HAND_ZONE_GUIDS = {Maroon = "b9a8d0", Tan = "409da9"}
 GREY_TEXT_GUIDS = {Tan = "37d7b5", Maroon = "13f08c"}
-GREY_VOTE_POS = {Maroon = {0, 1.05, -35.50}, Tan = {29.30, 1.05, -35.50}}
+GREY_VOTE_POS = {Tan = {29.30, 1.05, -35.50}, Maroon = {0, 1.05, -35.50}}
+-- FIXME don't hardcode GREY_ABILITY_POS
+GREY_ABILITY_POS = {Tan = {37, 1.2, -41}, Maroon = {12.60, 1.2, -41}}
 GREY_FORWARD = 0
 GREY_RIGHT = 0
 GREY_UP = 0.3
@@ -16,94 +18,81 @@ NO_ROT = {x = 0, y = 0, z = 0}
 FACE_UP_ROT = {x = 0, y = 180, z = 0}
 FACE_DOWN_ROT = {x = 0, y = 180, z = 180}
 
-function giveObjectToPlayer(object, playerColor, posAdd, rotAdd, ...)
-	local pos
-	local rot
-	local vForward
-	local vRight
-	local vUp
+function getPlayerPosRotVectors(playerColor)
+	local returnVal = {}
 
 	if greyPlayer(playerColor) then
 		local ph = getObjectFromGUID(greyPlayerHandGuids[playerColor])
 		if ph then
-			pos = ph.getPosition()
-			pos = {x = pos["x"], y = pos["y"], z = pos["z"] - 2.26}
-			rot = ph.getRotation()
-			vForward = ph.getTransformForward()
-			vRight = ph.getTransformRight()
-			vUp = ph.getTransformUp()
+			returnVal.pos = ph.getPosition()
+			returnVal.pos = {x = pos["x"], y = pos["y"], z = pos["z"] - 2.26}
+			returnVal.rot = ph.getRotation()
+			returnVal.vForward = ph.getTransformForward()
+			returnVal.vRight = ph.getTransformRight()
+			returnVal.vUp = ph.getTransformUp()
 		end
 	else
 		local ph = Player[playerColor].getPlayerHand();
 		if ph then
-			pos = {x = ph["pos_x"], y = ph["pos_y"], z = ph["pos_z"]}
-			rot = {x = ph["rot_x"], y = ph["rot_y"], z = ph["rot_z"]}
-			vForward = {x = ph["trigger_forward_x"], y = ph["trigger_forward_y"], z = ph["trigger_forward_z"]}
-			vRight = {x = ph["trigger_right_x"], y = ph["trigger_right_y"], z = ph["trigger_right_z"]}
-			vUp = {x = ph["trigger_up_x"], y = ph["trigger_up_y"], z = ph["trigger_up_z"]}
+			returnVal.pos = {x = ph["pos_x"], y = ph["pos_y"], z = ph["pos_z"]}
+			returnVal.rot = {x = ph["rot_x"], y = ph["rot_y"], z = ph["rot_z"]}
+			returnVal.vForward = {x = ph["trigger_forward_x"], y = ph["trigger_forward_y"], z = ph["trigger_forward_z"]}
+			returnVal.vRight = {x = ph["trigger_right_x"], y = ph["trigger_right_y"], z = ph["trigger_right_z"]}
+			returnVal.vUp = {x = ph["trigger_up_x"], y = ph["trigger_up_y"], z = ph["trigger_up_z"]}
 		end
 	end
 
-	if pos then
+	return returnVal
+end
+
+--function giveObjectToPlayer(object, playerColor, posAdd, rotAdd, collide, fast)
+function giveObjectToPlayer(object, playerColor, posAdd, rotAdd, ...)
+	local info = getPlayerPosRotVectors(playerColor)
+	if info then
 		if rotAdd["exactRot"] then
 			object.setRotationSmooth({rotAdd["x"], rotAdd["y"], rotAdd["z"]}, ...)
 		else
-			object.setRotationSmooth({rot["x"] + rotAdd["x"], rot["y"] + rotAdd["y"], rot["z"] + rotAdd["z"]}, ...)
+			object.setRotationSmooth({info.rot["x"] + rotAdd["x"], info.rot["y"] + rotAdd["y"], info.rot["z"] + rotAdd["z"]}, ...)
 		end
 		if posAdd["forceHeight"] then
-			object.setPositionSmooth({pos["x"] + vForward["x"] * posAdd["forward"] + vRight["x"] * posAdd["right"] + vUp["x"] * posAdd["up"],
+			object.setPositionSmooth({info.pos["x"] + info.vForward["x"] * posAdd["forward"] + info.vRight["x"] * posAdd["right"] + info.vUp["x"] * posAdd["up"],
 											  posAdd["forceHeight"],
-											  pos["z"] + vForward["z"] * posAdd["forward"] + vRight["z"] * posAdd["right"] + vUp["z"] * posAdd["up"]}, ...)
+											  info.pos["z"] + info.vForward["z"] * posAdd["forward"] + info.vRight["z"] * posAdd["right"] + info.vUp["z"] * posAdd["up"]}, ...)
 		else
-			object.setPositionSmooth({pos["x"] + vForward["x"] * posAdd["forward"] + vRight["x"] * posAdd["right"] + vUp["x"] * posAdd["up"],
-											  pos["y"] + vForward["y"] * posAdd["forward"] + vRight["y"] * posAdd["right"] + vUp["y"] * posAdd["up"],
-											  pos["z"] + vForward["z"] * posAdd["forward"] + vRight["z"] * posAdd["right"] + vUp["z"] * posAdd["up"]}, ...)
+			object.setPositionSmooth({info.pos["x"] + info.vForward["x"] * posAdd["forward"] + info.vRight["x"] * posAdd["right"] + info.vUp["x"] * posAdd["up"],
+											  info.pos["y"] + info.vForward["y"] * posAdd["forward"] + info.vRight["y"] * posAdd["right"] + info.vUp["y"] * posAdd["up"],
+											  info.pos["z"] + info.vForward["z"] * posAdd["forward"] + info.vRight["z"] * posAdd["right"] + info.vUp["z"] * posAdd["up"]}, ...)
 		end
 	end
 end
 
 function forceObjectToPlayer(object, playerColor, posAdd, rotAdd)
-	local pos
-	local rot
-	local vForward
-	local vRight
-	local vUp
-
-	if greyPlayer(playerColor) then
-		local ph = getObjectFromGUID(greyPlayerHandGuids[playerColor])
-		if ph then
-			pos = ph.getPosition()
-			pos = {x = pos["x"], y = pos["y"], z = pos["z"] - 2.26}
-			rot = ph.getRotation()
-			vForward = ph.getTransformForward()
-			vRight = ph.getTransformRight()
-			vUp = ph.getTransformUp()
-		end
-	else
-		local ph = Player[playerColor].getPlayerHand();
-		if ph then
-			pos = {x = ph["pos_x"], y = ph["pos_y"], z = ph["pos_z"]}
-			rot = {x = ph["rot_x"], y = ph["rot_y"], z = ph["rot_z"]}
-			vForward = {x = ph["trigger_forward_x"], y = ph["trigger_forward_y"], z = ph["trigger_forward_z"]}
-			vRight = {x = ph["trigger_right_x"], y = ph["trigger_right_y"], z = ph["trigger_right_z"]}
-			vUp = {x = ph["trigger_up_x"], y = ph["trigger_up_y"], z = ph["trigger_up_z"]}
-		end
-	end
-
-	if pos then
+	local info = getPlayerPosRotVectors(playerColor)
+	if info then
 		if rotAdd["exactRot"] then
 			object.setRotation({rotAdd["x"], rotAdd["y"], rotAdd["z"]})
 		else
-			object.setRotation({rot["x"] + rotAdd["x"], rot["y"] + rotAdd["y"], rot["z"] + rotAdd["z"]})
+			object.setRotation({info.rot["x"] + rotAdd["x"], info.rot["y"] + rotAdd["y"], info.rot["z"] + rotAdd["z"]})
 		end
 		if posAdd["forceHeight"] then
-			object.setPosition({pos["x"] + vForward["x"] * posAdd["forward"] + vRight["x"] * posAdd["right"] + vUp["x"] * posAdd["up"],
+			object.setPosition({info.pos["x"] + info.vForward["x"] * posAdd["forward"] + info.vRight["x"] * posAdd["right"] + info.vUp["x"] * posAdd["up"],
 									  posAdd["forceHeight"],
-									  pos["z"] + vForward["z"] * posAdd["forward"] + vRight["z"] * posAdd["right"] + vUp["z"] * posAdd["up"]})
+									  info.pos["z"] + info.vForward["z"] * posAdd["forward"] + info.vRight["z"] * posAdd["right"] + info.vUp["z"] * posAdd["up"]})
 		else
-			object.setPosition({pos["x"] + vForward["x"] * posAdd["forward"] + vRight["x"] * posAdd["right"] + vUp["x"] * posAdd["up"],
-									  pos["y"] + vForward["y"] * posAdd["forward"] + vRight["y"] * posAdd["right"] + vUp["y"] * posAdd["up"],
-									  pos["z"] + vForward["z"] * posAdd["forward"] + vRight["z"] * posAdd["right"] + vUp["z"] * posAdd["up"]})
+			object.setPosition({info.pos["x"] + info.vForward["x"] * posAdd["forward"] + info.vRight["x"] * posAdd["right"] + info.vUp["x"] * posAdd["up"],
+									  info.pos["y"] + info.vForward["y"] * posAdd["forward"] + info.vRight["y"] * posAdd["right"] + info.vUp["y"] * posAdd["up"],
+									  info.pos["z"] + info.vForward["z"] * posAdd["forward"] + info.vRight["z"] * posAdd["right"] + info.vUp["z"] * posAdd["up"]})
+		end
+	end
+end
+
+--tableIn = {guid = , max = , forward = , height = }
+function moveObjectToPlayerByGUID(tableIn)
+	local object = getObjectFromGUID(tableIn.guid)
+	if object then
+		local playerColor = closestPlayer(object, players, tableIn.max)
+		if playerColor then
+			giveObjectToPlayer(object, playerColor, {forward = tableIn.forward, right = 0, up = 0, forceHeight = tableIn.height}, NO_ROT, false, true)
 		end
 	end
 end
@@ -221,16 +210,6 @@ function getDeckFromZoneByGUID(guidIn)
 		return deck
 	end
 	return nil
-end
-
-function moveObjectToPlayerByGUID(tableIn)
-	local object = getObjectFromGUID(tableIn.guid)
-	if object then
-		local playerColor = closestPlayer(object, players, tableIn.max)
-		if playerColor then
-			giveObjectToPlayer(object, playerColor, {forward = tableIn.forward, right = 0, up = 0, forceHeight = tableIn.height}, NO_ROT, false, true)
-		end
-	end
 end
 
 function inTable(tableIn, valueIn)

@@ -618,6 +618,77 @@ function discardAbility(cardName, playerColor)
 	end
 end
 
+function revealAbility(cardName, playerColor)
+	local player = getPlayerObj(playerColor)
+	local abilityDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
+	local pos = GREY_ABILITY_POS[playerColor]
+	local result = {}
+
+	result = moveCard12P(cardName, nil, pos, FACE_UP_ROT, playerColor)
+	if result ~= -1 then
+		broadcastToAll(playerColor .. " has played " .. result.name, {1, 1, 1})
+	end
+end
+
+function examineAbilityDeck(playerColor)
+	local player = getPlayerObj(playerColor)
+	local abilityDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
+	local deckString = ""
+	if abilityDeck == nil then
+		player.broadcast("ERROR: Ability deck not found.", {1, 1, 1})
+		return
+	end
+	local deckTable = abilityDeck.getObjects()
+	player.print("Cards in the ability deck:")
+	for k, v in pairs(deckTable) do
+		deckString = deckString .. v.nickname .. " "
+	end
+	player.print(deckString)
+	broadcastToAll(playerColor .. " examines the Ability deck.", {1, 1, 1})
+end
+
+function takeAbility(cardName, playerColor)
+	local player = getPlayerObj(playerColor)
+	local foundIndex = nil
+	local abilityDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
+	if abilityDeck == nil then
+		player.broadcast("ERROR: Ability deck not found.", {1, 0, 0})
+		return
+	end
+	local deckTable = abilityDeck.getObjects()
+	for k,v in pairs(deckTable) do
+		if string.match(string.lower(v.nickname), string.lower(cardName)) then
+			foundIndex = v.index
+		end
+	end
+	if foundIndex == nil then
+		player.broadcast("ERROR: Ability not found in deck.", {1, 0, 0})
+	else
+		local info = getPlayerPosRotVectors(playerColor)
+		if info.pos then
+			local takeParams = {
+				index = foundIndex,
+				position = info.pos
+			}
+			abilityDeck.takeObject(takeParams)
+			player.broadcast("You drew " .. deckTable[foundIndex + 1].nickname .. " [FFFFFF]from the Ability deck.", {1, 1, 1})
+			broadcastToAll(playerColor .. " takes an ability from the Ability deck", {1, 1, 1})
+		end
+	end
+end
+
+function giveCardExp(cardName, targetColor, playerColor)
+	local info = getPlayerPosRotVectors(targetColor)
+	local result = {}
+
+	if info.pos then
+		result = moveCard12P(cardName, nil, info.pos, FACE_DOWN_ROT, playerColor)
+	end
+	if result ~= -1 then
+		smartBroadcastToColor("You gave " .. targetColor .. " the " .. result.name .. " card.", playerColor, {1, 1, 1})
+	end
+end
+
 function closeAdminUIB(player, value, id)
 	if player.admin then
 		UI.setAttribute("admin", "active", false)
