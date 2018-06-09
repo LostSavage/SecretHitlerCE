@@ -619,8 +619,6 @@ function discardAbility(cardName, playerColor)
 end
 
 function revealAbility(cardName, playerColor)
-	local player = getPlayerObj(playerColor)
-	local abilityDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 	local pos = GREY_ABILITY_POS[playerColor]
 	local result = {}
 

@@ -3090,55 +3090,59 @@ function disableSecurityCoroutine()
 end
 
 function createInspectButtons(powerHolder)
-	local membershipCard = getObjectFromGUID(fakeMembership_card_guid)
-
-	if membershipCard then
-		activePowerColor = powerHolder
-		if greyPlayer(powerHolder) then
-			smartBroadcastToColor('Use the UI to inspect a player.', powerHolder, {1, 1, 1})
-		else
-			broadcastToColor('Click on the party membership card of the person you want to inspect.', powerHolder, {1, 1, 1})
-		end
-		for i, playerColor in ipairs(players) do
-			if playerColor ~= powerHolder and not inTable(inspected, playerColor) and not (_G.playerStatus[playerColor] > 4) then
-				local params = {rotation = {0, 0, 180}, sound = false}
-				card = membershipCard.clone(params)
-				card.setDescription('Fake Party Card')
-				card.setLuaScript(
-					'playerColor = \'' .. playerColor .. '\'\r\n\r\n' ..
-					'function onCollisionEnter(collision_info)\r\n' ..
-					'	if Global.call(\'greyPlayer\', {playerColor}) then\r\n' ..
-					'		--hard coded\r\n' ..
-					'		self.setRotation({0, 180, 180})\r\n' ..
-					'	else\r\n' ..
-					'		local ph = Player[playerColor].getPlayerHand()\r\n' ..
-					'		if ph then\r\n' ..
-					'			self.setRotation({0, ph[\'rot_y\']+180, 180})\r\n' ..
-					'		end\r\n' ..
-					'	end\r\n' ..
-					'	self.setLock(true)\r\n' ..
-					'end\r\n\r\n' ..
-					'function onLoad(saveString)\r\n' ..
-					'	local button = {}\r\n' ..
-					'	button.click_function = \'' .. playerColor .. 'Inspected\'\r\n' ..
-					'	button.label = \'Inspect\\n' .. playerColor .. '\'\r\n' ..
-					'	button.function_owner = Global\r\n' ..
-					'	button.position = {0, 3, 0}\r\n' ..
-					'	button.rotation = {0, 0, 180}\r\n' ..
-					'	button.width = 1000\r\n' ..
-					'	button.height = 1500\r\n' ..
-					'	button.font_size = 150\r\n' ..
-					'	self.createButton(button)\r\n' ..
-					'end')
-				card.setPosition({0, 30 + (i * 0.25), 0})
-				card.setLock(false)
-				wait(5)
-				giveObjectToPlayer(card, playerColor, {forward = 16.5, right = 0, up = 0}, FACE_DOWN_ROT, false, true)
+	function createInspectButtonsCoroutine()
+		local membershipCard = getObjectFromGUID(fakeMembership_card_guid)
+		if membershipCard then
+			activePowerColor = powerHolder
+			if greyPlayer(powerHolder) then
+				smartBroadcastToColor('Use the UI to inspect a player.', powerHolder, {1, 1, 1})
+			else
+				broadcastToColor('Click on the party membership card of the person you want to inspect.', powerHolder, {1, 1, 1})
 			end
+			for i, playerColor in ipairs(players) do
+				if playerColor ~= powerHolder and not inTable(inspected, playerColor) and not (_G.playerStatus[playerColor] > 4) then
+					local params = {rotation = {0, 0, 180}, sound = false}
+					card = membershipCard.clone(params)
+					card.setDescription('Fake Party Card')
+					card.setLuaScript(
+						'playerColor = \'' .. playerColor .. '\'\r\n\r\n' ..
+						'function onCollisionEnter(collision_info)\r\n' ..
+						'	if Global.call(\'greyPlayer\', {playerColor}) then\r\n' ..
+						'		--hard coded\r\n' ..
+						'		self.setRotation({0, 180, 180})\r\n' ..
+						'	else\r\n' ..
+						'		local ph = Player[playerColor].getPlayerHand()\r\n' ..
+						'		if ph then\r\n' ..
+						'			self.setRotation({0, ph[\'rot_y\']+180, 180})\r\n' ..
+						'		end\r\n' ..
+						'	end\r\n' ..
+						'	self.setLock(true)\r\n' ..
+						'end\r\n\r\n' ..
+						'function onLoad(saveString)\r\n' ..
+						'	local button = {}\r\n' ..
+						'	button.click_function = \'' .. playerColor .. 'Inspected\'\r\n' ..
+						'	button.label = \'Inspect\\n' .. playerColor .. '\'\r\n' ..
+						'	button.function_owner = Global\r\n' ..
+						'	button.position = {0, 3, 0}\r\n' ..
+						'	button.rotation = {0, 0, 180}\r\n' ..
+						'	button.width = 1000\r\n' ..
+						'	button.height = 1500\r\n' ..
+						'	button.font_size = 150\r\n' ..
+						'	self.createButton(button)\r\n' ..
+						'end')
+					card.setPosition({0, 30 + (i * 0.25), 0})
+					card.setLock(false)
+					wait(5)
+					giveObjectToPlayer(card, playerColor, {forward = 16.5, right = 0, up = 0}, FACE_DOWN_ROT, false, true)
+				end
+			end
+		else
+			printToAll('ERROR: Base membership card not found.', {1,0,0})
 		end
-	else
-		printToAll('ERROR: Base membership card not found.', {1,0,0})
+
+		return true
 	end
+	startLuaCoroutine(Global, 'createInspectButtonsCoroutine')
 end
 
 function playerInspected(clickedObject, inspectorColor, checkedColor)
