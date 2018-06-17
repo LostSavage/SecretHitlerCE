@@ -768,28 +768,25 @@ function onChat(messageIn, player)
 	elseif messageTable[1] == 'v' then
 		player:print(versionInfo())
 		return false
-	elseif messageTable[1] == 'black' and (player.admin or inTable(trusted_players, player.steam_id)) then
+	elseif messageTable[1] == 'c' and (player.admin or inTable(trusted_players, player.steam_id)) then
 		if messageTable[2] then
-			local playerFound = getPlayerByNameSteamID(messageTable[2], Player.getPlayers())
-			if playerFound then
-				playerFound:changeColor('Black')
+			messageTable[2] = string.titlecase(messageTable[2])
+			if inTable(MAIN_PLAYABLE_COLORS, messageTable[2]) or messageTable[2] == 'Black' or messageTable[2] == 'Grey' then
+				if messageTable[3] then
+					local playerFound = getPlayerByNameSteamID(messageTable[3], Player.getPlayers())
+					if playerFound then
+						playerFound:changeColor(messageTable[2])
+					else
+						player:print('ERROR: ' .. messageTable[3] .. ' not found.', {1, 0, 0})
+					end
+				else
+					player:changeColor(messageTable[2])
+				end
 			else
-				player:print(messageTable[2] .. ' not found.', {1, 0, 0})
+				player:print('ERROR: Unknown color ' .. messageTable[2] .. '.', {1, 0, 0})
 			end
 		else
-			player:changeColor('Black')
-		end
-		return false
-	elseif messageTable[1] == 'grey' and (player.admin or inTable(trusted_players, player.steam_id)) then
-		if messageTable[2] then
-			local playerFound = getPlayerByNameSteamID(messageTable[2], Player.getPlayers())
-			if playerFound then
-				playerFound:changeColor('Grey')
-			else
-				player:print(messageTable[2] .. ' not found.', {1, 0, 0})
-			end
-		else
-			player:changeColor('Grey')
+			player:print('ERROR: No color given.', {1, 0, 0})
 		end
 		return false
 	elseif messageTable[1] == 'promote' and (player.admin or inTable(trusted_players, player.steam_id)) then
@@ -836,8 +833,7 @@ function chatHelp(admin)
 					'   help - This message'
 	if admin then
 		msg = msg .. '\nadmin chat commands:\n' ..
-					'   black [name* or steam id] - sets player to black\n' ..
-					'   grey [name* or steam id] - sets player to grey\n' ..
+					'   c color [name* or steam id] - sets player to color\n' ..
 					'   promote [name* or steam id] - promotes/demotes player\n' ..
 					'   kick name* or steam id - kicks the player\n' ..
 					'   list - lists steam ids\n' ..

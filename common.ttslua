@@ -396,6 +396,10 @@ function string:tokenize(sep)
     return fields
 end
 
+function string:titlecase()
+	return string.upper(string.sub(self, 1, 1)) .. string.lower(string.sub(self, 2))
+end
+
 function bigBroadcast(msgIn, playerObjIn)
 	local messageTable = string.tokenize(msgIn, "\n")
 
