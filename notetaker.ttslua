@@ -146,7 +146,6 @@ function initNoteTakerValues(boardName)
 	end
 	local options = Global.getTable('options')
 
-
 	if boardName == 'Custom_Board' then
 		if options.zoneType == 6 then
 			posZoffsetMenu = -0.25
@@ -231,7 +230,7 @@ function initNoteTakerValues(boardName)
 		end
 	end
 
-	if options.scriptedVoting and boardName.name ~= 'backgammon_board' then
+	if options.scriptedVoting and boardName ~= 'backgammon_board' then
 		maxLines = 19
 	end
 
