@@ -16,9 +16,8 @@ function refreshUI()
 		end
 		UI.setAttribute("greyPolicy", "visibility", "Grey")
 		UI.setAttribute("greyVote", "visibility", "Grey")
-		local adminList = adminVisibility()
-		UI.setAttribute("adminButton", "visibility", adminList)
-		UI.setAttribute("admin", "visibility", adminList)
+		UI.setAttribute("adminButton", "visibility", "Admin")
+		UI.setAttribute("admin", "visibility", "Admin")
 		UI.setAttribute("adminButton", "active", "true")
 	end
 	if started then
@@ -148,32 +147,6 @@ function refreshUI()
 		UI.setAttribute("fasTan", "visibility", fasTan)
 		UI.setAttribute("fasMaroon", "visibility", fasMaroon)
 	end
-end
-
-function adminVisibility()
-	local visList = ""
-
-	local greyAdded = false
-	for _, player in ipairs(getAdminPlayers()) do
-		if player.color == "Grey" then
-			if not greyAdded then
-				if visList == "" then
-					visList = player.color
-				else
-					visList = visList .. "|" .. player.color
-				end
-				greyAdded = true
-			end
-		else
-			if visList == "" then
-				visList = player.color
-			else
-				visList = visList .. "|" .. player.color
-			end
-		end
-	end
-
-	return visList
 end
 
 function hitVisibility(colorIn)

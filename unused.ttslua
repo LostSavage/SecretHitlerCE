@@ -17,6 +17,23 @@ function topLines(stringIn, maxLinesIn)
 	return string.sub(stringIn, 1, oldLinePos)
 end
 
+function getAdminPlayers()
+  local adminList = {}
+  local playerList = Player.getPlayers()
+  for _, player in ipairs(playerList) do
+	  if player.admin then
+		  table.insert(adminList, player)
+	  end
+  end
+  playerList = Player.getSpectators()
+  for _, player in ipairs(playerList) do
+	  if player.admin then
+		  table.insert(adminList, player)
+	  end
+  end
+  return adminList
+end
+
 COLOR_TABLE = {[1] = "White", [2] = "Brown", [3] = "Red", [4] = "Orange", [5] = "Yellow", [6] = "Green", [7] = "Teal", [8] = "Blue", [9] = "Purple", [10] = "Pink",
  ["White"] = 1, ["Brown"] = 2, ["Red"] = 3, ["Orange"] = 4, ["Yellow"] = 5,["Green"] = 6, ["Teal"] = 7, ["Blue"] = 8, ["Purple"] = 9, ["Pink"] = 10}
 

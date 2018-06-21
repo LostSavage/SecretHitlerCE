@@ -445,23 +445,6 @@ function getPlayerByNameSteamID(playerNameSteamID, playerList)
 	return nil
 end
 
-function getAdminPlayers()
-	local adminList = {}
-	local playerList = Player.getPlayers()
-	for _, player in ipairs(playerList) do
-		if player.admin then
-	    	table.insert(adminList, player)
-		end
-	end
-	playerList = Player.getSpectators()
-	for _, player in ipairs(playerList) do
-		if player.admin then
-			table.insert(adminList, player)
-		end
-	end
-	return adminList
-end
-
 function smartBroadcastToColor(msg, playerColor, msgColor)
 	if greyPlayer(playerColor) then
 		local player = getPlayerObj(playerColor)
