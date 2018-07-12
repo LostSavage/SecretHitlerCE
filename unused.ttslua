@@ -81,3 +81,34 @@ COLOR_TABLE = {[1] = "White", [2] = "Brown", [3] = "Red", [4] = "Orange", [5] = 
      COLOR_TABLE[Player[playerIn2].color],
      COLOR_TABLE[Player[playerIn1].color]
  end
+
+ function addMissingItems(deck, count)
+ 	if deck then
+ 		local pos = deck.getPosition()
+ 		local addCt = count - #deck.getObjects()
+ 		local params = {}
+ 		params.position = {pos['x'], pos['y'] + 1, pos['z']}
+ 		local card = deck.takeObject(params)
+ 		while addCt > 0 do
+ 			local cloneParams = {position = {pos['x'], pos['y'] + 1 + addCt * 0.1, pos['z']}, sound = false}
+ 			local newCard = card.clone(cloneParams)
+ 			newCard.putObject(deck)
+ 			addCt = addCt - 1
+ 		end
+ 		card.putObject(deck)
+ 	end
+ end
+
+ function deleteExtraItems(deck, count)
+ 	if deck then
+ 		local pos = deck.getPosition()
+ 		local removeCt = #deck.getObjects() - count
+ 		while removeCt > 0 do
+ 			local params = {}
+ 			params.position = {pos['x'], pos['y'] + 3, pos['z']}
+ 			local card = deck.takeObject(params)
+ 			card.destruct()
+ 			removeCt = removeCt - 1
+ 		end
+ 	end
+ end

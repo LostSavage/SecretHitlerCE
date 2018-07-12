@@ -185,8 +185,8 @@ function removeBBCode(stringIn)
 end
 
 function getPositionByGUID(guidIn)
-	local tmpZone = getObjectFromGUID(guidIn)
-	return tmpZone.getPosition()
+	local tmpObj = getObjectFromGUID(guidIn)
+	return tmpObj.getPosition()
 end
 
 function getDeckFromZoneByGUID(guidIn)

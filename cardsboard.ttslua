@@ -1,0 +1,444 @@
+--Board cards
+TOPTHREE_STRING = "The president examines\nthe top three cards."
+PICKPRES_STRING = "The president picks\nthe next presidential\ncandidate."
+INSPECT_STRING = "The president\ninvestigates a\nplayer\'s identity\ncard."
+BULLET_STRING = "The president must\nkill a player."
+TOPCARD_STRING = "The president examines\nthe top card."
+IMPRISON_STRING = "The president must\nimprison a player."
+PRESTAKESABOVE_STRING = "The president takes\nthe card above."
+PRESTAKESBELOW_STRING = "The president takes\nthe card below."
+CHANTAKESABOVE_STRING = "The chancellor takes\nthe card above."
+CHANTAKESBELOW_STRING = "The chancellor takes\nthe card below."
+PRESGIVESABOVE_STRING = "The president gives\nthe card above\nto another player\nafter examining it."
+PRESGIVESBELOW_STRING = "The president gives\nthe card below\nto another player\nafter examining it."
+CHANGIVESABOVE_STRING = "The chancellor gives\nthe card above\nto another player\nafter examining it."
+CHANGIVESBELOW_STRING = "The chancellor gives\nthe card below\nto another player\nafter examining it."
+VETO_STRING = "Veto power is\nunlocked."
+
+--Policy cards
+NOTUSED_STRING = "Not Used"
+
+function isBoardCard(objIn)
+	if objIn.tag == "Card" and
+	   (objIn.getDescription() == TOPTHREE_STRING or
+		 objIn.getDescription() == PICKPRES_STRING or
+	    objIn.getDescription() == INSPECT_STRING or
+	    objIn.getDescription() == BULLET_STRING or
+		 objIn.getDescription() == TOPCARD_STRING or
+		 objIn.getDescription() == IMPRISON_STRING or
+		 objIn.getDescription() == PRESTAKESABOVE_STRING or
+		 objIn.getDescription() == PRESTAKESBELOW_STRING or
+		 objIn.getDescription() == CHANTAKESABOVE_STRING or
+		 objIn.getDescription() == CHANTAKESBELOW_STRING or
+		 objIn.getDescription() == PRESGIVESABOVE_STRING or
+		 objIn.getDescription() == PRESGIVESBELOW_STRING or
+		 objIn.getDescription() == CHANGIVESABOVE_STRING or
+		 objIn.getDescription() == CHANGIVESBELOW_STRING or
+		 objIn.getDescription() == VETO_STRING) then
+		return true
+	end
+	return false
+end
+
+function isBoardCardTopThree(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == TOPTHREE_STRING then
+		return true
+	end
+	return false
+end
+
+function isBoardCardPickPres(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == PICKPRES_STRING then
+		return true
+	end
+	return false
+end
+
+function isBoardCardInspect(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == INSPECT_STRING then
+		return true
+	end
+	return false
+end
+
+function isBoardCardBullet(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == BULLET_STRING then
+		return true
+	end
+	return false
+end
+
+function isBoardCardTopCard(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == TOPCARD_STRING then
+		return true
+	end
+	return false
+end
+
+function isBoardCardVeto(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == VETO_STRING then
+		return true
+	end
+	return false
+end
+
+function isPolicyCard(objIn)
+	if objIn.tag == "Card" and (objIn.getDescription() == "Fascist Policy" or
+		objIn.getDescription() == "Liberal Policy") and not objIn.held_by_color then
+		return true
+	end
+	return false
+end
+
+function isFascistPolicyCard(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == "Fascist Policy" and not objIn.held_by_color then
+		return true
+	end
+	return false
+end
+
+function isLiberalPolicyCard(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == "Liberal Policy" and not objIn.held_by_color then
+		return true
+	end
+	return false
+end
+
+function isPolicyNotUsedCard(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == NOTUSED_STRING and not objIn.held_by_color then
+		return true
+	end
+	return false
+end
+
+function refreshBoardCards()
+	if options.gameType == 2 then
+		spawnCustomBoardCards()
+	else
+		deleteBoardCards()
+		if options.gameType == 0 then
+			spawnNotUsedFascist(getPositionByGUID(fascist_zone_guids[1]))
+			spawnNotUsedLiberal(getPositionByGUID(liberal_zone_guids[1]))
+		end
+		if #getSeatedPlayers() > 8 then
+			if options.gameType == 1 then
+				spawnTopCardOrange(getPositionByGUID(fascist_zone_guids[1]))
+			end
+			spawnInspectOrange(getPositionByGUID(fascist_zone_guids[2]))
+			spawnInspectOrange(getPositionByGUID(fascist_zone_guids[3]))
+			spawnPickPresOrange(getPositionByGUID(fascist_zone_guids[4]))
+		elseif #getSeatedPlayers() > 6 then
+			if options.gameType == 1 then
+				spawnTopCardOrange(getPositionByGUID(fascist_zone_guids[2]))
+			end
+			spawnInspectOrange(getPositionByGUID(fascist_zone_guids[3]))
+			spawnPickPresOrange(getPositionByGUID(fascist_zone_guids[4]))
+		else
+			if options.gameType == 1 then
+				spawnTopCardOrange(getPositionByGUID(fascist_zone_guids[3]))
+			end
+			spawnTopThreeOrange(getPositionByGUID(fascist_zone_guids[4]))
+		end
+		spawnBulletRed(getPositionByGUID(fascist_zone_guids[5]))
+		spawnBulletRed(getPositionByGUID(fascist_zone_guids[6]))
+		local pos = getPositionByGUID(fascist_zone_guids[6])
+		if pos then
+			spawnVetoRed({pos["x"], pos["y"], pos["z"] - 2})
+		end
+	end
+	lastPlayerCt = #getSeatedPlayers()
+end
+
+function deleteBoardCards()
+	local tmpZoneGuid
+	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for i, j in ipairs(inZone) do
+				if isBoardCard(j) then
+					j.destruct()
+				elseif isPolicyNotUsedCard(j) then
+					j.destruct()
+				end
+			end
+		end
+	end
+	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for i, j in ipairs(inZone) do
+				if isBoardCard(j) then
+					j.destruct()
+				elseif isPolicyNotUsedCard(j) then
+					j.destruct()
+				end
+			end
+		end
+	end
+end
+
+function spawnCustomBoardCards()
+	for i = 1, 3 do
+		spawnTopThreeBlue({-36, 2, 22})
+		spawnTopThreeOrange({-32, 2, 22})
+		spawnTopThreeRed({-28, 2, 22})
+		spawnInspectBlue({-36, 2, 18})
+		spawnInspectOrange({-32, 2, 18})
+		spawnInspectRed({-28, 2, 18})
+		spawnPickPresBlue({-36, 2, 14})
+		spawnPickPresOrange({-32, 2, 14})
+		spawnPickPresRed({-28, 2, 14})
+		spawnBulletBlue({-36, 2, 10})
+		spawnBulletOrange({-32, 2, 10})
+		spawnBulletRed({-28, 2, 10})
+		spawnTopCardBlue({-36, 2, 6})
+		spawnTopCardOrange({-32, 2, 6})
+		spawnTopCardRed({-28, 2, 6})
+		--spawnImprisonBlue({-36, 2, 2})
+		--spawnImprisonOrange({-32, 2, 2})
+		--spawnImprisonRed({-28, 2, 2})
+		spawnPresTakesBlue({-36, 2, -2})
+		spawnPresTakesOrange({-32, 2, -2})
+		spawnPresTakesRed({-28, 2, -2})
+		spawnChanTakesBlue({-36, 2, -6})
+		spawnChanTakesOrange({-32, 2, -6})
+		spawnChanTakesRed({-28, 2, -6})
+		spawnPresGivesBlue({-36, 2, -10})
+		spawnPresGivesOrange({-32, 2, -10})
+		spawnPresGivesRed({-28, 2, -10})
+		spawnChanGivesBlue({-36, 2, -14})
+		spawnChanGivesOrange({-32, 2, -14})
+		spawnChanGivesRed({-28, 2, -14})
+		spawnVetoBlue({-36, 2, -16.8})
+		spawnVetoOrange({-32, 2, -16.8})
+		spawnVetoRed({-28, 2, -16.8})
+		spawnNotUsedLiberal({-34, 2, -21.2})
+		spawnNotUsedFascist({-30, 2, -21.2})
+	end
+end
+
+function spawnTopThreeOrange(pos)
+	return spawnBoardCard("10000", TOPTHREE_STRING, pos)
+end
+
+function spawnTopThreeRed(pos)
+	return spawnBoardCard("10001", TOPTHREE_STRING, pos)
+end
+
+function spawnTopThreeBlue(pos)
+	return spawnBoardCard("10002", TOPTHREE_STRING, pos)
+end
+
+function spawnPickPresOrange(pos)
+	return spawnBoardCard("10003", PICKPRES_STRING, pos)
+end
+
+function spawnPickPresRed(pos)
+	return spawnBoardCard("10004", PICKPRES_STRING, pos)
+end
+
+function spawnPickPresBlue(pos)
+	return spawnBoardCard("10005", PICKPRES_STRING, pos)
+end
+
+function spawnInspectOrange(pos)
+	return spawnBoardCard("10006", INSPECT_STRING, pos)
+end
+
+function spawnInspectRed(pos)
+	return spawnBoardCard("10007", INSPECT_STRING, pos)
+end
+
+function spawnInspectBlue(pos)
+	return spawnBoardCard("10008", INSPECT_STRING, pos)
+end
+
+function spawnBulletOrange(pos)
+	return spawnBoardCard("10009", BULLET_STRING, pos)
+end
+
+function spawnBulletRed(pos)
+	return spawnBoardCard("10010", BULLET_STRING, pos)
+end
+
+function spawnBulletBlue(pos)
+	return spawnBoardCard("10011", BULLET_STRING, pos)
+end
+
+function spawnTopCardOrange(pos)
+	return spawnBoardCard("10012", TOPCARD_STRING, pos)
+end
+
+function spawnTopCardRed(pos)
+	return spawnBoardCard("10013", TOPCARD_STRING, pos)
+end
+
+function spawnTopCardBlue(pos)
+	return spawnBoardCard("10014", TOPCARD_STRING, pos)
+end
+
+function spawnImprisonOrange(pos)
+	return spawnBoardCard("10015", IMPRISON_STRING, pos)
+end
+
+function spawnImprisonRed(pos)
+	return spawnBoardCard("10016", IMPRISON_STRING, pos)
+end
+
+function spawnImprisonBlue(pos)
+	return spawnBoardCard("10017", IMPRISON_STRING, pos)
+end
+
+function spawnPresTakesOrange(pos)
+	return spawnBoardCard("10018", PRESTAKESABOVE_STRING, pos)
+end
+
+function spawnPresTakesRed(pos)
+	return spawnBoardCard("10019", PRESTAKESABOVE_STRING, pos)
+end
+
+function spawnPresTakesBlue(pos)
+	return spawnBoardCard("10020", PRESTAKESBELOW_STRING, pos)
+end
+
+function spawnChanTakesOrange(pos)
+	return spawnBoardCard("10021", CHANTAKESABOVE_STRING, pos)
+end
+
+function spawnChanTakesRed(pos)
+	return spawnBoardCard("10022", CHANTAKESABOVE_STRING, pos)
+end
+
+function spawnChanTakesBlue(pos)
+	return spawnBoardCard("10023", CHANTAKESBELOW_STRING, pos)
+end
+
+function spawnPresGivesOrange(pos)
+	return spawnBoardCard("10024", PRESGIVESABOVE_STRING, pos)
+end
+
+function spawnPresGivesRed(pos)
+	return spawnBoardCard("10025", PRESGIVESABOVE_STRING, pos)
+end
+
+function spawnPresGivesBlue(pos)
+	return spawnBoardCard("10026", PRESGIVESBELOW_STRING, pos)
+end
+
+function spawnChanGivesOrange(pos)
+	return spawnBoardCard("10027", CHANGIVESABOVE_STRING, pos)
+end
+
+function spawnChanGivesRed(pos)
+	return spawnBoardCard("10028", CHANGIVESABOVE_STRING, pos)
+end
+
+function spawnChanGivesBlue(pos)
+	return spawnBoardCard("10029", CHANGIVESBELOW_STRING, pos)
+end
+
+function spawnBoardCard(cardID, desc, pos)
+   local params = {
+      json =
+			"{" ..
+			"\"Name\": \"Card\", " ..
+			"\"Transform\": {\"posX\": 0,\"posY\": 0,\"posZ\": 0,\"rotX\": 0,\"rotY\": 0,\"rotZ\": 0,\"scaleX\": 1,\"scaleY\": 1,\"scaleZ\": 1}, " ..
+			"\"CardID\": " .. cardID .. ", " ..
+			"\"CustomDeck\": {" ..
+			"\"" .. string.sub(cardID, 1, 3) .. "\": {" ..
+			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/960839658836251260/0B0C545B51385E2C15684E71C887C321473CD5B3/\", " ..
+			"\"BackURL\": \"http://cloud-3.steamusercontent.com/ugc/493521193151335450/EF640CCED543D0988B40DF3483149AAFA477ECFD/\", " ..
+			"\"NumWidth\": 10, " ..
+			"\"NumHeight\": 7, " ..
+			"\"BackIsHidden\": false, " ..
+			"\"UniqueBack\": true " ..
+			"}" ..
+			"}" ..
+			"}",
+      position = pos,
+      rotation = {x = 0, y = 180, z = 0},
+      scale = {x = 1, y = 1, z = 1},
+      sound = false
+   }
+	local tmpObj = spawnObjectJSON(params)
+	tmpObj.setDescription(desc)
+   return tmpObj
+end
+
+function spawnVetoOrange(pos)
+	return spawnVetoCard("10100", VETO_STRING, pos)
+end
+
+function spawnVetoRed(pos)
+	return spawnVetoCard("10101", VETO_STRING, pos)
+end
+
+function spawnVetoBlue(pos)
+	return spawnVetoCard("10102", VETO_STRING, pos)
+end
+
+function spawnVetoCard(cardID, desc, pos)
+   local params = {
+      json =
+			"{" ..
+			"\"Name\": \"Card\", " ..
+			"\"Transform\": {\"posX\": 0,\"posY\": 0,\"posZ\": 0,\"rotX\": 0,\"rotY\": 0,\"rotZ\": 0,\"scaleX\": 1,\"scaleY\": 1,\"scaleZ\": 1}, " ..
+			"\"CardID\": " .. cardID .. ", " ..
+			"\"CustomDeck\": {" ..
+			"\"" .. string.sub(cardID, 1, 3) .. "\": {" ..
+			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/933811790106772643/799572E21277196721F8F38524C4FC2B26B63D7B/\", " ..
+			"\"BackURL\": \"http://cloud-3.steamusercontent.com/ugc/933811790106773286/CEF69DD5B70A2FBDF937CCFE7837221F2BB32A99/\", " ..
+			"\"NumWidth\": 3, " ..
+			"\"NumHeight\": 2, " ..
+			"\"BackIsHidden\": false, " ..
+			"\"UniqueBack\": true " ..
+			"}" ..
+			"}" ..
+			"}",
+      position = pos,
+      rotation = {x = 0, y = 180, z = 0},
+      scale = {x = 0.2, y = 1, z = 0.2},
+      sound = false
+   }
+	local tmpObj = spawnObjectJSON(params)
+	tmpObj.setDescription(desc)
+   return tmpObj
+end
+
+function spawnNotUsedLiberal(pos)
+	return spawnPolicyCard("10203", NOTUSED_STRING, pos)
+end
+
+function spawnNotUsedFascist(pos)
+	return spawnPolicyCard("10204", NOTUSED_STRING, pos)
+end
+
+function spawnPolicyCard(cardID, desc, pos)
+   local params = {
+      json =
+			"{" ..
+			"\"Name\": \"Card\", " ..
+			"\"Transform\": {\"posX\": 0,\"posY\": 0,\"posZ\": 0,\"rotX\": 0,\"rotY\": 0,\"rotZ\": 0,\"scaleX\": 1,\"scaleY\": 1,\"scaleZ\": 1}, " ..
+			"\"CardID\": " .. cardID .. ", " ..
+			"\"CustomDeck\": {" ..
+			"\"" .. string.sub(cardID, 1, 3) .. "\": {" ..
+			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/486767061409381348/247F480C7E8D4505F3ACDD34BE74E0A04480991F/\", " ..
+			"\"BackURL\": \"http://cloud-3.steamusercontent.com/ugc/486767005708571374/C5FBC566556E3FBE9A6C8ACCDB2472FA911A253A/\", " ..
+			"\"NumWidth\": 4, " ..
+			"\"NumHeight\": 2, " ..
+			"\"BackIsHidden\": false, " ..
+			"\"UniqueBack\": false " ..
+			"}" ..
+			"}" ..
+			"}",
+      position = pos,
+      rotation = {x = 0, y = 180, z = 0},
+      scale = {x = 1.51, y = 1, z = 1.51},
+      sound = false
+   }
+	local tmpObj = spawnObjectJSON(params)
+	tmpObj.setDescription(desc)
+   return tmpObj
+end

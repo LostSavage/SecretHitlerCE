@@ -1,5 +1,5 @@
 <Defaults>
-   <Text class="outline" outline="Black" fontSize="28" visibility=""/>
+   <Text class="outline" outline="Black" fontSize="28" visibility=" "/>
    <Panel class="window" allowDragging="true" returnToOriginalPositionWhenReleased="false" color="#EBEBEB" outline="#000000" outlineSize="1 -1" />
    <Button class="window" fontSize="22" colors="#FFFFFF|#FFFFFF|#C8C8C8|#C8C8C880" />
    <InputField class="window" fontSize="20" colors="#FFFFFF|#FFFFFF|#C8C8C8|#C8C8C880" />
@@ -50,7 +50,7 @@
    <Text class="outline" id="fasMaroon" color="#800000">ERROR: fasMaroon</Text>
 </VerticalLayout>
 
-<Panel class="window" id="admin" width="680" height="140" rectAlignment="Center" active="false" visibility="">
+<Panel class="window" id="admin" width="680" height="140" rectAlignment="Center" active="false" visibility=" ">
    <Text class="window" alignment="UpperLeft" offsetXY="5 -5">GREY PLAYER ADMIN</Text>
    <Button class="window" width="30" height="30" rectAlignment="UpperRight" offsetXY="-5 -5" fontSize="18" textColor="#B60808" onClick="closeAdminUIB">X</Button>
    <VerticalLayout padding="5 5 40 5" spacing="5">
@@ -63,11 +63,11 @@
    </VerticalLayout>
 </Panel>
 
-<Panel id="adminButton" width="128" height="58" rectAlignment="UpperCenter" offsetXY="260 -100" active="false" visibility="">
+<Panel id="adminButton" width="128" height="58" rectAlignment="UpperCenter" offsetXY="260 -100" active="false" visibility=" ">
    <Button class="tp50" onClick="showAdminUIB">Grey Player Admin</Button>
 </Panel>
 
-<HorizontalLayout id="greyCommands" padding="110 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
+<HorizontalLayout id="greyCommands" padding="110 0 0 0" height="8%" width="33%" rectAlignment="LowerLeft" visibility=" ">
    <Dropdown class="tp50" onValueChanged="actionUID">
       <Option selected="true" >Choose Action</Option>
       <Option>Choose Chancellor</Option>
@@ -92,7 +92,7 @@
    <Button class="tp50" onClick="startUIB">Start</Button>
 </HorizontalLayout>
 
-<VerticalLayout id="greyCommandsExp" height="8%" width="33%" rectAlignment="LowerLeft" visibility="">
+<VerticalLayout id="greyCommandsExp" height="8%" width="33%" rectAlignment="LowerLeft" visibility=" ">
    <HorizontalLayout padding="110 0 0 0">
       <Dropdown class="tp50" onValueChanged="actionUID">
          <Option selected="true">Choose Action</Option>
@@ -127,14 +127,14 @@
    </HorizontalLayout>
 </VerticalLayout>
 
-<HorizontalLayout id="greyPolicy" height="8%" width="33%" rectAlignment="LowerCenter" visibility="">
+<HorizontalLayout id="greyPolicy" height="8%" width="33%" rectAlignment="LowerCenter" visibility=" ">
    <Button class="tp50" onClick="drawCardsUIB">Draw Cards</Button>
    <Button class="tp50" onClick="discardLUIB">Discard L</Button>
    <Button class="tp50" onClick="discardFUIB">Discard F</Button>
    <Button class="tp50" onClick="checkCardsUIB">Check Cards</Button>
 </HorizontalLayout>
 
-<HorizontalLayout id="greyVote" padding="0 110 0 0" height="8%" width="33%" rectAlignment="LowerRight" visibility="">
+<HorizontalLayout id="greyVote" padding="0 110 0 0" height="8%" width="33%" rectAlignment="LowerRight" visibility=" ">
    <Button class="tp50" onClick="voteJaUIB">Vote ja!</Button>
    <Button class="tp50" onClick="voteNeinUIB">Vote nein</Button>
    <Button class="tp50" onClick="voteRemoveUIB">Remove vote</Button>

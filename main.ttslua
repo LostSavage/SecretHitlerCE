@@ -8,25 +8,6 @@ discardPileBoard_guid = '3e225f'
 radio_string = '●'
 check_string = '✓'
 
---Board cards
-inspectOrange_deck_guid = '87e770'
-topOneOrange_deck_guid = '6b94d6'
-topThreeOrange_deck_guid = '021287'
-nextPresidentOrange_deck_guid = '0cce08'
-bulletRed_deck_guid = '747b8f'
-vetoRed_deck_guid = 'd8f06c'
-liberalNotUsed_deck_guid = '54ae94'
-fascistNotUsed_deck_guid = '7cec50'
-all_deck_guids = {
-	'87ca7e', '6b94d6', 'c3149f',
-	'4a8ebc', '021287', '7ccdc0',
-	'74db80', '87e770', '3fb57a',
-	'2dfce5', '0cce08', 'd22a6b',
-	'b1c672', '8354ae', '747b8f',
-	'34d88b', '9487d7', 'd8f06c',
-	'54ae94', '7cec50'
-}
-
 --Decks/Cards
 hitler_deck_guid = '5997ea'
 fascist_deck_guids = {'5f2055','fb58cf', '4a3cf4'}
@@ -382,121 +363,6 @@ function refreshHiddenZones()
 	end
 end
 
-function resetDecks()
-	if options.gameType ~= 2 and foundBoardCards() then
-		deleteBoardCards()
-	end
-	for i = 1, #all_deck_guids do
-		tmpObj = getObjectFromGUID(all_deck_guids[i])
-		if tmpObj then
-			tmpObj.reset()
-			if #tmpObj.getObjects() > 5 then
-				deleteExtraItems(tmpObj, 5)
-			elseif #tmpObj.getObjects() < 5 then
-				addMissingItems(tmpObj, 5)
-			end
-		else
-			customOnly = true
-		end
-	end
-	if customOnly then
-		options.gameType = 2
-		settingsPannelMakeButtons()
-	end
-end
-
-function refreshBoardCards()
-	local tmpObj
-	local params = {}
-
-	params.rotation = FACE_UP_ROT
-	if options.gameType < 2 then
-		resetDecks()
-		if options.gameType == 0 then
-			tmpObj = getObjectFromGUID(fascistNotUsed_deck_guid)
-			if tmpObj then
-				params.position = getPositionByGUID(fascist_zone_guids[1])
-				tmpObj.takeObject(params)
-			end
-			tmpObj = getObjectFromGUID(liberalNotUsed_deck_guid)
-			if tmpObj then
-				params.position = getPositionByGUID(liberal_zone_guids[1])
-				tmpObj.takeObject(params)
-			end
-		end
-		if #getSeatedPlayers() > 8 then
-			if options.gameType == 1 then
-				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
-				if tmpObj then
-					params.position = getPositionByGUID(fascist_zone_guids[1])
-					tmpObj.takeObject(params)
-				end
-			end
-			tmpObj = getObjectFromGUID(inspectOrange_deck_guid)
-			if tmpObj then
-				params.position = getPositionByGUID(fascist_zone_guids[2])
-				tmpObj.takeObject(params)
-				params.position = getPositionByGUID(fascist_zone_guids[3])
-				tmpObj.takeObject(params)
-			end
-			tmpObj = getObjectFromGUID(nextPresidentOrange_deck_guid)
-			if tmpObj then
-				params.position = getPositionByGUID(fascist_zone_guids[4])
-				tmpObj.takeObject(params)
-			end
-		elseif #getSeatedPlayers() > 6 then
-			if options.gameType == 1 then
-				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
-				if tmpObj then
-					params.position = getPositionByGUID(fascist_zone_guids[2])
-					tmpObj.takeObject(params)
-				end
-			end
-			tmpObj = getObjectFromGUID(inspectOrange_deck_guid)
-			if tmpObj then
-				params.position = getPositionByGUID(fascist_zone_guids[3])
-				tmpObj.takeObject(params)
-			end
-			tmpObj = getObjectFromGUID(nextPresidentOrange_deck_guid)
-			if tmpObj then
-				params.position = getPositionByGUID(fascist_zone_guids[4])
-				tmpObj.takeObject(params)
-			end
-		else
-			if options.gameType == 1 then
-				tmpObj = getObjectFromGUID(topOneOrange_deck_guid)
-				if tmpObj then
-					params.position = getPositionByGUID(fascist_zone_guids[3])
-					tmpObj.takeObject(params)
-				end
-			end
-			tmpObj = getObjectFromGUID(topThreeOrange_deck_guid)
-			if tmpObj then
-				params.position = getPositionByGUID(fascist_zone_guids[4])
-				tmpObj.takeObject(params)
-			end
-		end
-		tmpObj = getObjectFromGUID(bulletRed_deck_guid)
-		if tmpObj then
-			params.position = getPositionByGUID(fascist_zone_guids[5])
-			tmpObj.takeObject(params)
-		end
-		tmpObj = getObjectFromGUID(bulletRed_deck_guid)
-		if tmpObj then
-			params.position = getPositionByGUID(fascist_zone_guids[6])
-			tmpObj.takeObject(params)
-		end
-		tmpObj = getObjectFromGUID(vetoRed_deck_guid)
-		if tmpObj then
-			local pos = getPositionByGUID(fascist_zone_guids[6])
-			params.position = {pos['x'], pos['y'], pos['z'] - 2}
-			tmpObj.takeObject(params)
-		end
-	end
-
-	lastPlayerCt = #getSeatedPlayers()
-end
-
 function onObjectEnterScriptingZone(zone, enterObject)
 	if enterObject then
 		if zone.guid == topdeck_zone_guid and enterObject.guid == ELECTION_TRACKER_GUID then
@@ -734,7 +600,9 @@ function init()
 	tmpObj = getDeckFromZoneByGUID(EFFECTSPILE_ZONE_GUID)
 	if tmpObj then	tmpObj.interactable = false end
 
-	resetDecks()
+	if options.gameType ~= 2 and foundBoardCards() then
+		deleteBoardCards()
+	end
 end
 
 function onChat(messageIn, player)
@@ -1413,90 +1281,6 @@ function boardCardHandler(card)
 			movePlacards(nextPres(lastPres), true)
 		end
 	end
-end
-
-function isPolicyCard(objIn)
-	if objIn.tag == 'Card' and (objIn.getDescription() == 'Fascist Policy' or
-		objIn.getDescription() == 'Liberal Policy') and not objIn.held_by_color then
-		return true
-	end
-	return false
-end
-
-function isFascistPolicyCard(objIn)
-	if objIn.tag == 'Card' and objIn.getDescription() == 'Fascist Policy' and not objIn.held_by_color then
-		return true
-	end
-	return false
-end
-
-function isLiberalPolicyCard(objIn)
-	if objIn.tag == 'Card' and objIn.getDescription() == 'Liberal Policy' and not objIn.held_by_color then
-		return true
-	end
-	return false
-end
-
-function isPolicyNotUsedCard(objIn)
-	if objIn.tag == 'Card' and objIn.getDescription() == 'Not Used' and not objIn.held_by_color then
-		return true
-	end
-	return false
-end
-
-function isBoardCard(objIn)
-	if objIn.tag == 'Card' and
-	   (objIn.getDescription() == 'The president examines\nthe top card.' or
-	    objIn.getDescription() == 'The president examines\nthe top three cards.' or
-	    objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.' or
-	    objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.' or
-	    objIn.getDescription() == 'The president must\nkill a player.' or
-		 objIn.getDescription() == 'Veto power is\nunlocked.') then
-		return true
-	end
-	return false
-end
-
-function isBoardCardBullet(objIn)
-	if objIn.tag == 'Card' and objIn.getDescription() == 'The president must\nkill a player.' then
-		return true
-	end
-	return false
-end
-
-function isBoardCardInspect(objIn)
-	if objIn.tag == 'Card' and objIn.getDescription() == 'The president\ninvestigates a\nplayer\'s identity\ncard.' then
-		return true
-	end
-	return false
-end
-
-function isBoardCardTopCard(objIn)
-	if objIn.tag == 'Card' and objIn.getDescription() == 'The president examines\nthe top card.' then
-		return true
-	end
-	return false
-end
-
-function isBoardCardTopThree(objIn)
-	if objIn.tag == 'Card' and objIn.getDescription() == 'The president examines\nthe top three cards.' then
-		return true
-	end
-	return false
-end
-
-function isBoardCardPickPres(objIn)
-	if objIn.tag == 'Card' and objIn.getDescription() == 'The president picks\nthe next presidential\ncandidate.' then
-		return true
-	end
-	return false
-end
-
-function isBoardCardVeto(objIn)
-	if objIn.tag == 'Card' and objIn.getDescription() == 'Veto power is\nunlocked.' then
-		return true
-	end
-	return false
 end
 
 function nextPres(playerIn)
@@ -2378,67 +2162,6 @@ function foundBoardCards()
 	return false
 end
 
-function deleteBoardCards()
-	local tmpZoneGuid
-	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for i, j in ipairs(inZone) do
-				if isBoardCard(j) then
-					j.destruct()
-				elseif j.getDescription() == 'Not Used' then
-					j.destruct()
-				end
-			end
-		end
-	end
-	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for i, j in ipairs(inZone) do
-				if isBoardCard(j) then
-					j.destruct()
-				elseif j.getDescription() == 'Not Used' then
-					j.destruct()
-				end
-			end
-		end
-	end
-end
-
-function addMissingItems(deck, count)
-	if deck then
-		local pos = deck.getPosition()
-		local addCt = count - #deck.getObjects()
-		local params = {}
-		params.position = {pos['x'], pos['y'] + 1, pos['z']}
-		local card = deck.takeObject(params)
-		while addCt > 0 do
-			local cloneParams = {position = {pos['x'], pos['y'] + 1 + addCt * 0.1, pos['z']}, sound = false}
-			local newCard = card.clone(cloneParams)
-			newCard.putObject(deck)
-			addCt = addCt - 1
-		end
-		card.putObject(deck)
-	end
-end
-
-function deleteExtraItems(deck, count)
-	if deck then
-		local pos = deck.getPosition()
-		local removeCt = #deck.getObjects() - count
-		while removeCt > 0 do
-			local params = {}
-			params.position = {pos['x'], pos['y'] + 3, pos['z']}
-			local card = deck.takeObject(params)
-			card.destruct()
-			removeCt = removeCt - 1
-		end
-	end
-end
-
 function setupStart(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		startLuaCoroutine(Global, 'setupCoroutine')
@@ -2821,10 +2544,10 @@ function setupCoroutine()
 	end
 	mainNotes = mainNotes .. ' and [FF0000][b]' .. string.upper(text.hitler) .. '[/b][-].\n'
 	mainNotes = mainNotes .. string.upper(text.hitler)
-	if (#players - #fascists - #hitler) > 4 then
-		mainNotes = mainNotes .. ' [b]doesn\'t know[/b] who the '
-	else
+	if #players < 7 then
 		mainNotes = mainNotes .. ' [b]knows[/b] who the '
+	else
+		mainNotes = mainNotes .. ' [b]doesn\'t know[/b] who the '
 	end
 	mainNotes = mainNotes .. string.upper(text.fascist) .. 'S are.\n\n'
 	setNotes(mainNotes)
@@ -2906,9 +2629,10 @@ function setupCoroutine()
 	end
 
 	-- Cleanup custom pieces
-	for _, v in pairs(all_deck_guids) do
-		destroyObject(getObjectFromGUID(v));
-	end
+	-- FIXME
+	--for _, v in pairs(all_deck_guids) do
+	--	destroyObject(getObjectFromGUID(v));
+	--end
 
 	sleep(1)
 
