@@ -16,6 +16,8 @@ CHANGIVESBELOW_STRING = "The chancellor gives\nthe card below\nto another player
 VETO_STRING = "Veto power is\nunlocked."
 
 --Policy cards
+LIBERALPOLICY_STRING = "Liberal Policy"
+FASCISTPOLICY_STRING = "Fascist Policy"
 NOTUSED_STRING = "Not Used"
 
 function isBoardCard(objIn)
@@ -155,10 +157,8 @@ function deleteBoardCards()
 		tmpZone = getObjectFromGUID(tmpZoneGuid)
 		if tmpZone then
 			inZone = tmpZone.getObjects()
-			for i, j in ipairs(inZone) do
-				if isBoardCard(j) then
-					j.destruct()
-				elseif isPolicyNotUsedCard(j) then
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) or isPolicyNotUsedCard(j) then
 					j.destruct()
 				end
 			end
@@ -168,11 +168,35 @@ function deleteBoardCards()
 		tmpZone = getObjectFromGUID(tmpZoneGuid)
 		if tmpZone then
 			inZone = tmpZone.getObjects()
-			for i, j in ipairs(inZone) do
-				if isBoardCard(j) then
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) or isPolicyNotUsedCard(j) then
 					j.destruct()
-				elseif isPolicyNotUsedCard(j) then
-					j.destruct()
+				end
+			end
+		end
+	end
+end
+
+function lockBoardCards()
+	local tmpZoneGuid
+	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) or isPolicyNotUsedCard(j) then
+					j.setLock(true)
+				end
+			end
+		end
+	end
+	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) or isPolicyNotUsedCard(j) then
+					j.setLock(true)
 				end
 			end
 		end
@@ -358,13 +382,13 @@ function spawnBoardCard(cardID, desc, pos)
 			"}" ..
 			"}",
       position = pos,
-      rotation = {x = 0, y = 180, z = 0},
+      rotation = FACE_UP_ROT,
       scale = {x = 1, y = 1, z = 1},
       sound = false
    }
-	local tmpObj = spawnObjectJSON(params)
-	tmpObj.setDescription(desc)
-   return tmpObj
+	local card = spawnObjectJSON(params)
+	card.setDescription(desc)
+   return card
 end
 
 function spawnVetoOrange(pos)
@@ -398,24 +422,32 @@ function spawnVetoCard(cardID, desc, pos)
 			"}" ..
 			"}",
       position = pos,
-      rotation = {x = 0, y = 180, z = 0},
+      rotation = FACE_UP_ROT,
       scale = {x = 0.2, y = 1, z = 0.2},
       sound = false
    }
-	local tmpObj = spawnObjectJSON(params)
-	tmpObj.setDescription(desc)
-   return tmpObj
+	local card = spawnObjectJSON(params)
+	card.setDescription(desc)
+   return card
+end
+
+function spawnLiberalPolicy(pos, rot)
+	return spawnPolicyCard("10200", LIBERALPOLICY_STRING, pos, rot, true)
+end
+
+function spawnFascistPolicy(pos, rot)
+	return spawnPolicyCard("10201", FASCISTPOLICY_STRING, pos, rot, true)
 end
 
 function spawnNotUsedLiberal(pos)
-	return spawnPolicyCard("10203", NOTUSED_STRING, pos)
+	return spawnPolicyCard("10203", NOTUSED_STRING, pos, FACE_UP_ROT, false)
 end
 
 function spawnNotUsedFascist(pos)
-	return spawnPolicyCard("10204", NOTUSED_STRING, pos)
+	return spawnPolicyCard("10204", NOTUSED_STRING, pos, FACE_UP_ROT, false)
 end
 
-function spawnPolicyCard(cardID, desc, pos)
+function spawnPolicyCard(cardID, desc, pos, rot, luaBool)
    local params = {
       json =
 			"{" ..
@@ -434,11 +466,26 @@ function spawnPolicyCard(cardID, desc, pos)
 			"}" ..
 			"}",
       position = pos,
-      rotation = {x = 0, y = 180, z = 0},
+      rotation = rot,
       scale = {x = 1.51, y = 1, z = 1.51},
       sound = false
    }
-	local tmpObj = spawnObjectJSON(params)
-	tmpObj.setDescription(desc)
-   return tmpObj
+	local card = spawnObjectJSON(params)
+	card.setDescription(desc)
+	if luaBool then
+		card.setLuaScript(
+			'enabled = false -- workaround for rewind error\r\n' ..
+			'\r\n' ..
+			'function onDrop(playerColor)\r\n' ..
+			'	enabled = true\r\n' ..
+			'	Global.call(\'createPolicyCardWait\')\r\n' ..
+			'end\r\n' ..
+			'\r\n' ..
+			'function onCollisionEnter(collisionInfo)\r\n' ..
+			'	if enabled then\r\n' ..
+			'		Global.call(\'createPolicyCardWait\')\r\n' ..
+			'	end\r\n' ..
+			'end\r\n')
+	end
+   return card
 end

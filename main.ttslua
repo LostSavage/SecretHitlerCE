@@ -14,7 +14,6 @@ fascist_deck_guids = {'5f2055','fb58cf', '4a3cf4'}
 fascist_deck_extra_guid = 'd60f75'
 liberal_deck_guids = {'b156f7', 'd1735a', 'c8ab2a', 'b2873d', '313939', '40d8f5'}
 liberal_deck_extra_guid = '304115'
-policy_deck_guid = '386233'
 extraRole_card_guids = {'675a6f', '16e480', '0a5960', '02b664', '328440', '05df40', '98f4dd', '7b4b46', 'ccb7ed', 'c2309a'}
 fakeMembership_card_guid = '55d1c3'
 fascistMembership_card_guid = 'e4d489'
@@ -61,6 +60,10 @@ votes = {}
 disableVote = false
 votePassed = false
 blockDraw = false
+
+--Wait timers
+voteWaitId = nil
+policyWaitId = nil
 
 --Saved data
 activePowerColor = nil
@@ -377,8 +380,8 @@ function onObjectLeaveScriptingZone(zone, leaveObject)
 			editButtonByLabel(drawPileBoard_guid, 'Topdeck', 'Draw 3', 'drawThree')
 		elseif options.policySafety then
 			if inTable(policySafety_zone_guids, zone.guid) and leaveObject.tag == 'Card' and
-				(leaveObject.getDescription() == 'Fascist Policy' or
-				 leaveObject.getDescription() == 'Liberal Policy') then
+				(leaveObject.getDescription() == FASCISTPOLICY_STRING or
+				 leaveObject.getDescription() == LIBERALPOLICY_STRING) then
 				if isFaceUp(leaveObject) and leaveObject.held_by_color then
 					leaveObject.deal(1, leaveObject.held_by_color)
 					broadcastToColor('Keep your policy cards face down\nwhen removing them from your hand!', leaveObject.held_by_color, {1, 0, 0})
@@ -566,10 +569,6 @@ function init()
 	tmpObj.interactable = false
 	tmpObj.setLock(true)
 
-	tmpObj = getObjectFromGUID(policy_deck_guid)
-	if tmpObj == nil then error('Policy Deck') end
-	tmpObj.interactable = false
-
 	tmpObj = getObjectFromGUID(PRESIDENT_GUID)
 	if tmpObj == nil then error('President') end
 	tmpObj.interactable = false
@@ -600,7 +599,7 @@ function init()
 	tmpObj = getDeckFromZoneByGUID(EFFECTSPILE_ZONE_GUID)
 	if tmpObj then	tmpObj.interactable = false end
 
-	if options.gameType ~= 2 and foundBoardCards() then
+	if options.gameType ~= 2 then
 		deleteBoardCards()
 	end
 end
@@ -1390,14 +1389,11 @@ function markDead(tableIn)
 	end
 end
 
-function createPolicyCardTimer()
-	Timer.destroy('policyCardTimer')
-	local parameters = {}
-	parameters.identifier = 'policyCardTimer'
-	parameters.function_name = 'startPolicyCardCheck'
-	parameters.function_owner = Global
-	parameters.delay = 1
-	Timer.create(parameters)
+function createPolicyCardWait()
+	if policyWaitId then
+		Wait.stop(policyWaitId)
+	end
+	policyWaitId = Wait.time(function() startPolicyCardCheck() end, 1)
 end
 
 function startPolicyCardCheck()
@@ -1630,10 +1626,10 @@ function getPolicyCardStatus(removeCards)
 			smartTableInsert(returnTable.drawDeckList, j.guid)
 			local inDeck = j.getObjects()
 			for k, l in ipairs(inDeck) do
-				if l.description == 'Fascist Policy' then
+				if l.description == FASCISTPOLICY_STRING then
 					smartTableInsert(returnTable.fascistList, l.guid)
 					smartTableInsert(returnTable.drawList, l.guid)
-				elseif l.description == 'Liberal Policy' then
+				elseif l.description == LIBERALPOLICY_STRING then
 					smartTableInsert(returnTable.liberalList, l.guid)
 					smartTableInsert(returnTable.drawList, l.guid)
 				elseif removeCards and removeCt < (#inDeck - 1) then
@@ -1657,10 +1653,10 @@ function getPolicyCardStatus(removeCards)
 			smartTableInsert(returnTable.discardDeckList, j.guid)
 			local inDeck = j.getObjects()
 			for k, l in ipairs(inDeck) do
-				if l.description == 'Fascist Policy' then
+				if l.description == FASCISTPOLICY_STRING then
 					smartTableInsert(returnTable.fascistList, l.guid)
 					smartTableInsert(returnTable.discardList, l.guid)
-				elseif l.description == 'Liberal Policy' then
+				elseif l.description == LIBERALPOLICY_STRING then
 					smartTableInsert(returnTable.liberalList, l.guid)
 					smartTableInsert(returnTable.discardList, l.guid)
 				elseif removeCards and removeCt < (#inDeck - 1) then
@@ -1732,15 +1728,12 @@ function allPolicyCardsKnown()
 	return false
 end
 
-function createVoteTimer()
+function createVoteWait()
 	if not disableVote then
-		Timer.destroy('voteTimer')
-		local parameters = {}
-		parameters.identifier = 'voteTimer'
-		parameters.function_name = 'startVoteCheck'
-		parameters.function_owner = Global
-		parameters.delay = 1
-		Timer.create(parameters)
+		if voteWaitId then
+			Wait.stop(voteWaitId)
+		end
+		voteWaitId = Wait.time(function() startVoteCheck() end, 1)
 	end
 end
 
@@ -2078,7 +2071,7 @@ end
 function onPlayerChangedColor(color)
 	refreshUI()
 	if started then
-		if not (color == 'Grey') and not (color == 'Black') then
+		if color ~= 'Grey' and color ~= 'Black' then
 			printToColor('--------------------------------------',color, {1, 1, 1})
 			printToColor('Welcome! ' .. Player[color].steam_name,color, {1, 1, 1})
 			printToColor('--------------------------------------',color, {1, 1, 1})
@@ -2129,37 +2122,6 @@ function onPlayerChangedColor(color)
 			end
 		end
 	end
-end
-
-function foundBoardCards()
-	local tmpZoneGuid
-	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for i, j in ipairs(inZone) do
-				if isBoardCard(j) then
-					return true
-				elseif j.getDescription() == 'Not Used' then
-					return true
-				end
-			end
-		end
-	end
-	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for i, j in ipairs(inZone) do
-				if isBoardCard(j) then
-					return true
-				elseif j.getDescription() == 'Not Used' then
-					return true
-				end
-			end
-		end
-	end
-	return false
 end
 
 function setupStart(clickedObject, playerColor)
@@ -2452,14 +2414,14 @@ function setupCoroutine()
 					'	local options = Global.getTable(\'options\')\r\n' ..
 					'	if options.scriptedVoting then\r\n' ..
 					'		collision = true\r\n' ..
-					'		Global.call(\'createVoteTimer\')\r\n' ..
+					'		Global.call(\'createVoteWait\')\r\n' ..
 					'	end\r\n' ..
 					'end\r\n' ..
 					'\r\n' ..
 					'function onCollisionEnter(collisionInfo)\r\n' ..
 					'	local options = Global.getTable(\'options\')\r\n' ..
 					'	if collision and options.scriptedVoting then\r\n' ..
-					'		Global.call(\'createVoteTimer\')\r\n' ..
+					'		Global.call(\'createVoteWait\')\r\n' ..
 					'	end\r\n' ..
 					'end\r\n')
 				card.setScale({1.51, 1, 1.51})
@@ -2482,14 +2444,14 @@ function setupCoroutine()
 					'	local options = Global.getTable(\'options\')\r\n' ..
 					'	if options.scriptedVoting then\r\n' ..
 					'		collision = true\r\n' ..
-					'		Global.call(\'createVoteTimer\')\r\n' ..
+					'		Global.call(\'createVoteWait\')\r\n' ..
 					'	end\r\n' ..
 					'end\r\n' ..
 					'\r\n' ..
 					'function onCollisionEnter(collisionInfo)\r\n' ..
 					'	local options = Global.getTable(\'options\')\r\n' ..
 					'	if collision and options.scriptedVoting then\r\n' ..
-					'		Global.call(\'createVoteTimer\')\r\n' ..
+					'		Global.call(\'createVoteWait\')\r\n' ..
 					'	end\r\n' ..
 					'end\r\n')
 				card.setScale({1.51, 1, 1.51})
@@ -2563,36 +2525,11 @@ function setupCoroutine()
 	chancelor.setPositionSmooth({0, pos['y']+14, 0})
 
 	-- Policy card setup
-	local params = {}
-	params.flip = false
-	local drawDeck = getDeckFromZoneByGUID(DRAW_ZONE_GUID)
-	if drawDeck then
-		local pos = drawDeck.getPosition()
-		local remove_fascistCt = 15 - options.fascistCards
-		local remove_liberalCt = 8 - options.liberalCards
-		local inDeck = drawDeck.getObjects()
-		for k, l in ipairs(inDeck) do
-			if l.description == 'Fascist Policy' and remove_fascistCt > 0 then
-				local params = {}
-				params.position = {pos['x'], pos['y'] + 7, pos['z']}
-				params.guid = l.guid
-				local card = drawDeck.takeObject(params)
-				wait(5)
-				destroyObject(card)
-				remove_fascistCt = remove_fascistCt - 1
-			elseif l.description == 'Liberal Policy' and remove_liberalCt > 0 then
-				local params = {}
-				params.position = {pos['x'], pos['y'] + 7, pos['z']}
-				params.guid = l.guid
-				local card = drawDeck.takeObject(params)
-				wait(5)
-				destroyObject(card)
-				remove_liberalCt = remove_liberalCt - 1
-			end
-		end
-	else
-		broadcastToAll('ERROR: Could not find draw deck! Restart required.', {1,0,0})
-		return true
+	for i = 1, options.liberalCards do
+		spawnLiberalPolicy(getPositionByGUID(DRAW_ZONE_GUID), FACE_DOWN_ROT)
+	end
+	for i = 1, options.fascistCards do
+		spawnFascistPolicy(getPositionByGUID(DRAW_ZONE_GUID), FACE_DOWN_ROT)
 	end
 
 	sleep(0.5)
@@ -2659,33 +2596,7 @@ function setupCoroutine()
 	tmpObj.setLock(false)
 
 	-- Lock placed board cards
-	local tmpZoneGuid
-	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for _, j in ipairs(inZone) do
-				if isBoardCard(j) then
-					j.setLock(true)
-				elseif j.getDescription() == 'Not Used' then
-					j.setLock(true)
-				end
-			end
-		end
-	end
-	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for _, j in ipairs(inZone) do
-				if isBoardCard(j) then
-					j.setLock(true)
-				elseif j.getDescription() == 'Not Used' then
-					j.setLock(true)
-				end
-			end
-		end
-	end
+	lockBoardCards()
 
 	--Set the started variable to true
 	started = true

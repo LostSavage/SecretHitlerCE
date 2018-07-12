@@ -1,10 +1,10 @@
 --Static
 ZONE_NAME = "EFFECTSPILE_ZONE_GUID"
-TIMER_NAME = "effectsCountTimer"
 PRINT_NAME = "Effects and Artifacts Pile"
 
 --Variable
 loadDone = false
+waitId = nil
 
 function onLoad()
 	loadDone = true
@@ -30,10 +30,6 @@ function onCollisionExit(info)
 	if loadDone then
 		countCards(false)
 	end
-end
-
-function secondCheck()
-	countCards(true)
 end
 
 function countCards(secondCheck)
@@ -65,13 +61,10 @@ function countCards(secondCheck)
 		if secondCheck then
 			broadcastToAll("WARNING: " .. PRINT_NAME .. " is not a single deck.", {1, 0, 0})
 		else
-			Timer.destroy(TIMER_NAME)
-			local parameters = {}
-			parameters.identifier = TIMER_NAME
-			parameters.function_name = "secondCheck"
-			parameters.function_owner = self
-			parameters.delay = 3
-			Timer.create(parameters)
+			if waitId then
+				Wait.stop(waitId)
+			end
+			waitId = Wait.time(function() countCards(true) end, 3)
 		end
 	end
 end
