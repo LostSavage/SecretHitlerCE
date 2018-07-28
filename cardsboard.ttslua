@@ -77,6 +77,13 @@ function isBoardCardTopCard(objIn)
 	return false
 end
 
+function isBoardCardImprison(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == IMPRISON_STRING then
+		return true
+	end
+	return false
+end
+
 function isBoardCardVeto(objIn)
 	if objIn.tag == "Card" and objIn.getDescription() == VETO_STRING then
 		return true
@@ -116,6 +123,7 @@ end
 function refreshBoardCards()
 	if options.gameType == 2 then
 		spawnCustomBoardCards()
+		setLockBoardCards(false)
 	else
 		deleteBoardCards()
 		if options.gameType == 0 then
@@ -147,6 +155,7 @@ function refreshBoardCards()
 		if pos then
 			spawnVetoRed({pos["x"], pos["y"], pos["z"] - 2})
 		end
+		Wait.time(function() setLockBoardCards(true) end, 2)
 	end
 	lastPlayerCt = #getSeatedPlayers()
 end
@@ -177,7 +186,7 @@ function deleteBoardCards()
 	end
 end
 
-function lockBoardCards()
+function setLockBoardCards(value)
 	local tmpZoneGuid
 	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
 		tmpZone = getObjectFromGUID(tmpZoneGuid)
@@ -185,7 +194,7 @@ function lockBoardCards()
 			inZone = tmpZone.getObjects()
 			for _, j in ipairs(inZone) do
 				if isBoardCard(j) or isPolicyNotUsedCard(j) then
-					j.setLock(true)
+					j.setLock(value)
 				end
 			end
 		end
@@ -196,7 +205,7 @@ function lockBoardCards()
 			inZone = tmpZone.getObjects()
 			for _, j in ipairs(inZone) do
 				if isBoardCard(j) or isPolicyNotUsedCard(j) then
-					j.setLock(true)
+					j.setLock(value)
 				end
 			end
 		end
@@ -204,43 +213,41 @@ function lockBoardCards()
 end
 
 function spawnCustomBoardCards()
-	for i = 1, 3 do
-		spawnTopThreeBlue({-36, 2, 22})
-		spawnTopThreeOrange({-32, 2, 22})
-		spawnTopThreeRed({-28, 2, 22})
-		spawnInspectBlue({-36, 2, 18})
-		spawnInspectOrange({-32, 2, 18})
-		spawnInspectRed({-28, 2, 18})
-		spawnPickPresBlue({-36, 2, 14})
-		spawnPickPresOrange({-32, 2, 14})
-		spawnPickPresRed({-28, 2, 14})
-		spawnBulletBlue({-36, 2, 10})
-		spawnBulletOrange({-32, 2, 10})
-		spawnBulletRed({-28, 2, 10})
-		spawnTopCardBlue({-36, 2, 6})
-		spawnTopCardOrange({-32, 2, 6})
-		spawnTopCardRed({-28, 2, 6})
-		--spawnImprisonBlue({-36, 2, 2})
-		--spawnImprisonOrange({-32, 2, 2})
-		--spawnImprisonRed({-28, 2, 2})
-		spawnPresTakesBlue({-36, 2, -2})
-		spawnPresTakesOrange({-32, 2, -2})
-		spawnPresTakesRed({-28, 2, -2})
-		spawnChanTakesBlue({-36, 2, -6})
-		spawnChanTakesOrange({-32, 2, -6})
-		spawnChanTakesRed({-28, 2, -6})
-		spawnPresGivesBlue({-36, 2, -10})
-		spawnPresGivesOrange({-32, 2, -10})
-		spawnPresGivesRed({-28, 2, -10})
-		spawnChanGivesBlue({-36, 2, -14})
-		spawnChanGivesOrange({-32, 2, -14})
-		spawnChanGivesRed({-28, 2, -14})
-		spawnVetoBlue({-36, 2, -16.8})
-		spawnVetoOrange({-32, 2, -16.8})
-		spawnVetoRed({-28, 2, -16.8})
-		spawnNotUsedLiberal({-34, 2, -21.2})
-		spawnNotUsedFascist({-30, 2, -21.2})
-	end
+	spawnTopThreeBlue({-36, 2, 22})
+	spawnTopThreeOrange({-32, 2, 22})
+	spawnTopThreeRed({-28, 2, 22})
+	spawnInspectBlue({-36, 2, 18})
+	spawnInspectOrange({-32, 2, 18})
+	spawnInspectRed({-28, 2, 18})
+	spawnPickPresBlue({-36, 2, 14})
+	spawnPickPresOrange({-32, 2, 14})
+	spawnPickPresRed({-28, 2, 14})
+	spawnBulletBlue({-36, 2, 10})
+	spawnBulletOrange({-32, 2, 10})
+	spawnBulletRed({-28, 2, 10})
+	spawnTopCardBlue({-36, 2, 6})
+	spawnTopCardOrange({-32, 2, 6})
+	spawnTopCardRed({-28, 2, 6})
+	spawnImprisonBlue({-36, 2, 2})
+	spawnImprisonOrange({-32, 2, 2})
+	spawnImprisonRed({-28, 2, 2})
+	spawnPresTakesBlue({-36, 2, -2})
+	spawnPresTakesOrange({-32, 2, -2})
+	spawnPresTakesRed({-28, 2, -2})
+	spawnChanTakesBlue({-36, 2, -6})
+	spawnChanTakesOrange({-32, 2, -6})
+	spawnChanTakesRed({-28, 2, -6})
+	spawnPresGivesBlue({-36, 2, -10})
+	spawnPresGivesOrange({-32, 2, -10})
+	spawnPresGivesRed({-28, 2, -10})
+	spawnChanGivesBlue({-36, 2, -14})
+	spawnChanGivesOrange({-32, 2, -14})
+	spawnChanGivesRed({-28, 2, -14})
+	spawnVetoBlue({-36, 2, -16.8})
+	spawnVetoOrange({-32, 2, -16.8})
+	spawnVetoRed({-28, 2, -16.8})
+	spawnNotUsedLiberal({-34, 2, -21.2})
+	spawnNotUsedFascist({-30, 2, -21.2})
 end
 
 function spawnTopThreeOrange(pos)

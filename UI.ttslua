@@ -54,23 +54,23 @@ function refreshUI()
 			youNotPlaying = ""
 			for _, playerColor in pairs(GREY_PLAYABLE_COLORS) do
 				if roles[playerColor] == "hitler" then
-					UI.setAttribute("hit" .. playerColor, "Text", playerColor .. " is " .. text.hitler .. "!")
+					UI.setValue("hit" .. playerColor, playerColor .. " is " .. text.hitler .. "!")
 				elseif roles[playerColor] == "fascist" then
-					UI.setAttribute("fas" .. playerColor, "Text", playerColor .. " is " .. text.fascistArticle .. " " .. text.fascist .. "!")
+					UI.setValue("fas" .. playerColor, playerColor .. " is " .. text.fascistArticle .. " " .. text.fascist .. "!")
 				end
 			end
 		end
 		for _, playerColor in pairs(MAIN_PLAYABLE_COLORS) do
 			UI.setAttribute("player" .. playerColor, "visibility", playerColor)
 			if roles[playerColor] == "hitler" then
-				UI.setAttribute("hit" .. playerColor, "Text", playerColor .. " is " .. text.hitler .. "!")
+				UI.setValue("hit" .. playerColor, playerColor .. " is " .. text.hitler .. "!")
 				if youHitler == "" then
 					youHitler = playerColor
 				else
 					youHitler = youHitler .. "|" .. playerColor
 				end
 			elseif roles[playerColor] == "fascist" then
-				UI.setAttribute("fas" .. playerColor, "Text", playerColor .. " is " .. text.fascistArticle .. " " .. text.fascist .. "!")
+				UI.setValue("fas" .. playerColor, playerColor .. " is " .. text.fascistArticle .. " " .. text.fascist .. "!")
 				if youFas == "" then
 					youFas = playerColor
 				else
@@ -115,9 +115,9 @@ function refreshUI()
 		fasTan = fasVisibility("Tan")
 		fasMaroon = fasVisibility("Maroon")
 
-		UI.setAttribute("youLib", "Text", "You are " .. text.liberalArticle .. " " .. text.liberal .. "!")
-		UI.setAttribute("youFas", "Text", "You are " .. text.fascistArticle .. " " .. text.fascist .. "!")
-		UI.setAttribute("youHitler", "Text", "You are " .. text.hitler .. "!")
+		UI.setValue("youLib", "You are " .. text.liberalArticle .. " " .. text.liberal .. "!")
+		UI.setValue("youFas", "You are " .. text.fascistArticle .. " " .. text.fascist .. "!")
+		UI.setValue("youHitler", "You are " .. text.hitler .. "!")
 		UI.setAttribute("youLib", "visibility", youLib)
 		UI.setAttribute("youFas", "visibility", youFas)
 		UI.setAttribute("youHitler", "visibility", youHitler)

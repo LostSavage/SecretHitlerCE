@@ -94,6 +94,26 @@ greyAvatarGuids = {}
 greyPlayerSteamIds = {}
 greyPlayerHandGuids = {}
 hitler = {}
+imprisonInfo = {
+	type = 'Custom_Model',
+	mesh = 'http://cloud-3.steamusercontent.com/ugc/993492686551248783/B83B87475B885192F8F820E381F1D70A2E3F1919/',
+	diffuse = 'http://cloud-3.steamusercontent.com/ugc/993492686551247160/63699220060380A49761207FF81A12E1AB00A597/',
+	assetbundle = nil,
+	assetbundle_secondary = nil,
+	convex = true,
+	image = nil,
+	material = 2,
+	specular_color = {0.737, 0.737, 0.737},
+	specular_intensity = 0.9,
+	specular_sharpness = 7.0,
+	fresnel_strength = 0,
+	use_grid = false,
+	colorTint = {1, 1, 1},
+	scale = {4, 4, 4},
+	action = 'Imprisons',
+	status = 'Imprisoned',
+	shooterColor = nil
+}
 inspected = {}
 jaCardGuids = {}
 lastFascistPlayed = 0
@@ -175,7 +195,8 @@ function onLoad(saveString)
 		greyPlayerSteamIds = save['gp']
 		greyPlayerHandGuids = save['gphg']
 		hitler = save['h']
-		inspected = save['i']
+		imprisonInfo = save['ii']
+		inspected = save['in']
 		jaCardGuids = save['ja']
 		lastFascistPlayed = save['lfp']
 		lastLiberalPlayed = save['llp']
@@ -231,7 +252,8 @@ function onSave()
 	save['gp'] = greyPlayerSteamIds
 	save['gphg'] = greyPlayerHandGuids
 	save['h'] = hitler
-	save['i'] = inspected
+	save['ii'] = imprisonInfo
+	save['in'] = inspected
 	save['ja'] = jaCardGuids
 	save['lfp'] = lastFascistPlayed
 	save['llp'] = lastLiberalPlayed
@@ -470,9 +492,13 @@ function refreshStatusButtons()
 			elseif _G.playerStatus[ownerColor] == 5 then
 				button.color = stringColorToRGB('Red')
 				button.label = bulletInfo.status
-			else
+			elseif _G.playerStatus[ownerColor] == 6 then
 				button.color = stringColorToRGB('Red')
 				button.label = bulletInfo.status .. '\nNot ' .. text.hitler
+			else
+				button.color = stringColorToRGB('Red')
+				button.label = imprisonInfo.status
+				button.font_size = 550
 			end
 			tmpObj.createButton(button)
 		end
@@ -1246,8 +1272,15 @@ function boardCardHandler(card)
 			end
 		elseif isBoardCardBullet(card) then
 			giveBullet(powerHolder)
+			bulletInfo.shooterColor = powerHolder
 			if options.autoNotate then
 				notateInfo(powerHolder, string.lower(bulletInfo.action), '', '', true)
+			end
+		elseif isBoardCardImprison(card) then
+			giveImprison(powerHolder)
+			imprisonInfo.shooterColor = powerHolder
+			if options.autoNotate then
+				notateInfo(powerHolder, string.lower(imprisonInfo.action), '', '', true)
 			end
 		elseif isBoardCardTopCard(card) then
 			smartBroadcastToColor('Examine the top card from the deck and put it back in the draw pile.', powerHolder, {1, 1, 1})
@@ -1325,51 +1358,7 @@ function movePlacards(playerIn, returnVoteCards)
 end
 
 function giveBullet(playerIn)
-	local params = {type = bulletInfo.type, sound = false}
-	local bullet = spawnObject(params)
-	custom = {
-		mesh = bulletInfo.mesh,
-		diffuse = bulletInfo.diffuse,
-		assetbundle = bulletInfo.assetbundle,
-		assetbundle_secondary = bulletInfo.assetbundle_secondary,
-		image = bulletInfo.image,
-		convex = bulletInfo.convex,
-		material = bulletInfo.material,
-		specular_color = bulletInfo.specular_color,
-		specular_intensity = bulletInfo.specular_intensity,
-		specular_sharpness = bulletInfo.specular_sharpness,
-		fresnel_strength = bulletInfo.fresnel_strength
-	}
-	bullet.use_grid = bulletInfo.use_grid
-	bullet.setCustomObject(custom)
-	bullet.setColorTint(bulletInfo.colorTint)
-	bullet.setScale(bulletInfo.scale)
-	bullet.setLuaScript(
-			'loadDone = false\r\n' ..
-			'\r\n' ..
-			'function onLoad()\r\n' ..
-			'	loadDone = true\r\n' ..
-			'end\r\n' ..
-			'\r\n' ..
-			'function onDrop(playerColor)\r\n' ..
-			'	local options = Global.getTable(\'options\')\r\n' ..
-			'	if options.scriptedVoting then\r\n' ..
-			'		Global.call(\'markDead\', {self})\r\n' ..
-			'	end\r\n' ..
-			'end\r\n' ..
-			'\r\n' ..
-			'function onCollisionEnter(collisionInfo)\r\n' ..
-			'	if collisionInfo and loadDone then\r\n' ..
-			'		if not self.interactable then\r\n' ..
-			'			self.setLock(true)\r\n' ..
-			'			self.interactable = true\r\n' ..
-			'		end\r\n' ..
-			'	end\r\n' ..
-			'end\r\n')
-	bulletInfo.shooterColor = playerIn
-	wait(5)
-	bullet.setPosition({0, 30, 0})
-	giveObjectToPlayer(bullet, playerIn, {forward = 20, right = 0, up = 0, forceHeight = 6}, NO_ROT)
+	giveBulletImprison(playerIn, bulletInfo, "markDead")
 end
 
 function markDead(tableIn)
@@ -1379,7 +1368,7 @@ function markDead(tableIn)
 			bulletInfo.shooterColor = nil
 			_G.playerStatus[victimColor] = 5
 			refreshStatusButtons()
-			tableIn[1].interactable = false
+			Wait.time(function() tableIn[1].setLock(true) end, 2)
 			if options.autoNotate then
 				if notate.line and notate.action == string.lower(bulletInfo.action) then
 					notateColor2ByObject(tableIn)
@@ -1387,6 +1376,56 @@ function markDead(tableIn)
 			end
 		end
 	end
+end
+
+function giveImprison(playerIn)
+	giveBulletImprison(playerIn, imprisonInfo, "markImprisoned")
+end
+
+function markImprisoned(tableIn)
+	if type(tableIn) == 'table' then
+		local victimColor = closestPlayer(tableIn[1], players, 18)
+		if victimColor and victimColor ~= imprisonInfo.shooterColor then
+			imprisonInfo.shooterColor = nil
+			_G.playerStatus[victimColor] = 7
+			refreshStatusButtons()
+			Wait.time(function() tableIn[1].setLock(true) end, 2)
+			if options.autoNotate then
+				if notate.line and notate.action == string.lower(imprisonInfo.action) then
+					notateColor2ByObject(tableIn)
+				end
+			end
+		end
+	end
+end
+
+function giveBulletImprison(playerIn, itemInfo, funcName)
+	local params = {type = itemInfo.type, sound = false}
+	local item = spawnObject(params)
+	custom = {
+		mesh = itemInfo.mesh,
+		diffuse = itemInfo.diffuse,
+		assetbundle = itemInfo.assetbundle,
+		assetbundle_secondary = itemInfo.assetbundle_secondary,
+		image = itemInfo.image,
+		convex = itemInfo.convex,
+		material = itemInfo.material,
+		specular_color = itemInfo.specular_color,
+		specular_intensity = itemInfo.specular_intensity,
+		specular_sharpness = itemInfo.specular_sharpness,
+		fresnel_strength = itemInfo.fresnel_strength
+	}
+	item.use_grid = itemInfo.use_grid
+	item.setCustomObject(custom)
+	item.setColorTint(itemInfo.colorTint)
+	item.setScale(itemInfo.scale)
+	item.setLuaScript(
+			'function onDrop(playerColor)\r\n' ..
+			'	Global.call(\'' .. funcName .. '\', {self})\r\n' ..
+			'end\r\n')
+	wait(5)
+	item.setPosition({0, 30, 0})
+	giveObjectToPlayer(item, playerIn, {forward = 20, right = 0, up = 0, forceHeight = 6}, NO_ROT)
 end
 
 function createPolicyCardWait()
@@ -2596,7 +2635,7 @@ function setupCoroutine()
 	tmpObj.setLock(false)
 
 	-- Lock placed board cards
-	lockBoardCards()
+	setLockBoardCards(true)
 
 	--Set the started variable to true
 	started = true
@@ -2626,7 +2665,7 @@ function changePlayerStatus(clickedObject, playerColor)
 				_G.playerStatus[ownerColor] = 5
 			end
 		end
-		if _G.playerStatus[ownerColor] > 6 then _G.playerStatus[ownerColor] = 1 end
+		if _G.playerStatus[ownerColor] > 7 then _G.playerStatus[ownerColor] = 1 end
 		refreshStatusButtons()
 	else
 		printToColor('ERROR: You are not the host or a promoted player.', playerColor, {1, 0, 0})
