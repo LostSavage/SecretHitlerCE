@@ -24,10 +24,12 @@ GREY_EXPANSION_RIGHT = 9
 --Placards and Tracker
 PRESIDENT_GUID = "4d3d8f"
 PREV_PRESIDENT_GUID = "780217"
-PREV_PRESIDENT_POS = {x = -8.0, y = 1.06, z = 14.0}
+PREV_PRESIDENT_POS = {x = -16.5, y = 1.06, z = -17}
+PREV_PRESIDENT_ROT = {x = 0, y = 270, z = 0}
 CHANCELOR_GUID = "7dba7e"
 PREV_CHANCELOR_GUID = "448483"
-PREV_CHANCELOR_POS = {x = 8.0, y = 1.06, z = 14.0}
+PREV_CHANCELOR_POS = {x = 16.5, y = 1.06, z = -17}
+PREV_CHANCELOR_ROT = {x = 0, y = 90, z = 0}
 ELECTION_TRACKER_GUID = "dd57c4"
 
 --Scripting Zones
@@ -64,6 +66,7 @@ blockDraw = false
 --Wait timers
 voteWaitId = nil
 policyWaitId = nil
+boardCardWaitId = nil
 
 --Saved data
 activePowerColor = nil
@@ -1468,12 +1471,12 @@ function policyCardCoroutine()
 	local homePrevPlacards = function()
 		local tmpPres = getObjectFromGUID(PREV_PRESIDENT_GUID)
 		if tmpPres then
-			tmpPres.setRotationSmooth(FACE_UP_ROT, false, false)
+			tmpPres.setRotationSmooth(PREV_PRESIDENT_ROT, false, false)
 			tmpPres.setPositionSmooth(PREV_PRESIDENT_POS, false, false)
 		end
 		local tmpChan = getObjectFromGUID(PREV_CHANCELOR_GUID)
 		if tmpChan then
-			tmpChan.setRotationSmooth(FACE_UP_ROT, false, false)
+			tmpChan.setRotationSmooth(PREV_CHANCELOR_ROT, false, false)
 			tmpChan.setPositionSmooth(PREV_CHANCELOR_POS, false, false)
 		end
 	end
@@ -2604,11 +2607,7 @@ function setupCoroutine()
 		end
 	end
 
-	-- Cleanup custom pieces
-	-- FIXME
-	--for _, v in pairs(all_deck_guids) do
-	--	destroyObject(getObjectFromGUID(v));
-	--end
+	deleteCustomBoardCards()
 
 	sleep(1)
 

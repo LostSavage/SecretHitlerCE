@@ -7,12 +7,12 @@ TOPCARD_STRING = "The president examines\nthe top card."
 IMPRISON_STRING = "The president must\nimprison a player."
 PRESTAKESABOVE_STRING = "The president takes\nthe card above."
 PRESTAKESBELOW_STRING = "The president takes\nthe card below."
-CHANTAKESABOVE_STRING = "The chancellor takes\nthe card above."
-CHANTAKESBELOW_STRING = "The chancellor takes\nthe card below."
-PRESGIVESABOVE_STRING = "The president gives\nthe card above\nto another player\nafter examining it."
-PRESGIVESBELOW_STRING = "The president gives\nthe card below\nto another player\nafter examining it."
-CHANGIVESABOVE_STRING = "The chancellor gives\nthe card above\nto another player\nafter examining it."
-CHANGIVESBELOW_STRING = "The chancellor gives\nthe card below\nto another player\nafter examining it."
+PRESTAKESHIDDENABOVE_STRING = "The president takes\nthe hidden card above."
+PRESTAKESHIDDENBELOW_STRING = "The president takes\nthe hidden card below."
+PRESGIVESABOVE_STRING = "The president gives\nthe card above\nto another player."
+PRESGIVESBELOW_STRING = "The president gives\nthe card below\nto another player."
+PRESGIVESHIDDENABOVE_STRING = "The president gives\nthe card above\nto another player\nafter examining it."
+PRESGIVESHIDDENBELOW_STRING = "The president gives\nthe card below\nto another player\nafter examining it."
 VETO_STRING = "Veto power is\nunlocked."
 
 --Policy cards
@@ -30,12 +30,12 @@ function isBoardCard(objIn)
 		 objIn.getDescription() == IMPRISON_STRING or
 		 objIn.getDescription() == PRESTAKESABOVE_STRING or
 		 objIn.getDescription() == PRESTAKESBELOW_STRING or
-		 objIn.getDescription() == CHANTAKESABOVE_STRING or
-		 objIn.getDescription() == CHANTAKESBELOW_STRING or
+		 objIn.getDescription() == PRESTAKESHIDDENABOVE_STRING or
+		 objIn.getDescription() == PRESTAKESHIDDENBELOW_STRING or
 		 objIn.getDescription() == PRESGIVESABOVE_STRING or
 		 objIn.getDescription() == PRESGIVESBELOW_STRING or
-		 objIn.getDescription() == CHANGIVESABOVE_STRING or
-		 objIn.getDescription() == CHANGIVESBELOW_STRING or
+		 objIn.getDescription() == PRESGIVESHIDDENABOVE_STRING or
+		 objIn.getDescription() == PRESGIVESHIDDENBELOW_STRING or
 		 objIn.getDescription() == VETO_STRING) then
 		return true
 	end
@@ -122,9 +122,11 @@ end
 
 function refreshBoardCards()
 	if options.gameType == 2 then
+		deleteCustomBoardCards()
 		spawnCustomBoardCards()
 		setLockBoardCards(false)
 	else
+		deleteCustomBoardCards()
 		deleteBoardCards()
 		if options.gameType == 0 then
 			spawnNotUsedFascist(getPositionByGUID(fascist_zone_guids[1]))
@@ -155,7 +157,10 @@ function refreshBoardCards()
 		if pos then
 			spawnVetoRed({pos["x"], pos["y"], pos["z"] - 2})
 		end
-		Wait.time(function() setLockBoardCards(true) end, 2)
+		if boardCardWaitId then
+			Wait.stop(boardCardWaitId)
+		end
+		boardCardWaitId = Wait.time(function() setLockBoardCards(true) end, 10)
 	end
 	lastPlayerCt = #getSeatedPlayers()
 end
@@ -212,6 +217,38 @@ function setLockBoardCards(value)
 	end
 end
 
+function deleteCustomBoardCards()
+	local tmpZoneGuid
+	local inUse = {}
+	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) or isPolicyNotUsedCard(j) then
+					smartTableInsert(inUse, j.getGUID())
+				end
+			end
+		end
+	end
+	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) or isPolicyNotUsedCard(j) then
+					smartTableInsert(inUse, j.getGUID())
+				end
+			end
+		end
+	end
+	for _, j in pairs(getAllObjects()) do
+		if (isBoardCard(j) or isPolicyNotUsedCard(j)) and not inTable(inUse, j.getGUID()) then
+			destroyObject(j);
+		end
+	end
+end
+
 function spawnCustomBoardCards()
 	spawnTopThreeBlue({-36, 2, 22})
 	spawnTopThreeOrange({-32, 2, 22})
@@ -234,15 +271,15 @@ function spawnCustomBoardCards()
 	spawnPresTakesBlue({-36, 2, -2})
 	spawnPresTakesOrange({-32, 2, -2})
 	spawnPresTakesRed({-28, 2, -2})
-	spawnChanTakesBlue({-36, 2, -6})
-	spawnChanTakesOrange({-32, 2, -6})
-	spawnChanTakesRed({-28, 2, -6})
+	spawnPresTakesHiddenBlue({-36, 2, -6})
+	spawnPresTakesHiddenOrange({-32, 2, -6})
+	spawnPresTakesHiddenRed({-28, 2, -6})
 	spawnPresGivesBlue({-36, 2, -10})
 	spawnPresGivesOrange({-32, 2, -10})
 	spawnPresGivesRed({-28, 2, -10})
-	spawnChanGivesBlue({-36, 2, -14})
-	spawnChanGivesOrange({-32, 2, -14})
-	spawnChanGivesRed({-28, 2, -14})
+	spawnPresGivesHiddenBlue({-36, 2, -14})
+	spawnPresGivesHiddenOrange({-32, 2, -14})
+	spawnPresGivesHiddenRed({-28, 2, -14})
 	spawnVetoBlue({-36, 2, -16.8})
 	spawnVetoOrange({-32, 2, -16.8})
 	spawnVetoRed({-28, 2, -16.8})
@@ -334,16 +371,16 @@ function spawnPresTakesBlue(pos)
 	return spawnBoardCard("10020", PRESTAKESBELOW_STRING, pos)
 end
 
-function spawnChanTakesOrange(pos)
-	return spawnBoardCard("10021", CHANTAKESABOVE_STRING, pos)
+function spawnPresTakesHiddenOrange(pos)
+	return spawnBoardCard("10021", PRESTAKESHIDDENABOVE_STRING, pos)
 end
 
-function spawnChanTakesRed(pos)
-	return spawnBoardCard("10022", CHANTAKESABOVE_STRING, pos)
+function spawnPresTakesHiddenRed(pos)
+	return spawnBoardCard("10022", PRESTAKESHIDDENABOVE_STRING, pos)
 end
 
-function spawnChanTakesBlue(pos)
-	return spawnBoardCard("10023", CHANTAKESBELOW_STRING, pos)
+function spawnPresTakesHiddenBlue(pos)
+	return spawnBoardCard("10023", PRESTAKESHIDDENBELOW_STRING , pos)
 end
 
 function spawnPresGivesOrange(pos)
@@ -358,16 +395,16 @@ function spawnPresGivesBlue(pos)
 	return spawnBoardCard("10026", PRESGIVESBELOW_STRING, pos)
 end
 
-function spawnChanGivesOrange(pos)
-	return spawnBoardCard("10027", CHANGIVESABOVE_STRING, pos)
+function spawnPresGivesHiddenOrange(pos)
+	return spawnBoardCard("10027", PRESGIVESHIDDENABOVE_STRING, pos)
 end
 
-function spawnChanGivesRed(pos)
-	return spawnBoardCard("10028", CHANGIVESABOVE_STRING, pos)
+function spawnPresGivesHiddenRed(pos)
+	return spawnBoardCard("10028", PRESGIVESHIDDENABOVE_STRING, pos)
 end
 
-function spawnChanGivesBlue(pos)
-	return spawnBoardCard("10029", CHANGIVESBELOW_STRING, pos)
+function spawnPresGivesHiddenBlue(pos)
+	return spawnBoardCard("10029", PRESGIVESHIDDENBELOW_STRING, pos)
 end
 
 function spawnBoardCard(cardID, desc, pos)
@@ -379,7 +416,7 @@ function spawnBoardCard(cardID, desc, pos)
 			"\"CardID\": " .. cardID .. ", " ..
 			"\"CustomDeck\": {" ..
 			"\"" .. string.sub(cardID, 1, 3) .. "\": {" ..
-			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/960839658836251260/0B0C545B51385E2C15684E71C887C321473CD5B3/\", " ..
+			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/972100947047128025/26EA18B539ACB7B13ABB97655A9E5758F5566C56/\", " ..
 			"\"BackURL\": \"http://cloud-3.steamusercontent.com/ugc/493521193151335450/EF640CCED543D0988B40DF3483149AAFA477ECFD/\", " ..
 			"\"NumWidth\": 10, " ..
 			"\"NumHeight\": 7, " ..
@@ -395,6 +432,7 @@ function spawnBoardCard(cardID, desc, pos)
    }
 	local card = spawnObjectJSON(params)
 	card.setDescription(desc)
+	card.use_grid = false
    return card
 end
 
@@ -435,6 +473,7 @@ function spawnVetoCard(cardID, desc, pos)
    }
 	local card = spawnObjectJSON(params)
 	card.setDescription(desc)
+	card.use_grid = false
    return card
 end
 
@@ -479,6 +518,7 @@ function spawnPolicyCard(cardID, desc, pos, rot, luaBool)
    }
 	local card = spawnObjectJSON(params)
 	card.setDescription(desc)
+	card.use_grid = false
 	if luaBool then
 		card.setLuaScript(
 			'enabled = false -- workaround for rewind error\r\n' ..
