@@ -193,6 +193,9 @@ end
 
 function setLockBoardCards(value)
 	local tmpZoneGuid
+	if boardCardWaitId then
+		Wait.stop(boardCardWaitId)
+	end
 	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
 		tmpZone = getObjectFromGUID(tmpZoneGuid)
 		if tmpZone then
