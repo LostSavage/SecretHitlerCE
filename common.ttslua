@@ -189,6 +189,13 @@ function getPositionByGUID(guidIn)
 	return tmpObj.getPosition()
 end
 
+function getPositionByGUIDOffsetZ(guidIn, offsetZ)
+	local tmpObj = getObjectFromGUID(guidIn)
+	local pos = tmpObj.getPosition()
+	pos["z"] = pos["z"] + offsetZ
+	return pos
+end
+
 function getDeckFromZoneByGUID(guidIn)
 	local deck = nil
 	local deck_ct = 0
