@@ -2670,13 +2670,13 @@ function setupPowerAbilities(abilitiesDeck)
 			inZone = tmpZone.getObjects()
 			for _, j in ipairs(inZone) do
 				if isBoardCardBelowAbility(j) then
-					local pos = tmpZone.getPosition()
+					local pos = j.getPosition()
 					pos["z"] = pos["z"] - 7.8
 					card = abilitiesDeck.takeObject(params)
 					card.setPositionSmooth(pos)
 					card.setRotationSmooth(FACE_UP_ROT)
 				elseif isBoardCardBelowHiddenAbility(j) then
-					local pos = tmpZone.getPosition()
+					local pos = j.getPosition()
 					pos["z"] = pos["z"] - 7.8
 					card = abilitiesDeck.takeObject(params)
 					card.setPositionSmooth(pos)
@@ -2691,14 +2691,14 @@ function setupPowerAbilities(abilitiesDeck)
 			inZone = tmpZone.getObjects()
 			for _, j in ipairs(inZone) do
 				if isBoardCardAboveAbility(j) then
-					local pos = tmpZone.getPosition()
-					pos["z"] = pos["z"] + 7.8
+					local pos = j.getPosition()
+					pos["z"] = pos["z"] + 7.7
 					card = abilitiesDeck.takeObject(params)
 					card.setPositionSmooth(pos)
 					card.setRotationSmooth(FACE_UP_ROT)
 				elseif isBoardCardAboveHiddenAbility(j) then
-					local pos = tmpZone.getPosition()
-					pos["z"] = pos["z"] + 7.8
+					local pos = j.getPosition()
+					pos["z"] = pos["z"] + 7.7
 					card = abilitiesDeck.takeObject(params)
 					card.setPositionSmooth(pos)
 					card.setRotationSmooth(FACE_DOWN_ROT)

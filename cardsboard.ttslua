@@ -480,30 +480,30 @@ function spawnBoardCard(cardID, desc, pos)
 end
 
 function spawnVetoOrange(pos)
-	return spawnVetoCard("10100", VETO_STRING, pos)
+	return spawnSubBoardCard("10100", VETO_STRING, pos)
 end
 
 function spawnVetoRed(pos)
-	return spawnVetoCard("10101", VETO_STRING, pos)
+	return spawnSubBoardCard("10101", VETO_STRING, pos)
 end
 
 function spawnVetoBlue(pos)
-	return spawnVetoCard("10102", VETO_STRING, pos)
+	return spawnSubBoardCard("10102", VETO_STRING, pos)
 end
 
 function spawnChancellorOrange(pos)
-	return spawnVetoCard("10103", CHANCELLOR_STRING, pos)
+	return spawnSubBoardCard("10103", CHANCELLOR_STRING, pos)
 end
 
 function spawnChancellorRed(pos)
-	return spawnVetoCard("10104", CHANCELLOR_STRING, pos)
+	return spawnSubBoardCard("10104", CHANCELLOR_STRING, pos)
 end
 
 function spawnChancellorBlue(pos)
-	return spawnVetoCard("10105", CHANCELLOR_STRING, pos)
+	return spawnSubBoardCard("10105", CHANCELLOR_STRING, pos)
 end
 
-function spawnVetoCard(cardID, desc, pos)
+function spawnSubBoardCard(cardID, desc, pos)
    local params = {
       json =
 			"{" ..
