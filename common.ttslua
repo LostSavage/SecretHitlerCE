@@ -383,19 +383,6 @@ function shuffleTable(objects)
 	end
 end
 
-function isFaceUp(cardIn)
-	if cardIn then
-		local zrot=cardIn.getRotation()["z"]
-		if zrot > -20 and zrot < 20 then
-			return true
-		else
-			return false
-		end
-	else
-		return nil
-	end
-end
-
 function string:tokenize(sep)
     local sep, fields = sep or ":", {}
     local pattern = string.format("([^%s]+)", sep)

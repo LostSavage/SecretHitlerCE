@@ -407,7 +407,7 @@ function onObjectLeaveScriptingZone(zone, leaveObject)
 			if inTable(policySafety_zone_guids, zone.guid) and leaveObject.tag == 'Card' and
 				(leaveObject.getDescription() == FASCISTPOLICY_STRING or
 				 leaveObject.getDescription() == LIBERALPOLICY_STRING) then
-				if isFaceUp(leaveObject) and leaveObject.held_by_color then
+				if not leaveObject.is_face_down and leaveObject.held_by_color then
 					leaveObject.deal(1, leaveObject.held_by_color)
 					broadcastToColor('Keep your policy cards face down\nwhen removing them from your hand!', leaveObject.held_by_color, {1, 0, 0})
 				end
@@ -1579,8 +1579,8 @@ function policyCardCoroutine()
 			local open = true
 			for i, j in ipairs(inZone) do
 				if isLiberalPolicyCard(j) or (bit32.band(options.expansionOptionStatus, 8) == 8 and isFascistPolicyCard(j)) then
-					if not isFaceUp(j) then open = false end
-					if isFaceUp(j) or (bit32.band(options.expansionOptionStatus, 8) == 8 and not isFaceUp(j)) then liberalCardFound = true end
+					if j.is_face_down then open = false end
+					if not j.is_face_down or (bit32.band(options.expansionOptionStatus, 8) == 8 and j.is_face_down) then liberalCardFound = true end
 				end
 			end
 			if liberalCardFound then
@@ -1613,8 +1613,8 @@ function policyCardCoroutine()
 			local open = true
 			for i, j in ipairs(inZone) do
 				if isFascistPolicyCard(j) or (bit32.band(options.expansionOptionStatus, 8) == 8 and isLiberalPolicyCard(j)) then
-					if not isFaceUp(j) then open = false end
-					if isFaceUp(j) or (bit32.band(options.expansionOptionStatus, 8) == 8 and not isFaceUp(j)) then fascistCardFound = true end
+					if j.is_face_down then open = false end
+					if not j.is_face_down or (bit32.band(options.expansionOptionStatus, 8) == 8 and j.is_face_down) then fascistCardFound = true end
 				end
 			end
 			if fascistCardFound then
@@ -1742,7 +1742,7 @@ function getPolicyCardStatus(removeCards)
 					cardFound = true
 				elseif isPolicyNotUsedCard(j) and cardFound then
 					smartTableInsert(returnTable.liberalNotUsedList, j.guid)
-				elseif isFascistPolicyCard(j) and not isFaceUp(j) and bit32.band(options.expansionOptionStatus, 8) == 8 then
+				elseif isFascistPolicyCard(j) and j.is_face_down and bit32.band(options.expansionOptionStatus, 8) == 8 then
 					smartTableInsert(returnTable.liberalList, j.guid)
 					smartTableInsert(returnTable.liberalPlayedList, j.guid)
 				end
@@ -1761,7 +1761,7 @@ function getPolicyCardStatus(removeCards)
 					cardFound = true
 				elseif isPolicyNotUsedCard(j) and cardFound then
 					smartTableInsert(returnTable.fascistNotUsedList, j.guid)
-				elseif isLiberalPolicyCard(j) and not isFaceUp(j) and bit32.band(options.expansionOptionStatus, 8) == 8 then
+				elseif isLiberalPolicyCard(j) and j.is_face_down and bit32.band(options.expansionOptionStatus, 8) == 8 then
 					smartTableInsert(returnTable.fascistList, j.guid)
 					smartTableInsert(returnTable.fascistPlayedList, j.guid)
 				end
@@ -1819,7 +1819,7 @@ function startVoteCheck()
 		if pos and jaCard and neinCard and not (_G.playerStatus[playerColor] > 3) then
 			local distance = findDistance(jaCard.getPosition(), pos);
 			if distance > 8 then
-				if not isFaceUp(jaCard) and not jaCard.held_by_color then
+				if jaCard.is_face_down and not jaCard.held_by_color then
 					jaVote = 1
 				else
 					voteDone = false
@@ -1827,7 +1827,7 @@ function startVoteCheck()
 			end
 			distance = findDistance(neinCard.getPosition(), pos);
 			if distance > 8 then
-				if not isFaceUp(neinCard) and not neinCard.held_by_color then
+				if neinCard.is_face_down and not neinCard.held_by_color then
 					neinVote = -1
 				else
 					voteDone = false

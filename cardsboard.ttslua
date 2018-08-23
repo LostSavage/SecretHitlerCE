@@ -197,7 +197,7 @@ function refreshBoardCards()
 		if boardCardWaitId then
 			Wait.stop(boardCardWaitId)
 		end
-		boardCardWaitId = Wait.time(function() setLockBoardCards(true) end, 10)
+		boardCardWaitId = Wait.time(function() boardCardsLockAfterLoad() end, 3, -1)
 	end
 	lastPlayerCt = #getSeatedPlayers()
 end
@@ -254,6 +254,36 @@ function setLockBoardCards(value)
 				end
 			end
 		end
+	end
+end
+
+function boardCardsLockAfterLoad()
+	local lock = true
+	local tmpZoneGuid
+	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) or isPolicyNotUsedCard(j) then
+					if j.loading_custom or not j.resting then lock = false end
+				end
+			end
+		end
+	end
+	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
+		tmpZone = getObjectFromGUID(tmpZoneGuid)
+		if tmpZone then
+			inZone = tmpZone.getObjects()
+			for _, j in ipairs(inZone) do
+				if isBoardCard(j) or isPolicyNotUsedCard(j) then
+					if j.loading_custom or not j.resting then lock = false end
+				end
+			end
+		end
+	end
+	if lock then
+		setLockBoardCards(true)
 	end
 end
 
