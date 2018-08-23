@@ -197,7 +197,7 @@ function refreshBoardCards()
 		if boardCardWaitId then
 			Wait.stop(boardCardWaitId)
 		end
-		boardCardWaitId = Wait.time(function() boardCardsLockAfterLoad() end, 3, -1)
+		boardCardWaitId = Wait.time(function() boardCardsLockAfterLoad() end, 5, -1)
 	end
 	lastPlayerCt = #getSeatedPlayers()
 end
@@ -259,32 +259,38 @@ end
 
 function boardCardsLockAfterLoad()
 	local lock = true
-	local tmpZoneGuid
-	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for _, j in ipairs(inZone) do
-				if isBoardCard(j) or isPolicyNotUsedCard(j) then
-					if j.loading_custom or not j.resting then lock = false end
-				end
-			end
-		end
+	--check if anything is loading
+	for _, j in pairs(getAllObjects()) do
+		if j.loading_custom and j.tag ~= "3D Text" then	lock = false end
 	end
-	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for _, j in ipairs(inZone) do
-				if isBoardCard(j) or isPolicyNotUsedCard(j) then
-					if j.loading_custom or not j.resting then lock = false end
+	--check if board cards are resting
+	if lock then
+		for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
+			tmpZone = getObjectFromGUID(tmpZoneGuid)
+			if tmpZone then
+				inZone = tmpZone.getObjects()
+				for _, j in ipairs(inZone) do
+					if isBoardCard(j) or isPolicyNotUsedCard(j) then
+						if not j.resting then lock = false end
+					end
 				end
 			end
 		end
 	end
 	if lock then
-		setLockBoardCards(true)
+		for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
+			tmpZone = getObjectFromGUID(tmpZoneGuid)
+			if tmpZone then
+				inZone = tmpZone.getObjects()
+				for _, j in ipairs(inZone) do
+					if isBoardCard(j) or isPolicyNotUsedCard(j) then
+						if not j.resting then lock = false end
+					end
+				end
+			end
+		end
 	end
+	if lock then setLockBoardCards(true) end
 end
 
 function deleteCustomBoardCards()
