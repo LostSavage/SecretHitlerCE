@@ -19,6 +19,7 @@ CHANCELLOR_STRING = "The chancellor gets the power."
 --Policy cards
 LIBERALPOLICY_STRING = "Liberal Policy"
 FASCISTPOLICY_STRING = "Fascist Policy"
+GREYPOLICY_STRING = "Grey Policy"
 NOTUSED_STRING = "Not Used"
 
 function isBoardCard(objIn)
@@ -132,29 +133,42 @@ function isBoardCardImprison(objIn)
 end
 
 function isPolicyCard(objIn)
-	if objIn.tag == "Card" and (objIn.getDescription() == "Fascist Policy" or
-		objIn.getDescription() == "Liberal Policy") and not objIn.held_by_color then
+	if objIn.tag == "Card" and (objIn.getDescription() == FASCISTPOLICY_STRING
+		or objIn.getDescription() == LIBERALPOLICY_STRING
+		or objIn.getDescription() == GREYPOLICY_STRING)
+		and not objIn.held_by_color then
 		return true
 	end
 	return false
 end
 
 function isFascistPolicyCard(objIn)
-	if objIn.tag == "Card" and objIn.getDescription() == "Fascist Policy" and not objIn.held_by_color then
+	if objIn.tag == "Card" and objIn.getDescription() == FASCISTPOLICY_STRING
+		and not objIn.held_by_color then
 		return true
 	end
 	return false
 end
 
 function isLiberalPolicyCard(objIn)
-	if objIn.tag == "Card" and objIn.getDescription() == "Liberal Policy" and not objIn.held_by_color then
+	if objIn.tag == "Card" and objIn.getDescription() == LIBERALPOLICY_STRING
+		and not objIn.held_by_color then
+		return true
+	end
+	return false
+end
+
+function isGreyPolicyCard(objIn)
+	if objIn.tag == "Card" and objIn.getDescription() == GREYPOLICY_STRING
+		and not objIn.held_by_color then
 		return true
 	end
 	return false
 end
 
 function isPolicyNotUsedCard(objIn)
-	if objIn.tag == "Card" and objIn.getDescription() == NOTUSED_STRING and not objIn.held_by_color then
+	if objIn.tag == "Card" and objIn.getDescription() == NOTUSED_STRING
+		and not objIn.held_by_color then
 		return true
 	end
 	return false
@@ -164,10 +178,16 @@ function refreshBoardCards()
 	if options.gameType == 2 then
 		deleteCustomBoardCards()
 		spawnCustomBoardCards()
-		setLockBoardCards(false)
+		-- lock board cards
+		testActionUsedPolicyZones(
+			function(p) return isBoardCard(p) or isPolicyNotUsedCard(p) end,
+			function(p) p.setLock(false) end)
 	else
+		--delete board cards
 		deleteCustomBoardCards()
-		deleteBoardCards()
+		testActionUsedPolicyZones(
+			function(p) return isBoardCard(p) or isPolicyNotUsedCard(p) end,
+			function(p) p.destruct() end)
 		if options.gameType == 0 then
 			spawnNotUsedFascist(getPositionByGUIDOffsetZ(fascist_zone_guids[1], 0.1))
 			spawnNotUsedLiberal(getPositionByGUIDOffsetZ(liberal_zone_guids[1], 0.1))
@@ -202,33 +222,7 @@ function refreshBoardCards()
 	lastPlayerCt = #getSeatedPlayers()
 end
 
-function deleteBoardCards()
-	local tmpZoneGuid
-	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for _, j in ipairs(inZone) do
-				if isBoardCard(j) or isPolicyNotUsedCard(j) then
-					j.destruct()
-				end
-			end
-		end
-	end
-	for _, tmpZoneGuid in ipairs(fascist_zone_guids) do
-		tmpZone = getObjectFromGUID(tmpZoneGuid)
-		if tmpZone then
-			inZone = tmpZone.getObjects()
-			for _, j in ipairs(inZone) do
-				if isBoardCard(j) or isPolicyNotUsedCard(j) then
-					j.destruct()
-				end
-			end
-		end
-	end
-end
-
-function setLockBoardCards(value)
+function testActionUsedPolicyZones(testFunc, actionFunc)
 	local tmpZoneGuid
 	if boardCardWaitId then
 		Wait.stop(boardCardWaitId)
@@ -238,8 +232,8 @@ function setLockBoardCards(value)
 		if tmpZone then
 			inZone = tmpZone.getObjects()
 			for _, j in ipairs(inZone) do
-				if isBoardCard(j) or isPolicyNotUsedCard(j) then
-					j.setLock(value)
+				if testFunc(j) then
+					actionFunc(j)
 				end
 			end
 		end
@@ -249,8 +243,8 @@ function setLockBoardCards(value)
 		if tmpZone then
 			inZone = tmpZone.getObjects()
 			for _, j in ipairs(inZone) do
-				if isBoardCard(j) or isPolicyNotUsedCard(j) then
-					j.setLock(value)
+				if testFunc(j) then
+					actionFunc(j)
 				end
 			end
 		end
@@ -261,7 +255,7 @@ function boardCardsLockAfterLoad()
 	local lock = true
 	--check if anything is loading
 	for _, j in pairs(getAllObjects()) do
-		if j.loading_custom and j.tag ~= "3D Text" then	lock = false end
+		if j.loading_custom and j.tag ~= "3D Text" then lock = false end
 	end
 	--check if board cards are resting
 	if lock then
@@ -290,7 +284,12 @@ function boardCardsLockAfterLoad()
 			end
 		end
 	end
-	if lock then setLockBoardCards(true) end
+	if lock then
+		-- lock board cards
+		testActionUsedPolicyZones(
+			function(p) return isBoardCard(p) or isPolicyNotUsedCard(p) end,
+			function(p) p.setLock(true) end)
+	end
 end
 
 function deleteCustomBoardCards()
@@ -576,12 +575,16 @@ function spawnFascistPolicy(pos, rot)
 	return spawnPolicyCard("10201", FASCISTPOLICY_STRING, pos, rot, true)
 end
 
+function spawnGreyPolicy(pos, rot)
+	return spawnPolicyCard("10203", GREYPOLICY_STRING, pos, rot, true)
+end
+
 function spawnNotUsedLiberal(pos)
-	return spawnPolicyCard("10203", NOTUSED_STRING, pos, FACE_UP_ROT, false)
+	return spawnPolicyCard("10204", NOTUSED_STRING, pos, FACE_UP_ROT, false)
 end
 
 function spawnNotUsedFascist(pos)
-	return spawnPolicyCard("10204", NOTUSED_STRING, pos, FACE_UP_ROT, false)
+	return spawnPolicyCard("10205", NOTUSED_STRING, pos, FACE_UP_ROT, false)
 end
 
 function spawnPolicyCard(cardID, desc, pos, rot, luaBool)
@@ -593,7 +596,7 @@ function spawnPolicyCard(cardID, desc, pos, rot, luaBool)
 			"\"CardID\": " .. cardID .. ", " ..
 			"\"CustomDeck\": {" ..
 			"\"" .. string.sub(cardID, 1, 3) .. "\": {" ..
-			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/486767061409381348/247F480C7E8D4505F3ACDD34BE74E0A04480991F/\", " ..
+			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/966473467906885935/F9971F60C369EE72B8D1EA541A98C96529541FEB/\", " ..
 			"\"BackURL\": \"http://cloud-3.steamusercontent.com/ugc/486767005708571374/C5FBC566556E3FBE9A6C8ACCDB2472FA911A253A/\", " ..
 			"\"NumWidth\": 4, " ..
 			"\"NumHeight\": 2, " ..
