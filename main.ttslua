@@ -413,8 +413,8 @@ function onObjectLeaveScriptingZone(zone, leaveObject)
 				(leaveObject.getDescription() == FASCISTPOLICY_STRING or
 				 leaveObject.getDescription() == LIBERALPOLICY_STRING) then
 				if not leaveObject.is_face_down and leaveObject.held_by_color then
-					leaveObject.deal(1, leaveObject.held_by_color)
 					broadcastToColor('Keep your policy cards face down\nwhen removing them from your hand!', leaveObject.held_by_color, {1, 0, 0})
+					leaveObject.deal(1, leaveObject.held_by_color)
 				end
 			end
 		end
@@ -1451,7 +1451,6 @@ function policyCardCoroutine()
 	local cardLists = {}
 	local drawZone = nil
 	local discardZone = nil
-	local autoNotateReshuffle = false
 
 	local homeTracker = function()
 		local tracker = getObjectFromGUID(ELECTION_TRACKER_GUID)
@@ -1532,6 +1531,7 @@ function policyCardCoroutine()
 	-- Location of all cards is known
 	if started and #cardLists.fascistList == options.fascistCards and #cardLists.liberalList == options.liberalCards and #cardLists.greyList == options.greyCards and (#cardLists.discardDeckList == 0 or #cardLists.discardDeckList == 1) then
 		-- Reshuffle
+		local autoNotateReshuffle = false
 		if #cardLists.drawList < 3 and #cardLists.discardDeckList == 1 and (#cardLists.drawDeckList == 0 or #cardLists.drawDeckList == 1) then
 			if cardLists.drawDeckList[1] then
 				local tmpDeck = getObjectFromGUID(cardLists.drawDeckList[1])
@@ -1549,7 +1549,9 @@ function policyCardCoroutine()
 				lastDrawCt = expectedCards
 				drawDeck.shuffle()
 				broadcastToAll('reshuffle done.', {1,1,1})
-				autoNotateReshuffle = true
+				if options.autoNotate then
+					autoNotateReshuffle = true
+				end
 				local discardPileBoard = getObjectFromGUID(discardPileBoard_guid)
 				if discardPileBoard then
 					discardPileBoard.setName(0)
@@ -1650,7 +1652,7 @@ function getPolicyCardStatus(removeCards)
 	returnTable.liberalList = {}
 	returnTable.liberalPlayedList = {}
 	returnTable.liberalNotUsedList = {}
-	returnTable.greyList = {} -- fixme
+	returnTable.greyList = {}
 	returnTable.drawList = {}
 	returnTable.drawDeckList = {}
 	returnTable.discardList = {}
