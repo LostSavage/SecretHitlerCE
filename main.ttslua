@@ -621,7 +621,8 @@ function init()
 		--delete board cards
 		testActionUsedPolicyZones(
 			function(p) return isBoardCard(p) or isPolicyNotUsedCard(p) end,
-			function(p) p.destruct() end)
+			function(p) p.destruct() end,
+			nil)
 	end
 end
 
@@ -1633,10 +1634,19 @@ function policyCardCoroutine()
 			end
 		end
 		if autoNotateReshuffle then notateInfo('', '', '', '*Reshuffle*', false) end
-		-- Lock placed policy cards
-		testActionUsedPolicyZones(
-			function(p) return isPolicyCard(p) end,
-			function(p) p.setLock(true) end)
+		if lastLiberalPlayed or lastFascistPlayed then
+			-- Lock placed policy cards
+			if boardCardWaitId then
+				Wait.stop(boardCardWaitId)
+			end
+			boardCardWaitId = Wait.time(
+				function()
+					testReadyToLock(
+						function(p)
+							return isPolicyCard(p) and not p.is_face_down
+						end, boardCardWaitId)
+				end, 1, -1)
+		end
 	end
 
 	Global.setVar('hold', false)
@@ -2665,7 +2675,8 @@ function setupCoroutine()
 	-- Lock placed board cards
 	testActionUsedPolicyZones(
 		function(p) return isBoardCard(p) or isPolicyNotUsedCard(p) end,
-		function(p) p.setLock(true) end)
+		function(p) p.setLock(true) end,
+		boardCardWaitId)
 
 	--Set the started variable to true
 	started = true

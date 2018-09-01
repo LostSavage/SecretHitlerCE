@@ -178,16 +178,18 @@ function refreshBoardCards()
 	if options.gameType == 2 then
 		deleteCustomBoardCards()
 		spawnCustomBoardCards()
-		-- lock board cards
+		-- Unlock board cards
 		testActionUsedPolicyZones(
 			function(p) return isBoardCard(p) or isPolicyNotUsedCard(p) end,
-			function(p) p.setLock(false) end)
+			function(p) p.setLock(false) end,
+			boardCardWaitId)
 	else
 		--delete board cards
 		deleteCustomBoardCards()
 		testActionUsedPolicyZones(
 			function(p) return isBoardCard(p) or isPolicyNotUsedCard(p) end,
-			function(p) p.destruct() end)
+			function(p) p.destruct() end,
+			nil)
 		if options.gameType == 0 then
 			spawnNotUsedFascist(getPositionByGUIDOffsetZ(fascist_zone_guids[1], 0.1))
 			spawnNotUsedLiberal(getPositionByGUIDOffsetZ(liberal_zone_guids[1], 0.1))
@@ -217,15 +219,21 @@ function refreshBoardCards()
 		if boardCardWaitId then
 			Wait.stop(boardCardWaitId)
 		end
-		boardCardWaitId = Wait.time(function() boardCardsLockAfterLoad() end, 5, -1)
+		boardCardWaitId = Wait.time(
+			function()
+				testReadyToLock(
+					function(p)
+						return isBoardCard(p) or isPolicyNotUsedCard(p)
+					end, boardCardWaitId)
+			end, 5, -1)
 	end
 	lastPlayerCt = #getSeatedPlayers()
 end
 
-function testActionUsedPolicyZones(testFunc, actionFunc)
+function testActionUsedPolicyZones(testFunc, actionFunc, waitID)
 	local tmpZoneGuid
-	if boardCardWaitId then
-		Wait.stop(boardCardWaitId)
+	if waitID then
+		Wait.stop(waitID)
 	end
 	for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
 		tmpZone = getObjectFromGUID(tmpZoneGuid)
@@ -251,20 +259,20 @@ function testActionUsedPolicyZones(testFunc, actionFunc)
 	end
 end
 
-function boardCardsLockAfterLoad()
+function testReadyToLock(testFunc, waitID)
 	local lock = true
 	--check if anything is loading
 	for _, j in pairs(getAllObjects()) do
 		if j.loading_custom and j.tag ~= "3D Text" then lock = false end
 	end
-	--check if board cards are resting
+	--check if resting
 	if lock then
 		for _, tmpZoneGuid in ipairs(liberal_zone_guids) do
 			tmpZone = getObjectFromGUID(tmpZoneGuid)
 			if tmpZone then
 				inZone = tmpZone.getObjects()
 				for _, j in ipairs(inZone) do
-					if isBoardCard(j) or isPolicyNotUsedCard(j) then
+					if testFunc(j) then
 						if not j.resting then lock = false end
 					end
 				end
@@ -277,7 +285,7 @@ function boardCardsLockAfterLoad()
 			if tmpZone then
 				inZone = tmpZone.getObjects()
 				for _, j in ipairs(inZone) do
-					if isBoardCard(j) or isPolicyNotUsedCard(j) then
+					if testFunc(j) then
 						if not j.resting then lock = false end
 					end
 				end
@@ -287,8 +295,9 @@ function boardCardsLockAfterLoad()
 	if lock then
 		-- lock board cards
 		testActionUsedPolicyZones(
-			function(p) return isBoardCard(p) or isPolicyNotUsedCard(p) end,
-			function(p) p.setLock(true) end)
+			function(p) return testFunc(p) end,
+			function(p) p.setLock(true) end,
+			waitID)
 	end
 end
 
@@ -596,7 +605,7 @@ function spawnPolicyCard(cardID, desc, pos, rot, luaBool)
 			"\"CardID\": " .. cardID .. ", " ..
 			"\"CustomDeck\": {" ..
 			"\"" .. string.sub(cardID, 1, 3) .. "\": {" ..
-			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/966473467906885935/F9971F60C369EE72B8D1EA541A98C96529541FEB/\", " ..
+			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/968725783513761884/D20A41E646CE901CA81FC067E81072BBDA9313C4/\", " ..
 			"\"BackURL\": \"http://cloud-3.steamusercontent.com/ugc/486767005708571374/C5FBC566556E3FBE9A6C8ACCDB2472FA911A253A/\", " ..
 			"\"NumWidth\": 4, " ..
 			"\"NumHeight\": 2, " ..
