@@ -1159,7 +1159,7 @@ end
 
 function decExpansionAmount(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		if options.expansionAmount > 2 then
+		if options.expansionAmount > 0 then
 			options.expansionAmount = options.expansionAmount - 1
 		end
 		settingsPannelMakeButtons()
@@ -1168,7 +1168,7 @@ end
 
 function incExpansionAmount(clickedObject, playerColor)
 	if Player[playerColor].admin then
-		if options.expansionAmount < 3 then
+		if options.expansionAmount < 4 then
 			options.expansionAmount = options.expansionAmount + 1
 		end
 		settingsPannelMakeButtons()
