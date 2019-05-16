@@ -142,7 +142,7 @@ options = {
 	expansionOptionText = {'Pres -> Chan', 'Chan -> Pres', 'Clockwise', 'Counterclockwise'},
 	fascistCards = 11,
 	greyCards = 0,
-	gameType = 0, -- [0 Original, 1 Extended, 2 Custom]
+	gameType = 0, -- [0 Original, 2 Custom]
 	liberalCards = 6,
 	noteType = 1, -- [1 Dark wood, 2 Light wood, 3 Red wood, 4 Black plastic, 5 Board image, 6 Swiss cheese, 7 Private only, 8 Cooperative]
 	policySafety = true,
@@ -754,13 +754,12 @@ function settingsPannelMakeButtons()
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
 		makeSquareButtonLabel(settingsPannel, options.gameType == 0, radio_string, '', 'Original', 'gameTypeZero', {startX, 0.2, startZ}, 2.45, not customOnly)
-		makeSquareButtonLabel(settingsPannel, options.gameType == 1, radio_string, '', 'Extended', 'gameTypeOne', {startX, 0.2, startZ + offsetZ}, 2.7, not customOnly)
-		makeSquareButtonLabel(settingsPannel, options.gameType == 2, radio_string, '', 'Custom', 'gameTypeTwo', {startX, 0.2, startZ + offsetZ * 2}, 2.3, true)
-		makeDecIncButtonsLabel(settingsPannel, options.liberalCards, '-', '+', 'Liberal Cards', 'decLiberalCards', 'incLiberalCards', {startX + 1.3, 0.2, startZ + offsetZ * 3}, 6.1, false, options.gameType == 2)
-		makeDecIncButtonsLabel(settingsPannel, options.fascistCards, '-', '+', 'Fascist Cards', 'decFascistCards', 'incFascistCards', {startX + 1.3, 0.2, startZ + offsetZ * 4}, 6.1, false, options.gameType == 2)
-		makeDecIncButtonsLabel(settingsPannel, options.greyCards, '-', '+', 'Grey Cards', 'decGreyCards', 'incGreyCards', {startX + 1.3, 0.2, startZ + offsetZ * 5}, 5.65, false, options.gameType == 2)
+		makeSquareButtonLabel(settingsPannel, options.gameType == 2, radio_string, '', 'Custom', 'gameTypeTwo', {startX, 0.2, startZ + offsetZ * 1}, 2.3, true)
+		makeDecIncButtonsLabel(settingsPannel, options.liberalCards, '-', '+', 'Liberal Cards', 'decLiberalCards', 'incLiberalCards', {startX + 1.3, 0.2, startZ + offsetZ * 2}, 6.1, false, options.gameType == 2)
+		makeDecIncButtonsLabel(settingsPannel, options.fascistCards, '-', '+', 'Fascist Cards', 'decFascistCards', 'incFascistCards', {startX + 1.3, 0.2, startZ + offsetZ * 3}, 6.1, false, options.gameType == 2)
+		makeDecIncButtonsLabel(settingsPannel, options.greyCards, '-', '+', 'Grey Cards', 'decGreyCards', 'incGreyCards', {startX + 1.3, 0.2, startZ + offsetZ * 4}, 5.65, false, options.gameType == 2)
 
-		startZ = -13.4
+		startZ = -14.5
 		buttonParam.label = '[u]Note Taker[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
@@ -768,7 +767,7 @@ function settingsPannelMakeButtons()
 		local offsets = {4.4, 6.6, 6.3, 4.7, 4.7, 4.7, 4.6, 4.6}
 		makeDecIncButtonsLabel(settingsPannel, options.noteType, '-', '+', labels, 'decNoteType', 'incNoteType', {startX, 0.2, startZ}, offsets, false, true)
 
-		startZ = -10.3
+		startZ = -11.6
 		buttonParam.label = '[u]Hidden Zones[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
@@ -776,7 +775,7 @@ function settingsPannelMakeButtons()
 		offsets = {3.2, 3.3, 5.3, 5.35, 3.3, 4.1}
 		makeDecIncButtonsLabel(settingsPannel, options.zoneType, '-', '+', labels, 'decZoneType', 'incZoneType', {startX, 0.2, startZ}, offsets, false, options.zoneType ~= 6)
 
-		startZ = -7.2
+		startZ = -8.5
 		buttonParam.label = '[u]Other Options[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
@@ -792,7 +791,7 @@ function settingsPannelMakeButtons()
 		--Expansion
 		local abilitiesDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 		if abilitiesDeck then
-			startZ = 5
+			startZ = 3.7
 			buttonParam.label = '[u]Expansion[/u]'
 			buttonParam.position = {0, 0.2, startZ - 1.4}
 			settingsPannel.createButton(buttonParam)
@@ -915,17 +914,6 @@ function gameTypeZero(clickedObject, playerColor)
 		options.gameType = 0
 		options.fascistCards = 11
 		options.liberalCards = 6
-		options.greyCards = 0
-		refreshBoardCards()
-		settingsPannelMakeButtons()
-	end
-end
-
-function gameTypeOne(clickedObject, playerColor)
-	if Player[playerColor].admin then
-		options.gameType = 1
-		options.fascistCards = 13
-		options.liberalCards = 7
 		options.greyCards = 0
 		refreshBoardCards()
 		settingsPannelMakeButtons()
@@ -3109,11 +3097,13 @@ function notateColor2ByObject(tableIn)
 		if tableIn[1] then
 			local playerColor = closestPlayer(tableIn[1], players, 18)
 			if playerColor and notate.line then
-				if noteTakerNotes[notate.line].color1 ~= playerColor then
-					noteTakerNotes[notate.line].color2 = playerColor
-					refreshNotes(nil)
-					notate.line = nil
-					notate.action = ''
+				if noteTakerNotes[notate.line] then
+					if noteTakerNotes[notate.line].color1 ~= playerColor then
+						noteTakerNotes[notate.line].color2 = playerColor
+						refreshNotes(nil)
+						notate.line = nil
+						notate.action = ''
+					end
 				end
 			end
 		end

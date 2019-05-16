@@ -1425,7 +1425,9 @@ function buttonColor(clickedObject, playerColor, colorClicked)
 			noteTakerNotes[noteTakerCurrLine].color2 = colorClicked
 			prevChanColor = colorClicked
 		end
-		if (noteTakerNotes[noteTakerCurrLine].action == string.lower(bulletInfo.action) or noteTakerNotes[noteTakerCurrLine].action == 'gives pres to')
+		if (noteTakerNotes[noteTakerCurrLine].action == string.lower(bulletInfo.action)
+			 or noteTakerNotes[noteTakerCurrLine].action == string.lower(imprisonInfo.action)
+			 or noteTakerNotes[noteTakerCurrLine].action == 'gives pres to')
 			 and noteTakerNotes[noteTakerCurrLine].color1 ~= '' and noteTakerNotes[noteTakerCurrLine].color2 ~= '' then
 			addNewLine()
 		end
@@ -2044,7 +2046,8 @@ function noteTakerNotesLine(lineIn, useColorIn)
 		end
 		stringOut = stringOut .. '[i]' .. text .. '[/i]'
 		if noteTakerNotes[lineIn].action ~= 'gives pres to'
-			and noteTakerNotes[lineIn].action ~= string.lower(bulletInfo.action) then
+			and noteTakerNotes[lineIn].action ~= string.lower(bulletInfo.action)
+			and noteTakerNotes[lineIn].action ~= string.lower(imprisonInfo.action) then
 			stringOut = stringOut .. ': '
 		elseif noteTakerNotes[lineIn].claim3 ~= ''
 				or noteTakerNotes[lineIn].claim2 ~= ''

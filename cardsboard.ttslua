@@ -14,6 +14,7 @@ PRESGIVESABOVE_STRING = "The president gives\nthe card above\nto another player.
 PRESGIVESBELOW_STRING = "The president gives\nthe card below\nto another player."
 PRESGIVESHIDDENABOVE_STRING = "The president gives\nthe card above\nto another player\nafter examining it."
 PRESGIVESHIDDENBELOW_STRING = "The president gives\nthe card below\nto another player\nafter examining it."
+DOESNOTHING_STRING = "The president\ndoes nothing."
 VETO_STRING = "Veto power is\nunlocked."
 CHANCELLOR_STRING = "The chancellor gets the power."
 --Policy cards
@@ -38,6 +39,7 @@ function isBoardCard(objIn)
 		 objIn.getDescription() == PRESGIVESBELOW_STRING or
 		 objIn.getDescription() == PRESGIVESHIDDENABOVE_STRING or
 		 objIn.getDescription() == PRESGIVESHIDDENBELOW_STRING or
+		 objIn.getDescription() == DOESNOTHING_STRING or
 		 objIn.getDescription() == VETO_STRING or
 		 objIn.getDescription() == CHANCELLOR_STRING) then
 		return true
@@ -190,27 +192,16 @@ function refreshBoardCards()
 			function(p) return isBoardCard(p) or isPolicyNotUsedCard(p) end,
 			function(p) p.destruct() end,
 			nil)
-		if options.gameType == 0 then
-			spawnNotUsedFascist(getPositionByGUIDOffsetZ(fascist_zone_guids[1], 0.1))
-			spawnNotUsedLiberal(getPositionByGUIDOffsetZ(liberal_zone_guids[1], 0.1))
-		end
+		spawnNotUsedFascist(getPositionByGUIDOffsetZ(fascist_zone_guids[1], 0.1))
+		spawnNotUsedLiberal(getPositionByGUIDOffsetZ(liberal_zone_guids[1], 0.1))
 		if #getSeatedPlayers() > 8 then
-			if options.gameType == 1 then
-				spawnTopCardOrange(getPositionByGUIDOffsetZ(fascist_zone_guids[1], 0.1))
-			end
 			spawnInspectOrange(getPositionByGUIDOffsetZ(fascist_zone_guids[2], 0.1))
 			spawnInspectOrange(getPositionByGUIDOffsetZ(fascist_zone_guids[3], 0.1))
 			spawnPickPresOrange(getPositionByGUIDOffsetZ(fascist_zone_guids[4], 0.1))
 		elseif #getSeatedPlayers() > 6 then
-			if options.gameType == 1 then
-				spawnTopCardOrange(getPositionByGUIDOffsetZ(fascist_zone_guids[2], 0.1))
-			end
 			spawnInspectOrange(getPositionByGUIDOffsetZ(fascist_zone_guids[3], 0.1))
 			spawnPickPresOrange(getPositionByGUIDOffsetZ(fascist_zone_guids[4], 0.1))
 		else
-			if options.gameType == 1 then
-				spawnTopCardOrange(getPositionByGUIDOffsetZ(fascist_zone_guids[3], 0.1))
-			end
 			spawnTopThreeOrange(getPositionByGUIDOffsetZ(fascist_zone_guids[4], 0.1))
 		end
 		spawnBulletRed(getPositionByGUIDOffsetZ(fascist_zone_guids[5], 0.1))
@@ -334,44 +325,47 @@ function deleteCustomBoardCards()
 end
 
 function spawnCustomBoardCards()
-	spawnTopThreeBlue({-36, 2, 22})
-	spawnTopThreeOrange({-32, 2, 22})
-	spawnTopThreeRed({-28, 2, 22})
-	spawnInspectBlue({-36, 2, 18})
-	spawnInspectOrange({-32, 2, 18})
-	spawnInspectRed({-28, 2, 18})
-	spawnPickPresBlue({-36, 2, 14})
-	spawnPickPresOrange({-32, 2, 14})
-	spawnPickPresRed({-28, 2, 14})
-	spawnBulletBlue({-36, 2, 10})
-	spawnBulletOrange({-32, 2, 10})
-	spawnBulletRed({-28, 2, 10})
-	spawnTopCardBlue({-36, 2, 6})
-	spawnTopCardOrange({-32, 2, 6})
-	spawnTopCardRed({-28, 2, 6})
-	--spawnImprisonBlue({-36, 2, 2})
-	--spawnImprisonOrange({-32, 2, 2})
-	--spawnImprisonRed({-28, 2, 2})
-	spawnPresTakesBlue({-36, 2, -2})
-	spawnPresTakesOrange({-32, 2, -2})
-	spawnPresTakesRed({-28, 2, -2})
-	spawnPresTakesHiddenBlue({-36, 2, -6})
-	spawnPresTakesHiddenOrange({-32, 2, -6})
-	spawnPresTakesHiddenRed({-28, 2, -6})
-	spawnPresGivesBlue({-36, 2, -10})
-	spawnPresGivesOrange({-32, 2, -10})
-	spawnPresGivesRed({-28, 2, -10})
-	spawnPresGivesHiddenBlue({-36, 2, -14})
-	spawnPresGivesHiddenOrange({-32, 2, -14})
-	spawnPresGivesHiddenRed({-28, 2, -14})
-	spawnVetoBlue({-36, 2, -16.8})
-	spawnVetoOrange({-32, 2, -16.8})
-	spawnVetoRed({-28, 2, -16.8})
-	--spawnChancellorBlue({-36, 2, -18.6})
-	--spawnChancellorOrange({-32, 2, -18.6})
-	--spawnChancellorRed({-28, 2, -18.6})
-	spawnNotUsedLiberal({-34, 2, -22.4})
-	spawnNotUsedFascist({-30, 2, -22.4})
+	spawnTopThreeBlue({-38, 2, 19})
+	spawnTopThreeOrange({-38, 2, 15})
+	spawnTopThreeRed({-38, 2, 11})
+	spawnInspectBlue({-34, 2, 19})
+	spawnInspectOrange({-34, 2, 15})
+	spawnInspectRed({-34, 2, 11})
+	spawnPickPresBlue({-30, 2, 19})
+	spawnPickPresOrange({-30, 2, 15})
+	spawnPickPresRed({-30, 2, 11})
+	spawnBulletBlue({-26, 2, 19})
+	spawnBulletOrange({-26, 2, 15})
+	spawnBulletRed({-26, 2, 11})
+	spawnVetoBlue({-36, 2, 8})
+	spawnVetoOrange({-36, 2, 6})
+	spawnVetoRed({-36, 2, 4})
+	spawnNotUsedLiberal({-32, 2, 6})
+	spawnNotUsedFascist({-28, 2, 6})
+	spawnTopCardBlue({-36, 2, 1})
+	spawnTopCardOrange({-36, 2, -3})
+	spawnTopCardRed({-36, 2, -7})
+	spawnImprisonBlue({-32, 2, 1})
+	spawnImprisonOrange({-32, 2, -3})
+	spawnImprisonRed({-32, 2, -7})
+	spawnDoesNothingBlue({-28, 2, 1})
+	spawnDoesNothingOrange({-28, 2, -3})
+	spawnDoesNothingRed({-28, 2, -7})
+	spawnPresTakesBlue({-38, 2, -11})
+	spawnPresTakesOrange({-38, 2, -15})
+	spawnPresTakesRed({-38, 2, -19})
+	spawnPresTakesHiddenBlue({-34, 2, -11})
+	spawnPresTakesHiddenOrange({-34, 2, -15})
+	spawnPresTakesHiddenRed({-34, 2, -19})
+	spawnPresGivesBlue({-30, 2, -11})
+	spawnPresGivesOrange({-30, 2, -15})
+	spawnPresGivesRed({-30, 2, -19})
+	spawnPresGivesHiddenBlue({-26, 2, -11})
+	spawnPresGivesHiddenOrange({-26, 2, -15})
+	spawnPresGivesHiddenRed({-26, 2, -19})
+	--spawnChancellorBlue({-36, 2, -22})
+	--spawnChancellorOrange({-32, 2, -22})
+	--spawnChancellorRed({-28, 2, -22})
 end
 
 function spawnTopThreeOrange(pos)
@@ -494,6 +488,18 @@ function spawnPresGivesHiddenBlue(pos)
 	return spawnBoardCard("10029", PRESGIVESHIDDENBELOW_STRING, pos)
 end
 
+function spawnDoesNothingOrange(pos)
+	return spawnBoardCard("10030", DOESNOTHING_STRING, pos)
+end
+
+function spawnDoesNothingRed(pos)
+	return spawnBoardCard("10031", DOESNOTHING_STRING, pos)
+end
+
+function spawnDoesNothingBlue(pos)
+	return spawnBoardCard("10032", DOESNOTHING_STRING, pos)
+end
+
 function spawnBoardCard(cardID, desc, pos)
    local params = {
       json =
@@ -503,12 +509,12 @@ function spawnBoardCard(cardID, desc, pos)
 			"\"CardID\": " .. cardID .. ", " ..
 			"\"CustomDeck\": {" ..
 			"\"" .. string.sub(cardID, 1, 3) .. "\": {" ..
-			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/972100947047128025/26EA18B539ACB7B13ABB97655A9E5758F5566C56/\", " ..
-			"\"BackURL\": \"http://cloud-3.steamusercontent.com/ugc/493521193151335450/EF640CCED543D0988B40DF3483149AAFA477ECFD/\", " ..
+			"\"FaceURL\": \"http://cloud-3.steamusercontent.com/ugc/809997459545222830/36C579AD5879CA194D3142C7C1940E2AE19F888E/\", " ..
+			"\"BackURL\": \"http://cloud-3.steamusercontent.com/ugc/809997459545150312/0CAC8BEF72548FBBABB723081596771432C78476/\", " ..
 			"\"NumWidth\": 10, " ..
 			"\"NumHeight\": 7, " ..
 			"\"BackIsHidden\": false, " ..
-			"\"UniqueBack\": true " ..
+			"\"UniqueBack\": false " ..
 			"}" ..
 			"}" ..
 			"}",

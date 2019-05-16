@@ -12,4 +12,3 @@ ADD_ON_VERSION = 6
 #include \SecretHitlerCE\UI.ttslua
 #include \SecretHitlerCE\notetaker.ttslua
 #include \SecretHitlerCE\common.ttslua
-#include \SecretHitlerCE\newcode.ttslua
