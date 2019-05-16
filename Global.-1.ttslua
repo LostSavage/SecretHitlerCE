@@ -5,7 +5,7 @@
 -- Rodney, Markimus, Morten G and Hmmmpf
 -- Scripts can be found on https://github.com/LostSavage/SecretHitlerCE
 MOD_NAME = "Secret Hitler: CE"
-UPDATE_VERSION = 107
+UPDATE_VERSION = 108
 ADD_ON_VERSION = 6
 #include \SecretHitlerCE\main.ttslua
 #include \SecretHitlerCE\cardsboard.ttslua

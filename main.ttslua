@@ -792,7 +792,7 @@ function settingsPannelMakeButtons()
 		local abilitiesDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 		if abilitiesDeck then
 			startZ = 3.7
-			buttonParam.label = '[u]Expansion[/u]'
+			buttonParam.label = '[u]Fan Expansion[/u]'
 			buttonParam.position = {0, 0.2, startZ - 1.4}
 			settingsPannel.createButton(buttonParam)
 			makeDecIncButtonsLabel(settingsPannel, options.expansionAmount, '-', '+', 'Cards', 'decExpansionAmount', 'incExpansionAmount', {startX, 0.2, startZ}, 4.7, false, true)
