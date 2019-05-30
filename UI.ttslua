@@ -21,9 +21,9 @@ function refreshUI()
 		UI.setAttribute("adminButton", "active", "true")
 	end
 	if started then
-		local youHitler = ""
-		local youFas = ""
-		local youLib = ""
+		local youHitler = " "
+		local youFas = " "
+		local youLib = " "
 		local youNotPlaying = "Grey"
 		local hitWhite = ""
 		local hitBrown = ""
@@ -51,7 +51,7 @@ function refreshUI()
 		local fasMaroon = ""
 
 		if options.zoneType == 6 then
-			youNotPlaying = ""
+			youNotPlaying = " "
 			for _, playerColor in pairs(GREY_PLAYABLE_COLORS) do
 				if roles[playerColor] == "hitler" then
 					UI.setValue("hit" .. playerColor, playerColor .. " is " .. text.hitler .. "!")
@@ -64,26 +64,26 @@ function refreshUI()
 			UI.setAttribute("player" .. playerColor, "visibility", playerColor)
 			if roles[playerColor] == "hitler" then
 				UI.setValue("hit" .. playerColor, playerColor .. " is " .. text.hitler .. "!")
-				if youHitler == "" then
+				if youHitler == " " then
 					youHitler = playerColor
 				else
 					youHitler = youHitler .. "|" .. playerColor
 				end
 			elseif roles[playerColor] == "fascist" then
 				UI.setValue("fas" .. playerColor, playerColor .. " is " .. text.fascistArticle .. " " .. text.fascist .. "!")
-				if youFas == "" then
+				if youFas == " " then
 					youFas = playerColor
 				else
 					youFas = youFas .. "|" .. playerColor
 				end
 			elseif roles[playerColor] == "liberal" then
-				if youLib == "" then
+				if youLib == " " then
 					youLib = playerColor
 				else
 					youLib = youLib .. "|" .. playerColor
 				end
 			else
-				if youNotPlaying == "" then
+				if youNotPlaying == " " then
 					youNotPlaying = playerColor
 				else
 					youNotPlaying = youNotPlaying .. "|" .. playerColor
