@@ -1,0 +1,5 @@
+Custom includes additional presidential powers that you can place anywhere, allows changing the number of policy slots on the fascist and liberal tracks with not used cards and enables changing the number of policy cards.  Some presidential powers need fan expansion cards that are not included.
+
+To make an extended game use the extra slot on the both tracks.  Add 2 Fascist and 1 Liberal policy cards and then add an orange "The president examines the top card." power.
+
+Grey policy cards can be played on Fascist or Liberal tracks.  Try removing a liberal policy and adding a grey one.

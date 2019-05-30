@@ -1,0 +1,16 @@
+[u][b]OBJECT[/b][/u]
+
+Every player has a secret identity as a member of either the Liberal team or the Fascist team.
+
+Players on the Liberal team win if either:
+
+    • Five Liberal Policies are enacted.
+    or
+    • Hitler is assassinated.
+
+Players on the Fascist team win if either:
+
+    • Six Fascist Policies are enacted
+    or
+    • Hitler is elected Chancellor any time after the
+    third Fascist Policy has been enacted.

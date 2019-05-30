@@ -1,0 +1,59 @@
+[u][b]GAMEPLAY[/b][/u]
+
+Secret Hitler is played in rounds. Each round has an [b]Election[/b] to form a government, a Legislative Session to enact a new Policy, and an Executive Action to exercise governmental power.
+
+[u][b]ELECTION[/b][/u]
+
+1. [b]Pass the Presidential Candidacy[/b]
+At the beginning of a new round, the President placard moves clockwise to the next player, who is the new Presidential Candidate.
+
+2. [b]Nominate a Chancellor[/b]
+The Presidential Candidate chooses a Chancellor Candidate by passing the Chancellor placard to any other eligible player. The Presidential Candidate is free to discuss Chancellor options with the table to build consensus and make it more likely the Government gets elected.
+
+[b]Eligibility:[/b]
+The last [i]elected[/i] President and Chancellor are “term-limited,” and ineligible to be nominated as Chancellor Candidate.
+
+> ON ELIGIBILITY:
+>
+> • Term limits apply to the President and
+> Chancellor who were last elected, not to the last > pair nominated.
+>
+> • Term limits only affect nominations to the
+> Chancellorship; anyone can be President, even
+> someone who was just Chancellor.
+>
+> • If there are only five players left in the game,
+> only the last elected Chancellor is ineligible to be
+> Chancellor Candidate; the last President may be
+> nominated.
+>
+> • There are some other rules that affect eligibility
+> in specific ways: the Veto Power and the Election
+> Tracker. You don’t need to worry about those yet,
+> and we’ll talk about each one in its relevant
+> section.
+
+3. [b]Vote on the government[/b]
+Once the Presidential Candidate has chosen an eligible Chancellor Candidate, players may discuss the proposed government until everyone is ready to vote. Every player, [i]including the Candidates[/i], votes on the proposed government. Once everyone is ready to vote, reveal your Ballot cards simultaneously so that everyone’s vote is public.
+
+[b]If the vote is a tie, or if a majority of players votes no:[/b]
+
+The vote fails. The Presidential Candidate misses this chance to be elected, and the President placard moves clockwise to the next player. The Election Tracker is advanced by one Election.
+
+[b]Election Tracker:[/b] If the group rejects three governments in a row, the country is thrown into chaos. Immediately reveal the Policy on top of the Policy deck and enact it. Any power granted by this Policy is ignored, but the Election Tracker resets, and existing term-limits are forgotten. All players become eligible to hold the office of Chancellor for the next Election. If there are fewer than three tiles remaining in the Policy deck at this point, shuffle them with the Discard pile to create a new Policy deck.
+
+[i]Any time a new Policy tile is played face-up, the Election Tracker is reset, whether it was enacted by an elected government or enacted by the frustrated populace.[/i]
+
+[b]If a majority of players votes yes:[/b]
+
+The Presidential Candidate and Chancellor Candidate become the new President and Chancellor, respectively.
+
+    If three or more Fascist Policies have been
+    enacted already:
+
+    Ask if the new Chancellor is Hitler. If so, the
+    game is over and the Fascists win. Otherwise,
+    other players know for sure the Chancellor is not
+    Hitler.
+
+Proceed as usual to the Legislative Session.

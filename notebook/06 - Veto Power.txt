@@ -1,0 +1,7 @@
+[u][b]VETO POWER[/u][/b]
+
+The Veto Power is a special rule that comes into effect after five Fascist Policies have been enacted. For all Legislative Sessions after the fifth* Fascist Policy is enacted, the Executive branch gains a [i]permanent new ability[/i] to discard all three Policy tiles if [b]both[/b] the Chancellor and President agree.
+
+The President draws three Policy tiles, discards one, and passes the remaining two to the Chancellor as usual. Then Chancellor may, instead of enacting either Policy, say “I wish to veto this agenda.” If the President consents by saying, “I agree to the veto,” both Policies are discarded and the President placard passes to the left as usual. If the President does not consent, the Chancellor must enact a Policy as normal.
+
+Each use of the Veto Power represents an inactive government and advances the Election Tracker by one.

@@ -24,7 +24,7 @@ function getPlayerPosRotVectors(playerColor)
 	if greyPlayer(playerColor) then
 		local ph = getObjectFromGUID(greyPlayerHandGuids[playerColor])
 		if ph then
-			returnVal.pos = ph.getPosition()
+			local pos = ph.getPosition()
 			returnVal.pos = {x = pos["x"], y = pos["y"], z = pos["z"] - 2.26}
 			returnVal.rot = ph.getRotation()
 			returnVal.vForward = ph.getTransformForward()

@@ -1,0 +1,61 @@
+[b]Secret Hitler[/b] was designed by [b][i]Max Temkin[/i][/b] (Cards Against Humanity, Humans vs. Zombies) [b][i]Mike Boxleiter[/i][/b] (Solipskier, TouchTone), [b][i]Tommy Maranges[/i][/b] (Philosophy Bro) and illustrated by [b][i]Mackenzie Schubert[/i][/b] (Letter Tycoon, Penny Press).
+
+[u]Secret Hitler homepage:[/u]
+http://secrethitler.com
+
+[b][i]Secret Hitler: Consolidator Edition by Lost Savage[/b][/i] is based on the following mods: 
+
+[b][i]Secret Hitler by skkeeper[/b][/i]
+The first Secret Hitler for TTS based on the print and play version. 
+
+[b][i]Secret Hitler by FragaholiC[/i][/b]
+All Secret Hitler TTS mods are based off of this one (except for the one above). 
+
+[b][i]Secret Hitler Scripted by Lycake[/i][/b]
+First scripted version. Now removed from Steam.
+
+[b][i]Secret Hitler Rescripted by LostGod[/i][/b]
+My scripting is based off of this mod. This is the version that picks the president automatically. 
+
+[b][i]Secret Hitler Scripted with 10 player variant by The Blind Dragon and Mr. White[/i][/b]
+Used the extended boards (7 slot Fascist and 6 slot Liberal). 
+
+[b][i]Secret Hitler: Customizable Board (Game not Included) by Corruptor0127[/i][/b]
+Most of the work for the custom boards. 
+
+[b][i]Secret Hitler: Remastered by The Trust Melon[/i][/b]
+The idea of a darker table top. 
+
+[b][i]Secret Hitler (Anonymous Voting) by Hobo[/i][/b]
+Used the hidden zones and the idea of card buttons.
+
+[b][i]Secret Hitler Scripted Note Taker Machine by Max[/i][/b]
+The original note taker. 
+
+[b][i]Secret Hitler Note Taker by The Blind Dragon[/i][/b]
+The updated note taker. 
+
+[b][i]Adv Secret Hitler Note Taker by smiling Aktheon[/i][/b]
+The best note taker. My note taker is based on this one. 
+
+[b][i]Secret Hitler Cheat/Troll Proof by SwiftPanda[/i][/b]
+Auto pres/chan for the note taker and other ideas. 
+
+[b][i]Card Counter by Rodney[/i][/b]
+My counting code is based on this.
+
+[b][i]Assorted Models by Bobirov[/i][/b]
+Used the bars for imprisonment.
+
+[b][i]Shuffle Players Button by Markimus[/i][/b]
+The start of the new shuffle functions.
+
+[b][i]Table Extension Shelves by Demian[/i][/b]
+Makes the table bigger for 12 Player.
+
+[b][i]12 Player avatar and hidden zone by CHRY[/i][/b]
+More stuff for 12 Player.
+
+[u][b]OTHER CREDITS[/b][/u]
+
+Earth background is based on the specular map by [b][i]James Hastings-Trew[/i][/b].

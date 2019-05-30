@@ -1,0 +1,17 @@
+[u][b]PRESIDENTIAL POWERS[/u][/b]
+
+[b]Investigate Loyalty[/b]
+The President chooses a player to investigate. Investigated players should hand their Party Membership card (not Secret Role card!) to the President, who checks the player’s loyalty in secret and then returns the card to the player. The President may share (or lie about!) the results of their investigation at their discretion. No player may be investigated twice in the same game.
+
+[b]Call Special Election[/b]
+The President chooses any other player at the table to be the next Presidential Candidate by passing that player the President placard. Any player can become President—even players that are term-limited. The new President nominates an eligible player as Chancellor Candidate and the Election proceeds as usual.
+
+[b]A Special Election does not skip any players. After a Special Election, the President placard returns to the left of the President who enacted the Special Election.[/b]
+
+If the President passes the presidency to the next player in the rotation, that player would get to run for President twice in a row: once for the Special Election and once for their normal shift in the Presidential rotation.
+
+[b]Policy Peek[/b]
+The President secretly looks at the top three tiles in the Policy deck and then returns them to the top of the deck without changing the order.
+
+[b]Execution[/b]
+The President executes one player at the table by saying “I formally execute [player name].” If that player is Hitler, the game ends in a Liberal victory. If the executed player is [b]not[/b] Hitler, the table should not learn whether a Fascist or a Liberal has been killed; players must try to work out for themselves the new table balance. Executed players are removed from the game and may not speak, vote, or run for office.

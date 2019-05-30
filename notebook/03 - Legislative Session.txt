@@ -1,0 +1,25 @@
+[u][b]LEGISLATIVE SESSION[/u][/b]
+
+During the Legislative Session, the President and Chancellor work together to enact a new Policy in secret. The President draws the top three tiles from the Policy deck, looks at them in secret, and discards one tile face down into the Discard pile. The remaining two tiles go to the Chancellor, who looks in secret, discards one Policy tile face down, and enacts the remaining Policy by placing the tile face up on the corresponding track.
+
+Verbal and nonverbal communication between the President and Chancellor is forbidden. The President and Chancellor MAY NOT pick Policies to play at random, shuffle the tiles before discarding one, or do anything else clever to avoid secretly and intentionally selecting a Policy. Additionally, the President should hand both Policies over at the same time, rather than one at a time to gauge the Chancellor’s reaction. Attempting to telegraph the contents of your hand using randomness or any other unusual selection procedure violates the spirit of the game. Don’t do it.
+
+[b]Discarded Policy tiles should never be revealed to the group. Players must rely on the word of the President and Chancellor, who are free to lie.[/b]
+
+> [b]ABOUT LYING:[/b] Often, some players learn
+> things that the rest of the players don’t know,
+> like when the President and Chancellor get to see > Policy tiles, or when a President uses the
+> Investigate power to see someone’s Party
+> Membership card. You can always lie about
+> hidden knowledge in Secret Hitler. The only time
+> players MUST tell the truth is in game-ending,
+> Hitler-related scenarios: a player who is Hitler
+> must say so if assassinated or if elected
+> Chancellor after three Fascist Policies have been
+> enacted.
+
+[b]If there are fewer than three tiles remaining in the Policy deck at the end of a Legislative Session,[/b] shuffle them with the Discard pile to create a new Policy deck. Unused Policy tiles should never be revealed, and they should not be simply placed on top of the new Policy deck.
+
+[b]If the government enacted a Fascist Policy that covered up a Presidential Power,[/b] the sitting President gets to use that power. Proceed to the Executive Action.
+
+[b]If the government enacted a Liberal Policy or a Fascist Policy that grants no Presidential Power,[/b] begin a new round with a new Election.

@@ -133,12 +133,12 @@ notate = {
 noteTakerNotes = {}
 noteTakerCurrLine = 0
 options = {
-	autoNotate = true,
+	autoNotate = false,
 	dealPartyCards = false,
 	dealRoleCards = false,
 	expansionAmount = 2,
-	expansionOptionEnabled = 0, -- [1 SwapGov, 2 Reverse, 4 SwapPower, 8 SetupPowerAbilities ...]
-	expansionOptionStatus = 0, -- [1 SwapGov, 2 Reverse, 4 Unused ...]
+	expansionOptionEnabled = 0, -- [1 SwapGov, 2 Reverse, 4 SwapPower, 8 SetupPowerAbilities]
+	expansionOptionStatus = 0, -- [1 SwapGov, 2 Reverse]
 	expansionOptionText = {'Pres -> Chan', 'Chan -> Pres', 'Clockwise', 'Counterclockwise'},
 	fascistCards = 11,
 	greyCards = 0,
@@ -150,7 +150,7 @@ options = {
 	shufflePlayers = false,
 	shuffleHost = true,
 	voteHistory = false,
-	zoneType = 4 -- [1 None, 2 Small, 3 Gap (version 1), 4 Gap (version 2), 5 Large, 6 12 Player]
+	zoneType = 4 -- [1 None, 2 Small, 3 Gap (version 1), 4 Gap (version 2), 5 Large, 6 11-12 Players]
 }
 players = {}
 playerRoleCardGuids = {}
@@ -771,8 +771,8 @@ function settingsPannelMakeButtons()
 		buttonParam.label = '[u]Hidden Zones[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
-		labels = {'None', 'Small', 'Gap (version 1)', 'Gap (version 2)', 'Large', '12 Player'}
-		offsets = {3.2, 3.3, 5.3, 5.35, 3.3, 4.1}
+		labels = {'None', 'Small', 'Gap (version 1)', 'Gap (version 2)', 'Large', '11-12 Players'}
+		offsets = {3.2, 3.3, 5.3, 5.35, 3.3, 4.8}
 		makeDecIncButtonsLabel(settingsPannel, options.zoneType, '-', '+', labels, 'decZoneType', 'incZoneType', {startX, 0.2, startZ}, offsets, false, options.zoneType ~= 6)
 
 		startZ = -8.5
@@ -2256,30 +2256,34 @@ function setupCoroutine()
 			forceObjectToPlayer(buttonStatusBase, player, {forward = 11, right = -8.5, up = 0, forceHeight = 1.09}, FACE_UP_ROT)
 		end
 	end
-	if options.zoneType == 6 then
-		-- Tan Maroon Status Buttons
+	if options.zoneType == 6 then -- Tan and Maroon
 		local paramsStatus = {
 			type = 'backgammon_piece_white',
 			callback = 'statusButtonCallback',
 			sound = false
 		}
-		local buttonStatusBase = {}
-		for i, color in ipairs(GREY_PLAYABLE_COLORS) do
-			buttonStatusBase[i] = spawnObject(paramsStatus)
-			buttonStatusBase[i].setName(color)
-			buttonStatusBase[i].setColorTint(stringColorToRGBExtra(color))
-			buttonStatusBase[i].setRotation({0, 180, 0})
-			buttonStatusBase[i].setLock(true)
-		end
-		buttonStatusBase[1].setPosition({20.8, 1.09, -40.66})
-		buttonStatusBase[2].setPosition({-8.5, 1.09, -40.66})
 		for _, color in ipairs(GREY_PLAYABLE_COLORS) do
-			table.insert(players, 1, color)
+			if greyPlayerSteamIds[color] then
+				table.insert(players, 1, color)
+				local buttonStatusBase = spawnObject(paramsStatus)
+				buttonStatusBase.setName(color)
+				buttonStatusBase.setColorTint(stringColorToRGBExtra(color))
+				buttonStatusBase.setRotation({0, 180, 0})
+				buttonStatusBase.setLock(true)
+				forceObjectToPlayer(buttonStatusBase, color, {forward = 11, right = -8.5, up = 0, forceHeight = 1.09}, FACE_UP_ROT)
+			else
+				destroyObjectByGUID(greyPlayerHandGuids[color])
+			end
 		end
+	end
+	if #players > 10 then
 		table.insert(fascist_deck_guids, 1, fascist_deck_extra_guid)
-		table.insert(liberal_deck_guids, 1, liberal_deck_extra_guid)
 	else
 		destroyObjectByGUID(fascist_deck_extra_guid)
+	end
+	if #players > 11 then
+		table.insert(liberal_deck_guids, 1, liberal_deck_extra_guid)
+	else
 		destroyObjectByGUID(liberal_deck_extra_guid)
 	end
 
