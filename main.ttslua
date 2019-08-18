@@ -709,6 +709,13 @@ function onChat(messageIn, player)
 		player:print(chatHelp(player.admin))
 		return false
 	end
+
+	for _, color in pairs(GREY_PLAYABLE_COLORS) do
+		if greyPlayerSteamIds[color] == player.steam_id then
+			printToAll("[" .. stringColorToHex(color) .. "]" .. player.steam_name .. ":[-] " .. messageIn)
+			return false
+		end
+	end
 end
 
 function chatHelp(admin)
@@ -1932,18 +1939,14 @@ function returnVoteCardsToHand()
 		jaCard = getObjectFromGUID(jaCardGuids[playerColor])
 		neinCard = getObjectFromGUID(neinCardGuids[playerColor])
 		if jaCard and neinCard then
-			local jaCardRot = jaCard.getRotation()
-			local neinCardRot = neinCard.getRotation()
-			jaCardRot.exactRot = true
-			neinCardRot.exactRot = true
 			if greyPlayer(playerColor) then
-				jaCardRot = {x = 0, y = 180, z = 180, exactRot = true}
-				neinCardRot = {x = 0, y = 180, z = 180, exactRot = true}
-				giveObjectToPlayer(jaCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, jaCardRot, false, true)
-				giveObjectToPlayer(neinCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, neinCardRot, false, true)
+				giveObjectToPlayer(jaCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, {x = 0, y = 180, z = 180, exactRot = true}, false, true)
+				giveObjectToPlayer(neinCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, {x = 0, y = 180, z = 180, exactRot = true}, false, true)
 			else
-				giveObjectToPlayer(jaCard, playerColor, {forward = 0, right = 0, up = 0}, jaCardRot, false, true)
-				giveObjectToPlayer(neinCard, playerColor, {forward = 0, right = 0, up = 0}, neinCardRot, false, true)
+				local jaCardRot = jaCard.getRotation()
+				local neinCardRot = neinCard.getRotation()
+				giveObjectToPlayer(jaCard, playerColor, {forward = 0, right = 0, up = 0}, {x = jaCardRot["x"], y = jaCardRot["y"], z = jaCardRot["z"], exactRot = true}, false, true)
+				giveObjectToPlayer(neinCard, playerColor, {forward = 0, right = 0, up = 0}, {x = neinCardRot["x"], y = neinCardRot["y"], z = neinCardRot["z"], exactRot = true}, false, true)
 			end
 		end
 	end
@@ -2106,7 +2109,13 @@ function drawCards(amount, playerColor)
 			if greyPlayer(playerColor) then
 				deal12P(amount, playerColor)
 			else
-				drawDeck.deal(amount, playerColor)
+				for i = 1, amount, 1 do
+					local params = {}
+					local card = drawDeck.takeObject(params)
+					if card then
+						giveObjectToPlayer(card, playerColor, {forward = 0, right = 0, up = 0}, FACE_DOWN_ROT, false, true)
+					end
+				end
 			end
 			if amount == 1 then
 				broadcastToAll('Dealing 1 card to ' .. playerColor .. '.', stringColorToRGBExtra(playerColor))
@@ -2291,15 +2300,15 @@ function setupCoroutine()
 	local abilitiesDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 	if abilitiesDeck then
 		abilitiesDeck.randomize()
-		abilitiesDeck.deal(options.expansionAmount)
-		-- Tan and Maroon
-		if options.zoneType == 6 then
-			for _, playerColor in ipairs(GREY_PLAYABLE_COLORS) do
-				for j = 1, options.expansionAmount do
-					local params = {}
-					local card = abilitiesDeck.takeObject(params)
-					if card then
-						giveObjectToPlayer(card, playerColor, {forward = GREY_FORWARD, right = GREY_EXPANSION_RIGHT, up = GREY_UP}, FACE_DOWN_ROT, false, true)
+		for _, player in pairs(players) do
+			for i = 1, options.expansionAmount, 1 do
+				local params = {}
+				local card = abilitiesDeck.takeObject(params)
+				if card then
+					if greyPlayer(player) then
+						giveObjectToPlayer(card, player, {forward = GREY_FORWARD, right = GREY_EXPANSION_RIGHT, up = GREY_UP}, FACE_DOWN_ROT, false, true)
+					else
+						giveObjectToPlayer(card, player, {forward = 0, right = 0, up = 0}, FACE_DOWN_ROT, false, true)
 					end
 				end
 			end
@@ -2351,7 +2360,7 @@ function setupCoroutine()
 		params.scale = {1.8, 1.8, 1.8}
 	end
 	for _, player in pairs(players) do
-		if not inTable(GREY_PLAYABLE_COLORS, player) then
+		if not greyPlayer(player) then
 			if Player[player].admin or options.noteType > 6 then
 				local notetaker = spawnObject(params)
 				if options.noteType < 7 then
