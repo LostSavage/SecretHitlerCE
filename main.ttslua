@@ -2109,13 +2109,7 @@ function drawCards(amount, playerColor)
 			if greyPlayer(playerColor) then
 				deal12P(amount, playerColor)
 			else
-				for i = 1, amount, 1 do
-					local params = {}
-					local card = drawDeck.takeObject(params)
-					if card then
-						giveObjectToPlayer(card, playerColor, {forward = 0, right = 0, up = 0}, FACE_DOWN_ROT, false, true)
-					end
-				end
+				drawDeck.deal(amount, playerColor)
 			end
 			if amount == 1 then
 				broadcastToAll('Dealing 1 card to ' .. playerColor .. '.', stringColorToRGBExtra(playerColor))
@@ -2301,16 +2295,16 @@ function setupCoroutine()
 	if abilitiesDeck then
 		abilitiesDeck.randomize()
 		for _, player in pairs(players) do
-			for i = 1, options.expansionAmount, 1 do
-				local params = {}
-				local card = abilitiesDeck.takeObject(params)
-				if card then
-					if greyPlayer(player) then
+			if greyPlayer(player) then
+				for i = 1, options.expansionAmount, 1 do
+					local params = {}
+					local card = abilitiesDeck.takeObject(params)
+					if card then
 						giveObjectToPlayer(card, player, {forward = GREY_FORWARD, right = GREY_EXPANSION_RIGHT, up = GREY_UP}, FACE_DOWN_ROT, false, true)
-					else
-						giveObjectToPlayer(card, player, {forward = 0, right = 0, up = 0}, FACE_DOWN_ROT, false, true)
 					end
 				end
+			else
+				abilitiesDeck.deal(options.expansionAmount, player)
 			end
 		end
 		if bit32.band(options.expansionOptionEnabled, 8) == 8 then
