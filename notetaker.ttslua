@@ -1853,6 +1853,8 @@ function XX(clickedObject, playerColor, text)
 		else
 			if noteTakerNotes[noteTakerCurrLine].claim1 == text then
 				noteTakerNotes[noteTakerCurrLine].claim1 = ''
+			elseif noteTakerConflict(noteTakerCurrLine) and noteTakerNotes[noteTakerCurrLine].claim2 == text then
+				noteTakerNotes[noteTakerCurrLine].claim2 = ''
 			else
 				noteTakerNotes[noteTakerCurrLine].claim1 = text
 			end
