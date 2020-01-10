@@ -1133,22 +1133,27 @@ function initCommon(selfIn)
 
 	buttonParam.click_function = 'rightButton'
 	buttonParam.label = right_unicode
+	buttonParam.tooltip = 'Edit Chancellor color or claim'
 	buttonParam.position = {posXscale * 7.25, posY, (6.5 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'downButton'
 	buttonParam.label = down_unicode
+	buttonParam.tooltip = ''
 	buttonParam.position = {posXscale * 5.75, posY, (7.25 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'leftButton'
 	buttonParam.label = left_unicode
+	buttonParam.tooltip = 'Edit President color or claim'
 	buttonParam.position = {posXscale * 4.25, posY, (6.5 * posZscale) + posZoffsetOther}
 	selfIn.createButton(buttonParam)
+
 
 	-- Policy x3
 	buttonParam.click_function = 'QQQ'
 	buttonParam.label = '???'
+	buttonParam.tooltip = ''
 	buttonParam.position = {posXscale * 3.8, posY, (2.75 * posZscale) + posZoffsetOther}
 	buttonParam.width = 900 * buttonScale
 	selfIn.createButton(buttonParam)
