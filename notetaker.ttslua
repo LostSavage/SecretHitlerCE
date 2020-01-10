@@ -1849,7 +1849,11 @@ function XX(clickedObject, playerColor, text)
 	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
 		if not editMode or (noteTakerNotes[noteTakerCurrLine].claim2 == ''
 			and noteTakerConflict(noteTakerCurrLine)) then
-			noteTakerNotes[noteTakerCurrLine].claim2 = text
+			if noteTakerNotes[noteTakerCurrLine].claim2 == text then
+				noteTakerNotes[noteTakerCurrLine].claim2 = ''
+			else
+				noteTakerNotes[noteTakerCurrLine].claim2 = text
+			end
 		else
 			if noteTakerNotes[noteTakerCurrLine].claim1 == text then
 				noteTakerNotes[noteTakerCurrLine].claim1 = ''
