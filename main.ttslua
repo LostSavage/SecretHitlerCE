@@ -57,7 +57,6 @@ bannerZoneGuid = nil
 topdeck = false
 lastDrawCt = nil
 lastPlayerCt = nil
-hold = false
 votes = {}
 disableVote = false
 votePassed = false
@@ -147,6 +146,7 @@ options = {
 	noteType = 1, -- [1 Dark wood, 2 Light wood, 3 Red wood, 4 Black plastic, 5 Board image, 6 Swiss cheese, 7 Private only, 8 Cooperative]
 	policySafety = true,
 	scriptedVoting = true,
+	security = true,
 	shufflePlayers = false,
 	shuffleHost = true,
 	voteHistory = false,
@@ -192,6 +192,7 @@ voteNotebook = ''
 
 -- Called when a game finishes loading
 function onLoad(saveString)
+	--saveString = ''
 	if not (saveString == '') then
 		local save = JSON.decode(saveString)
 		activePowerColor = save['a']
@@ -657,7 +658,70 @@ function onChat(messageIn, player)
 	elseif messageTable[1] == 'v' then
 		player:print(versionInfo())
 		return false
-	elseif messageTable[1] == 'c' and (player.admin or inTable(trusted_players, player.steam_id)) then
+	elseif messageTable[1] == 'notetaker' and player.admin then
+		if started then
+			if messageTable[2] then
+				messageTable[2] = string.titlecase(messageTable[2])
+				if inTable(MAIN_PLAYABLE_COLORS, messageTable[2]) then
+					local params = {position = {-100, 100, -100}, sound = false}
+					if options.noteType == 1 then
+						params.type = 'Chess_Board'
+						params.scale = {1.55, 1.55, 1.55}
+					elseif options.noteType == 2 then
+						params.type = 'Go_Board'
+						params.scale = {1.45, 1.45, 1.45}
+					elseif options.noteType == 3 then
+						params.type = 'Checker_Board'
+						params.scale = {1.55, 1.55, 1.55}
+					elseif options.noteType == 4 then
+						params.type = 'reversi_board'
+						params.scale = {1.45, 1.45, 1.45}
+					elseif options.noteType == 5 then
+						params.type = 'Custom_Board'
+						params.scale = {1, 1, 1}
+					elseif options.noteType == 6 then
+						params.type = 'Custom_Model'
+						params.scale = {1.05, 1.05, 1.05}
+					elseif options.noteType > 6 then
+						params.type = 'backgammon_board'
+						params.scale = {1.8, 1.8, 1.8}
+					end
+					local notetaker = spawnObject(params)
+					if options.noteType < 7 then
+						notetaker.setLuaScript(newNoteTakerLuaScript(messageTable[2], 'true', 'false', 'false', 'false', 'false', 'true'))
+					elseif options.noteType == 7 then
+						notetaker.setLuaScript(newNoteTakerLuaScript(messageTable[2], 'false', 'false', 'false', 'false', 'false', 'false'))
+					elseif options.noteType == 8 then
+						notetaker.setLuaScript(newNoteTakerLuaScript(messageTable[2], 'false', 'true', 'false', 'false', 'false', 'false'))
+					end
+					if options.noteType == 5 then
+						local custom = {}
+						custom.image = 'http://cloud-3.steamusercontent.com/ugc/486766424829587499//FDF54ECD5D1706DE0A590239E84D62CDE757FE46/'
+						notetaker.setCustomObject(custom)
+					elseif options.noteType == 6 then
+						local custom = {}
+						custom.diffuse = 'http://cloud-3.steamusercontent.com/ugc/478894184492866532/6639B6E1AB511AB10D53DB91B2A47A0A63410DDF/'
+						custom.mesh = 'http://cloud-3.steamusercontent.com/ugc/478894184492865468/51C18F993BBDD5D1B55FE5261A625B2CE0B2FD9F/'
+						custom.type = 4
+						custom.material = 3
+						notetaker.setCustomObject(custom)
+					end
+				else
+					player:print('ERROR: Unknown color ' .. messageTable[2] .. '.', {1, 0, 0})
+				end
+			end
+		else
+			player:print('ERROR: Game has not started.', {1, 0, 0})
+		end
+		return false
+	elseif messageTable[1] == 'returnvotes' and player.admin then
+		if started then
+			returnVoteCardsToHand()
+		else
+			player:print('ERROR: Game has not started.', {1, 0, 0})
+		end
+		return false
+	elseif messageTable[1] == 'c' and player.admin then
 		if messageTable[2] then
 			messageTable[2] = string.titlecase(messageTable[2])
 			if inTable(MAIN_PLAYABLE_COLORS, messageTable[2]) or messageTable[2] == 'Black' or messageTable[2] == 'Grey' then
@@ -690,7 +754,7 @@ function onChat(messageIn, player)
 			player.promote()
 		end
 		return false
-	elseif messageTable[1] == 'kick' and (player.admin or inTable(trusted_players, player.steam_id)) then
+	elseif messageTable[1] == 'kick' and player.admin then
 		if messageTable[2] then
 			local playerFound = getPlayerByNameSteamID(messageTable[2], Player.getPlayers())
 			if playerFound then
@@ -700,7 +764,7 @@ function onChat(messageIn, player)
 			end
 		end
 		return false
-	elseif messageTable[1] == 'list' and (player.admin or inTable(trusted_players, player.steam_id)) then
+	elseif messageTable[1] == 'list' and player.admin then
 		for _, p in pairs(Player.getPlayers()) do
 			player:print(p.steam_name .. ' ' .. p.steam_id)
 		end
@@ -729,6 +793,8 @@ function chatHelp(admin)
 					'   help - This message'
 	if admin then
 		msg = msg .. '\nadmin chat commands:\n' ..
+					'   notetaker color - give a notetaker to that color\n' ..
+					'   returnvotes - return all vote cards\n' ..
 					'   c color [name* or steam id] - sets player to color\n' ..
 					'   promote [name* or steam id] - promotes/demotes player\n' ..
 					'   kick name* or steam id - kicks the player\n' ..
@@ -766,15 +832,16 @@ function settingsPannelMakeButtons()
 		makeDecIncButtonsLabel(settingsPannel, options.fascistCards, '-', '+', 'Fascist Cards', 'decFascistCards', 'incFascistCards', {startX + 1.3, 0.2, startZ + offsetZ * 3}, 6.1, false, options.gameType == 2)
 		makeDecIncButtonsLabel(settingsPannel, options.greyCards, '-', '+', 'Grey Cards', 'decGreyCards', 'incGreyCards', {startX + 1.3, 0.2, startZ + offsetZ * 4}, 5.65, false, options.gameType == 2)
 
-		startZ = -14.5
+		startZ = -14.7
 		buttonParam.label = '[u]Note Taker[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
 		local labels = {'Dark wood', 'Light wood (tintable)', 'Red wood (tintable)', 'Black plastic', 'Board image', 'Swiss cheese', 'Private only', 'Cooperative'}
 		local offsets = {4.4, 6.6, 6.3, 4.7, 4.7, 4.7, 4.6, 4.6}
 		makeDecIncButtonsLabel(settingsPannel, options.noteType, '-', '+', labels, 'decNoteType', 'incNoteType', {startX, 0.2, startZ}, offsets, false, true)
+		makeSquareButtonLabel(settingsPannel, options.autoNotate, check_string, '', 'Auto notate', 'autoNotateFlip', {startX, 0.2, startZ + offsetZ}, 3.4, true)
 
-		startZ = -11.6
+		startZ = -10.5
 		buttonParam.label = '[u]Hidden Zones[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
@@ -782,23 +849,33 @@ function settingsPannelMakeButtons()
 		offsets = {3.2, 3.3, 5.3, 5.35, 3.3, 4.8}
 		makeDecIncButtonsLabel(settingsPannel, options.zoneType, '-', '+', labels, 'decZoneType', 'incZoneType', {startX, 0.2, startZ}, offsets, false, options.zoneType ~= 6)
 
-		startZ = -8.5
+		startZ = -7.6
+		buttonParam.label = '[u]Voting[/u]'
+		buttonParam.position = {0, 0.2, startZ - 1.4}
+		settingsPannel.createButton(buttonParam)
+		makeSquareButtonLabel(settingsPannel, options.voteHistory, check_string, '', 'History', 'voteHistoryFlip', {startX, 0.2, startZ}, 2.3, true)
+		makeSquareButtonLabel(settingsPannel, options.scriptedVoting, check_string, '', 'Scripted', 'scriptedVotingFlip', {startX, 0.2, startZ + offsetZ}, 2.5, true)
+
+		startZ = -3.2
+		buttonParam.label = '[u]Security[/u]'
+		buttonParam.position = {0, 0.2, startZ - 1.4}
+		settingsPannel.createButton(buttonParam)
+		makeSquareButtonLabel(settingsPannel, options.security, check_string, '', 'Main security', 'mainSecurityFlip', {startX, 0.2, startZ}, 3.7, true)
+		makeSquareButtonLabel(settingsPannel, options.policySafety, check_string, '', 'Policy safety', 'policySafetyFlip', {startX, 0.2, startZ + offsetZ}, 3.5, true)
+
+		startZ = 1
 		buttonParam.label = '[u]Other Options[/u]'
 		buttonParam.position = {0, 0.2, startZ - 1.4}
 		settingsPannel.createButton(buttonParam)
 		makeSquareButtonLabel(settingsPannel, options.dealRoleCards, check_string, '', 'Deal role', 'roleCardFlip', {startX, 0.2, startZ}, 2.7, true)
 		makeSquareButtonLabel(settingsPannel, options.dealPartyCards, check_string, '', 'Deal party membership', 'partyCardFlip', {startX, 0.2, startZ + offsetZ}, 5.8, true)
-		makeSquareButtonLabel(settingsPannel, options.scriptedVoting, check_string, '', 'Scripted voting', 'scriptedVotingFlip', {startX, 0.2, startZ + offsetZ * 2}, 4, true)
-		makeSquareButtonLabel(settingsPannel, options.autoNotate, check_string, '', 'Auto notate', 'autoNotateFlip', {startX, 0.2, startZ + offsetZ * 3}, 3.4, true)
-		makeSquareButtonLabel(settingsPannel, options.policySafety, check_string, '', 'Policy safety', 'policySafetyFlip', {startX, 0.2, startZ + offsetZ * 4}, 3.5, true)
-		makeSquareButtonLabel(settingsPannel, options.voteHistory, check_string, '', 'Vote history', 'voteHistoryFlip', {startX, 0.2, startZ + offsetZ * 5}, 3.4, true)
-		makeSquareButtonLabel(settingsPannel, options.shufflePlayers, check_string, '', 'Shuffle players', 'shufflePlayersFlip', {startX, 0.2, startZ + offsetZ * 6}, 4, true)
-		makeSquareButtonLabel(settingsPannel, options.shuffleHost, check_string, '', 'Shuffle host', 'shuffleHostFlip', {startX + 1.3, 0.2, startZ + offsetZ * 7}, 3.3, options.shufflePlayers)
+		makeSquareButtonLabel(settingsPannel, options.shufflePlayers, check_string, '', 'Shuffle players', 'shufflePlayersFlip', {startX, 0.2, startZ + offsetZ * 2}, 4, true)
+		makeSquareButtonLabel(settingsPannel, options.shuffleHost, check_string, '', 'Shuffle host', 'shuffleHostFlip', {startX + 1.3, 0.2, startZ + offsetZ * 3}, 3.3, options.shufflePlayers)
 
 		--Expansion
 		local abilitiesDeck = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
 		if abilitiesDeck then
-			startZ = 3.7
+			startZ = 7.8
 			buttonParam.label = '[u]Fan Expansion[/u]'
 			buttonParam.position = {0, 0.2, startZ - 1.4}
 			settingsPannel.createButton(buttonParam)
@@ -997,6 +1074,13 @@ end
 function autoNotateFlip(clickedObject, playerColor)
 	if Player[playerColor].admin then
 		options.autoNotate = not options.autoNotate
+		settingsPannelMakeButtons()
+	end
+end
+
+function mainSecurityFlip(clickedObject, playerColor)
+	if Player[playerColor].admin then
+		options.security = not options.security
 		settingsPannelMakeButtons()
 	end
 end
@@ -1229,13 +1313,13 @@ function displayBannerCard(card, offset, bannerGuidsOffset)
 	local bannerCard = {}
 	local params = {sound = false}
 	params.snap_to_grid = false
-	params.position = {offset, 33, 144}
+	params.position = {offset, 43, 144}
 	bannerCard[1] = card.clone(params)
-	params.position = {-offset, 33, -144}
+	params.position = {-offset, 43, -144}
 	bannerCard[2] = card.clone(params)
-	params.position = {144, 33, -offset}
+	params.position = {144, 43, -offset}
 	bannerCard[3] = card.clone(params)
-	params.position = {-144, 33, offset}
+	params.position = {-144, 43, offset}
 	bannerCard[4] = card.clone(params)
 	wait(5)
 	bannerCard[1].setRotation({90, 180, 0})
@@ -1437,10 +1521,7 @@ function createPolicyCardWait()
 end
 
 function startPolicyCardCheck()
-	if not Global.getVar('hold') then
-		Global.setVar('hold', true)
-		startLuaCoroutine(Global, 'policyCardCoroutine')
-	end
+	startLuaCoroutine(Global, 'policyCardCoroutine')
 end
 
 function policyCardCoroutine()
@@ -1488,41 +1569,43 @@ function policyCardCoroutine()
 	-- Get the status of all cards and decks from the zones
 	cardLists = getPolicyCardStatus(true)
 
-	-- protect the cards
-	if #cardLists.drawDeckList == 1 and #cardLists.drawList > 1 then
-		local tmpDeck = getObjectFromGUID(cardLists.drawDeckList[1])
-		if tmpDeck then
-			tmpDeck.interactable = false
+	if options.security then
+		-- protect the cards
+		if #cardLists.drawDeckList == 1 and #cardLists.drawList > 1 then
+			local tmpDeck = getObjectFromGUID(cardLists.drawDeckList[1])
+			if tmpDeck then
+				tmpDeck.interactable = false
+			end
 		end
-	end
-	if #cardLists.discardDeckList == 1 and #cardLists.discardList > 1 then
-		local tmpDeck = getObjectFromGUID(cardLists.discardDeckList[1])
-		if tmpDeck then
-			tmpDeck.interactable = false
+		if #cardLists.discardDeckList == 1 and #cardLists.discardList > 1 then
+			local tmpDeck = getObjectFromGUID(cardLists.discardDeckList[1])
+			if tmpDeck then
+				tmpDeck.interactable = false
+			end
 		end
-	end
 
-	--Expansion
-	tmpObj = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
-	if tmpObj then tmpObj.interactable = false end
-	tmpObj = getDeckFromZoneByGUID(EFFECTSPILE_ZONE_GUID)
-	if tmpObj then tmpObj.interactable = false end
+		--Expansion
+		tmpObj = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
+		if tmpObj then tmpObj.interactable = false end
+		tmpObj = getDeckFromZoneByGUID(EFFECTSPILE_ZONE_GUID)
+		if tmpObj then tmpObj.interactable = false end
 
-	-- Msg if cards are added to the draw deck
-	if lastDrawCt and #cardLists.drawList > lastDrawCt and #cardLists.drawDeckList == 1 then
-		broadcastToAll('WARNING: One or more cards have been added to the draw deck!', {1,0,0})
+		-- Msg if cards are added to the draw deck
+		if lastDrawCt and #cardLists.drawList > lastDrawCt and #cardLists.drawDeckList == 1 then
+			broadcastToAll('WARNING: One or more cards have been added to the draw deck!', {1,0,0})
+		end
+
+		if started and #cardLists.fascistList > options.fascistCards then
+			broadcastToAll('CHEATING DETECTED: Too many ' .. text.fascistAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
+		end
+		if started and #cardLists.liberalList > options.liberalCards then
+			broadcastToAll('CHEATING DETECTED: Too many ' .. text.liberalAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
+		end
+		if started and #cardLists.greyList > options.greyCards then
+			broadcastToAll('CHEATING DETECTED: Too many ' .. text.greyAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
+		end
 	end
 	lastDrawCt = #cardLists.drawList
-
-	if started and #cardLists.fascistList > options.fascistCards then
-		broadcastToAll('CHEATING DETECTED: Too many ' .. text.fascistAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
-	end
-	if started and #cardLists.liberalList > options.liberalCards then
-		broadcastToAll('CHEATING DETECTED: Too many ' .. text.liberalAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
-	end
-	if started and #cardLists.greyList > options.greyCards then
-		broadcastToAll('CHEATING DETECTED: Too many ' .. text.greyAbbr ..  ' ' .. text.policy .. ' cards.', {1,0,0})
-	end
 
 	-- Location of all cards is known
 	if started and #cardLists.fascistList == options.fascistCards and #cardLists.liberalList == options.liberalCards and #cardLists.greyList == options.greyCards and (#cardLists.discardDeckList == 0 or #cardLists.discardDeckList == 1) then
@@ -1554,7 +1637,6 @@ function policyCardCoroutine()
 				end
 			else
 				broadcastToAll('ERROR: reshuffle FAILED! Please fix the issue.', {1,0,0})
-				startLuaCoroutine(Global, 'disableSecurityCoroutine')
 				return true
 			end
 		end
@@ -1643,8 +1725,6 @@ function policyCardCoroutine()
 				end, 1, -1)
 		end
 	end
-
-	Global.setVar('hold', false)
 
 	return true
 end
@@ -1871,7 +1951,7 @@ function startVoteCheck()
 		lastVote = out
 		for _, lastVoteGuid in ipairs(lastVote_guids) do
 			local lastVoteObj = getObjectFromGUID(lastVoteGuid)
-			if lastVoteObj then lastVoteObj.TextTool.setValue(removeBBCode(out)) end
+			if lastVoteObj then lastVoteObj.TextTool.setValue(out) end --removeBBCode(out)
 		end
 		flipVotes()
 		disableVote = true
@@ -1943,10 +2023,8 @@ function returnVoteCardsToHand()
 				giveObjectToPlayer(jaCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, {x = 0, y = 180, z = 180, exactRot = true}, false, true)
 				giveObjectToPlayer(neinCard, playerColor, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, {x = 0, y = 180, z = 180, exactRot = true}, false, true)
 			else
-				local jaCardRot = jaCard.getRotation()
-				local neinCardRot = neinCard.getRotation()
-				giveObjectToPlayer(jaCard, playerColor, {forward = 0, right = 0, up = 0}, {x = jaCardRot["x"], y = jaCardRot["y"], z = jaCardRot["z"], exactRot = true}, false, true)
-				giveObjectToPlayer(neinCard, playerColor, {forward = 0, right = 0, up = 0}, {x = neinCardRot["x"], y = neinCardRot["y"], z = neinCardRot["z"], exactRot = true}, false, true)
+				jaCard.deal(1, playerColor)
+				neinCard.deal(1, playerColor)
 			end
 		end
 	end
@@ -2502,7 +2580,7 @@ function setupCoroutine()
 				if greyPlayer(player) then
 					giveObjectToPlayer(card, player, {forward = GREY_FORWARD, right = GREY_RIGHT, up = GREY_UP}, FACE_DOWN_ROT, false, true)
 				else
-					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_DOWN_ROT, false, true)
+					giveObjectToPlayer(card, player, {forward = 0, right = offset, up = 0}, FACE_UP_ROT, false, true)
 				end
 			elseif description == 'Nein Card' then
 				card.setDescription(player .. '\'s Nein Card')
@@ -2814,34 +2892,24 @@ function shuffleDrawDeck()
 	return false
 end
 
-function disableSecurity()
-	startLuaCoroutine(Global, 'disableSecurityCoroutine')
-end
+function toggleSecurity()
+	if options.security then
+		broadcastToAll('WARNING: Security has been disabled!', {1,0,0})
+		local allObjs = getAllObjects()
+		local tmpObj
 
-function disableSecurityCoroutine()
-	local allObjs = getAllObjects()
-	local tmpObj
-
-	Global.setVar('hold', true)
-	broadcastToAll('WARNING: Security has been disabled for 30 seconds!', {1,0,0})
-	for _, tmpObj in ipairs(allObjs) do
-		if isPolicyCard(tmpObj) then
-			tmpObj.interactable = true
-		elseif tmpObj.tag == 'Deck' then
-			tmpObj.interactable = true
+		for _, tmpObj in ipairs(allObjs) do
+			if isPolicyCard(tmpObj) then
+				tmpObj.interactable = true
+			elseif tmpObj.tag == 'Deck' then
+				tmpObj.interactable = true
+			end
 		end
+	else
+		broadcastToAll('Security is enabled.', {0,1,0})
+		createPolicyCardWait()
 	end
-	sleep(30)
-
-	--Expansion
-	tmpObj = getDeckFromZoneByGUID(ABILITIESPILE_ZONE_GUID)
-	if tmpObj then tmpObj.interactable = false end
-	tmpObj = getDeckFromZoneByGUID(EFFECTSPILE_ZONE_GUID)
-	if tmpObj then	tmpObj.interactable = false end
-
-	Global.setVar('hold', false)
-
-	return true
+	options.security = not options.security
 end
 
 function createInspectButtons(powerHolder)
@@ -3015,86 +3083,27 @@ function giveRoleCards()
 	end
 end
 
-function findUnusedColor()
-	local checkList = {'Brown', 'Teal', 'Black', 'White', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink'}
-
-	for _, playerColor in ipairs(checkList) do
-		if not Player[playerColor].seated then
-			return playerColor
-		end
-	end
-end
-
 function shufflePlayers()
-	local blackSteamId
-	if #getSeatedPlayers() == 10 and Player['Black'].seated then
-		blackSteamId = Player['Black'].steam_id
-		Player['Black']:changeColor('Grey')
-		while Player['Black'].seated do
-			coroutine.yield()
-		end
-	end
-	swapColor = findUnusedColor()
+	local shufflePlayers = {}
+	local playerColors = {}
 
-	local ranColors = {}
-	for _, v in pairs(getSeatedPlayers()) do
-		if (not Player[v].host) or options.shuffleHost then
-			table.insert(ranColors, 1, v)
-		end
-	end
-	shuffleTable(ranColors)
-
-	seatedPlayers = {}
-	local j = 1
-	for _, v in pairs(getSeatedPlayers()) do
-		if (not Player[v].host) or options.shuffleHost then
-			local playerInfo = {}
-			playerInfo.target = ranColors[j]
-			playerInfo.myColor = v
-			table.insert(seatedPlayers, 1, playerInfo)
-			j = j + 1
+	for i, value in pairs(Player.getPlayers()) do
+		if (value ~= nil and value.color ~= "Grey" and value.color ~= "Black" and (value.host == false or options.shuffleHost)) then
+			table.insert(playerColors, value.color)
+			table.insert(shufflePlayers, value)
 		end
 	end
 
-	local doneCount = 0
-	local tryCount = #seatedPlayers
-	while doneCount ~= #seatedPlayers and tryCount > 0 do
-		doneCount = 0
-		for i, v in pairs(seatedPlayers) do
-			if v.target ~= v.myColor then
-				if Player[v.target].seated == false then
-					local myC = v.myColor
-					if Player[myC].seated == true then
-						Player[myC]:changeColor(v.target)
-						while Player[myC].seated and not Player[v.target].seated do
-							coroutine.yield()
-						end
-						v.myColor = v.target
-						doneCount = doneCount + 1
-					end
-				elseif Player[swapColor].seated == false then
-					local myC = v.myColor
-					if Player[myC].seated == true then
-						Player[myC]:changeColor(swapColor)
-						while Player[myC].seated and not Player[swapColor].seated do
-							coroutine.yield()
-						end
-						v.myColor = swapColor
-					end
-				end
-			else
-				doneCount = doneCount + 1
+	for i, value in pairs(playerColors) do
+		if #shufflePlayers > 1 then
+			local tempRandInt = math.random(#shufflePlayers)
+			if (Player[playerColors[i]] ~= nil and Player[playerColors[i]].seated and shufflePlayers[tempRandInt].steam_id ~= Player[playerColors[i]].steam_id) then
+				Player[playerColors[i]].changeColor("Grey")
 			end
-		end
-		tryCount = tryCount - 1
-		coroutine.yield()
-	end
-
-	if blackSteamId then
-		for _, p in pairs(Player.getSpectators()) do
-			if p.steam_id == blackSteamId then
-				p:changeColor('Black')
-			end
+			shufflePlayers[tempRandInt].changeColor(playerColors[i])
+			table.remove(shufflePlayers, tempRandInt)
+		else
+			shufflePlayers[1].changeColor(playerColors[i])
 		end
 	end
 end

@@ -2,10 +2,10 @@
 -- Heavily modified by Lost Savage
 -- Lots of code from Sionar
 -- Also used code from smiling Aktheon, SwiftPanda,
--- Rodney, Markimus, Morten G and Hmmmpf
+-- Rodney, Markimus, Morten G, Hmmmpf and l55tremine
 -- Scripts can be found on https://github.com/LostSavage/SecretHitlerCE
 MOD_NAME = "Secret Hitler: CE"
-UPDATE_VERSION = 109
+UPDATE_VERSION = 111
 ADD_ON_VERSION = 6
 #include \SecretHitlerCE\main.ttslua
 #include \SecretHitlerCE\cardsboard.ttslua

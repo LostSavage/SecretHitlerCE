@@ -24,10 +24,6 @@ function onCollisionExit(info)
 	end
 end
 
-function secondCheck()
-	countCards(true)
-end
-
 function countCards(secondCheck)
 	local deck = nil
 	local deck_ct = 0

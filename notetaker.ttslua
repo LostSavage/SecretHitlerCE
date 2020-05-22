@@ -510,14 +510,9 @@ function menuBase(selfIn)
 		selfIn.createButton(buttonParam)
 	end
 
-	buttonParam.click_function = 'shuffleDrawDeckButton'
-	buttonParam.label = 'Shuffle'
-	buttonParam.position = {posXscale * 4, posY, 1.25  * posZscale + posZoffsetOther}
-	selfIn.createButton(buttonParam)
-
-	buttonParam.click_function = 'disableSecurityButton'
-	buttonParam.label = 'Disable security'
-	buttonParam.position = {posXscale * 4, posY, 2.75 * posZscale + posZoffsetOther}
+	buttonParam.click_function = 'toggleSecurityButton'
+	buttonParam.label = 'Toggle security'
+	buttonParam.position = {posXscale * 4, posY, 1.25 * posZscale + posZoffsetOther}
 	selfIn.createButton(buttonParam)
 
 	buttonParam.click_function = 'giveRoleCardsButton'
@@ -683,17 +678,9 @@ function flipMoveTracker(clickedObject, playerColor)
 	end
 end
 
-function shuffleDrawDeckButton(clickedObject, playerColor)
+function toggleSecurityButton(clickedObject, playerColor)
 	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		if not Global.call('shuffleDrawDeck') then
-			broadcastToColor('ERROR: Failed to shuffle draw deck.', playerColor, {1,0,0})
-		end
-	end
-end
-
-function disableSecurityButton(clickedObject, playerColor)
-	if clickedObject.getVar('playerNoteTaker') == playerColor or Player[playerColor].admin then
-		Global.call('disableSecurity')
+		Global.call('toggleSecurity')
 	end
 end
 
