@@ -642,6 +642,16 @@ function onChat(messageIn, player)
 	elseif messageTable[1] == 'l' then
 		player:print(lastVote)
 		return false
+	elseif messageTable[1] == 'list' then
+		player:print('Connect order:')
+		for _, p in pairs(Player.getPlayers()) do
+			if player.admin then
+				player:print(p.steam_name .. ' ' .. p.steam_id, stringColorToRGB(p.color))
+			else
+				player:print(p.steam_name, stringColorToRGB(p.color))
+			end
+		end
+		return false
 	elseif messageTable[1] == 'h' then
 		if options.voteHistory then
 			player:print(string.gsub(voteNotebook, '\n$', ''))
@@ -764,16 +774,10 @@ function onChat(messageIn, player)
 			end
 		end
 		return false
-	elseif messageTable[1] == 'list' and player.admin then
-		for _, p in pairs(Player.getPlayers()) do
-			player:print(p.steam_name .. ' ' .. p.steam_id)
-		end
-		return false
 	elseif messageTable[1] == 'help' then
 		player:print(chatHelp(player.admin))
 		return false
 	end
-
 	for _, color in pairs(GREY_PLAYABLE_COLORS) do
 		if greyPlayerSteamIds[color] == player.steam_id then
 			printToAll("[" .. stringColorToHex(color) .. "]" .. player.steam_name .. ":[-] " .. messageIn)
@@ -786,6 +790,7 @@ function chatHelp(admin)
 	local msg = 'chat commands:\n' ..
 					'   r - All the role information you can know\n' ..
 					'   l - Shows the last vote\n' ..
+					'   list - players by connect order (includes steam ids for admins)\n' ..
 					'   h - Vote history\n' ..
 					'   n - All of the notes\n' ..
 					'   o - current options\n' ..
@@ -798,7 +803,6 @@ function chatHelp(admin)
 					'   c color [name* or steam id] - sets player to color\n' ..
 					'   promote [name* or steam id] - promotes/demotes player\n' ..
 					'   kick name* or steam id - kicks the player\n' ..
-					'   list - lists steam ids\n' ..
 					'   * partial name allowed but must be distinct'
 	end
 

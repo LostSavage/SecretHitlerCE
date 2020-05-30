@@ -362,25 +362,21 @@ function getObjsFromZone(zoneGUID)
 end
 
 function shufflePosition(objects)
-	local positionA
-	local positionB
-
-	for i = 1, #objects * 5 do
-		local a = math.random(#objects)
-		local b = math.random(#objects)
-		positionA = objects[a].getPosition()
-		positionB = objects[b].getPosition()
-		objects[b].setPosition(positionA)
-		objects[a].setPosition(positionB)
+	for i = 1, #objects - 1 do
+		local j = math.random(i, #objects)
+		local posI = objects[i].getPosition()
+		local posJ = objects[j].getPosition()
+		objects[i].setPosition(posJ)
+		objects[j].setPosition(posI)
 	end
 end
 
-function shuffleTable(objects)
-	for i = 1, #objects * 5 do
-		local a = math.random(#objects)
-		local b = math.random(#objects)
-		objects[a], objects[b] = objects[b], objects[a]
-	end
+function shuffleTable(tab)
+   for i = 1, #tab - 1 do
+      local j = math.random(i, #tab)
+      tab[j], tab[i] = tab[i], tab[j]
+   end
+   return tab
 end
 
 function string:tokenize(sep)
