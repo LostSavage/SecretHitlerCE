@@ -774,6 +774,32 @@ function onChat(messageIn, player)
 			end
 		end
 		return false
+	elseif messageTable[1] == 'grey' and player.admin then
+		if messageTable[2] then
+			messageTable[2] = string.titlecase(messageTable[2])
+			if messageTable[2] == 'Lib' or messageTable[2] == 'Fas' then
+				for _, p in pairs(Player.getPlayers()) do
+					if inTable(fascists, p.color) then
+						if messageTable[2] == 'Fas' then
+							p:changeColor('Grey')
+						end
+					elseif inTable(hitler, p.color) then
+						if messageTable[2] == 'Fas' then
+							p:changeColor('Grey')
+						end
+					elseif inTable(players, p.color) then
+						if messageTable[2] == 'Lib' then
+							p:changeColor('Grey')
+						end
+					end
+				end
+			else
+				player:print('Unknown team ' ..messageTable[2] .. '.', {1, 0, 0})
+			end
+		else
+			player:print('No team given.', {1, 0, 0})
+		end
+		return false
 	elseif messageTable[1] == 'help' then
 		player:print(chatHelp(player.admin))
 		return false
@@ -803,9 +829,9 @@ function chatHelp(admin)
 					'   c color [name* or steam id] - sets player to color\n' ..
 					'   promote [name* or steam id] - promotes/demotes player\n' ..
 					'   kick name* or steam id - kicks the player\n' ..
+					'   grey [Fas or Lib] - moves team to grey (for use with Waitlist Tool)\n' ..
 					'   * partial name allowed but must be distinct'
 	end
-
 	return msg
 end
 
@@ -3092,7 +3118,7 @@ function shufflePlayers()
 	local playerColors = {}
 
 	for i, value in pairs(Player.getPlayers()) do
-		if (value ~= nil and value.color ~= "Grey" and value.color ~= "Black" and (value.host == false or options.shuffleHost)) then
+		if (value ~= nil and value.color ~= 'Grey' and value.color ~= 'Black' and (value.host == false or options.shuffleHost)) then
 			table.insert(playerColors, value.color)
 			table.insert(shufflePlayers, value)
 		end
@@ -3102,7 +3128,7 @@ function shufflePlayers()
 		if #shufflePlayers > 1 then
 			local tempRandInt = math.random(#shufflePlayers)
 			if (Player[playerColors[i]] ~= nil and Player[playerColors[i]].seated and shufflePlayers[tempRandInt].steam_id ~= Player[playerColors[i]].steam_id) then
-				Player[playerColors[i]].changeColor("Grey")
+				Player[playerColors[i]].changeColor('Grey')
 			end
 			shufflePlayers[tempRandInt].changeColor(playerColors[i])
 			table.remove(shufflePlayers, tempRandInt)
